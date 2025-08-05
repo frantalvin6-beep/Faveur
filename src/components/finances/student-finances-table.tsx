@@ -35,7 +35,7 @@ import { cn } from '@/lib/utils';
 import { calculerFinance } from '@/lib/data';
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(amount).replace('XAF', 'FCFA');
+  return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 }
 
 function getStatusBadgeVariant(status: StudentFinance['statut']) {
@@ -126,7 +126,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
             <CardTitle>Suivi des Paiements</CardTitle>
             <CardDescription>Détails financiers pour chaque étudiant de ce groupe.</CardDescription>
           </div>
-          <Button onClick={handleExport}>
+          <Button onClick={handleExport} variant="outline">
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             Exporter ce groupe
           </Button>

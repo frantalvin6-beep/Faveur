@@ -83,14 +83,27 @@ function AddStudentFinanceForm({ onAddStudent }: { onAddStudent: (student: Stude
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
+                        {/* Champs principaux */}
                         <div className="space-y-2"><Label htmlFor="matricule">Matricule</Label><Input id="matricule" value={matricule} onChange={(e) => setMatricule(e.target.value)} required /></div>
                         <div className="space-y-2"><Label htmlFor="fullName">Nom & Prénom</Label><Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
                         <div className="space-y-2"><Label htmlFor="level">Niveau d'études</Label><Input id="level" value={level} onChange={(e) => setLevel(e.target.value)} placeholder="Ex: Licence 1" required /></div>
                         <div className="space-y-2"><Label htmlFor="option">Option</Label><Select onValueChange={setOption} value={option}><SelectTrigger id="option"><SelectValue placeholder="Sélectionner..." /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></div>
                         <div className="space-y-2"><Label htmlFor="semester">Semestre</Label><Select onValueChange={(v: 'Pair' | 'Impair') => setSemester(v)} value={semester}><SelectTrigger id="semester"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Impair">Impair</SelectItem><SelectItem value="Pair">Pair</SelectItem></SelectContent></Select></div>
+                        
+                        {/* Champs financiers */}
+                        <div className="space-y-2"><Label htmlFor="inscription">Frais d'inscription</Label><Input id="inscription" type="number" value={inscription} onChange={(e) => setInscription(Number(e.target.value))} /></div>
+                        <div className="space-y-2"><Label htmlFor="fournitures">Frais de fournitures</Label><Input id="fournitures" type="number" value={fournitures} onChange={(e) => setFournitures(Number(e.target.value))} /></div>
+                        <div className="space-y-2"><Label htmlFor="support">Frais de support</Label><Input id="support" type="number" value={support} onChange={(e) => setSupport(Number(e.target.value))} /></div>
+                        <div className="space-y-2"><Label htmlFor="latrine">Frais de latrine</Label><Input id="latrine" type="number" value={latrine} onChange={(e) => setLatrine(Number(e.target.value))} /></div>
+                        <div className="space-y-2"><Label htmlFor="session">Frais de session</Label><Input id="session" type="number" value={session} onChange={(e) => setSession(Number(e.target.value))} /></div>
+                        <div className="space-y-2"><Label htmlFor="rattrapage">Frais de rattrapage</Label><Input id="rattrapage" type="number" value={rattrapage} onChange={(e) => setRattrapage(Number(e.target.value))} /></div>
+                        
+                        {/* Scolarité et Bourse */}
                         <div className="space-y-2"><Label htmlFor="bourseType">Type de Bourse</Label><Select onValueChange={(v: StudentFinance['bourseType']) => setBourseType(v)} value={bourseType}><SelectTrigger id="bourseType"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Non boursier">Non boursier</SelectItem><SelectItem value="Boursier">Boursier</SelectItem><SelectItem value="Partiellement boursier">Partiellement boursier</SelectItem></SelectContent></Select></div>
                         {bourseType === 'Partiellement boursier' && <div className="space-y-2"><Label htmlFor="reduction">% Réduction</Label><Input id="reduction" type="number" value={reduction} onChange={(e) => setReduction(Number(e.target.value))} /></div>}
                         <div className="space-y-2"><Label htmlFor="scolariteBase">Scolarité de base</Label><Input id="scolariteBase" type="number" value={scolariteBase} onChange={(e) => setScolariteBase(Number(e.target.value))} /></div>
+                        
+                        {/* Avance */}
                         <div className="space-y-2"><Label htmlFor="avance">Avance</Label><Input id="avance" type="number" value={avance} onChange={(e) => setAvance(Number(e.target.value))} /></div>
                     </div>
                     <DialogFooter>
