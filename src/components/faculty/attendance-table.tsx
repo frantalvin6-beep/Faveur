@@ -61,7 +61,7 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const teacher = allFaculty.find(f => f.id === teacherId);
-    const course = allAssignments.find(a => a.courseCode === courseCode);
+    const course = allAssignments.find(a => a.courseCode === courseCode && a.teacherId === teacherId);
     
     if (!teacher || !course || !date || !status) {
       alert("Veuillez remplir tous les champs obligatoires.");
@@ -150,24 +150,13 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
 }
 
 
-export function AttendanceTable({ data }: { data: TeacherAttendance[] }) {
-  const [attendance, setAttendance] = React.useState(data);
+export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: TeacherAttendance[], onAddEntry: (entry: TeacherAttendance) => void, onDeleteEntry: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  const filteredAttendance = attendance.filter((item) =>
+  const filteredAttendance = data.filter((item) =>
     item.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.courseName.toLowerCase().includes(searchTerm.toLowerCase())
-  ).sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-
-  const handleAddEntry = (newEntry: TeacherAttendance) => {
-    setAttendance(prev => [...prev, newEntry]);
-  };
-
-  const handleDelete = (id: string) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) {
-      setAttendance(attendance.filter(a => a.id !== id));
-    }
-  };
+  );
 
   return (
     <Card>
@@ -184,7 +173,7 @@ export function AttendanceTable({ data }: { data: TeacherAttendance[] }) {
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-xs"
             />
-            <AddAttendanceForm onAddEntry={handleAddEntry} />
+            <AddAttendanceForm onAddEntry={onAddEntry} />
           </div>
         </div>
       </CardHeader>
@@ -224,7 +213,7 @@ export function AttendanceTable({ data }: { data: TeacherAttendance[] }) {
                         <DropdownMenuItem onClick={() => alert("Modification bientôt disponible")}>
                           <Edit className="mr-2 h-4 w-4" /> Modifier
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleDelete(item.id)} className="text-destructive">
+                        <DropdownMenuItem onClick={() => onDeleteEntry(item.id)} className="text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" /> Supprimer
                         </DropdownMenuItem>
                       </DropdownMenuContent>
