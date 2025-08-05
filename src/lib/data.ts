@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance } from './types';
 
 export const students: Student[] = [
   { 
@@ -153,5 +153,12 @@ export const teacherWorkload: TeacherWorkload[] = [
     { id: 'TW003', teacherId: 'F003', teacherName: 'Dr. Ian Malcolm', courseName: 'Big Data Analytics', level: 'Master 2', semester: 'S2', plannedHours: 70, completedHours: 35 },
 ];
 
+export const teacherAttendance: TeacherAttendance[] = [
+    { id: 'ATT001', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'Intro au ML', courseCode: 'CS501', date: '2024-09-09', status: 'Présent' },
+    { id: 'ATT002', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Systèmes Embarqués', courseCode: 'EE402', date: '2024-09-09', status: 'Présent' },
+    { id: 'ATT003', teacherId: 'F003', teacherName: 'Dr. Ian Malcolm', courseName: 'Big Data Analytics', courseCode: 'BD601', date: '2024-09-10', status: 'Absent', remarks: 'Maladie' },
+    { id: 'ATT004', teacherId: 'F004', teacherName: 'Dr. Sarah Harding', courseName: 'Design Urbain', courseCode: 'AU201', date: '2024-09-11', status: 'Présent' },
+];
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload };
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance };

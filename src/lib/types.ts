@@ -106,3 +106,14 @@ export interface TeacherWorkload {
     plannedHours: number;
     completedHours: number;
 }
+
+export interface TeacherAttendance {
+  id: string;
+  teacherId: string;
+  teacherName: string;
+  courseName: string;
+  courseCode: string;
+  date: string;
+  status: 'Présent' | 'Absent' | 'Justifié';
+  remarks?: string;
+}

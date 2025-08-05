@@ -23,6 +23,7 @@ import {
   ClipboardCheck,
   CalendarPlus,
   Hourglass,
+  CheckSquare,
 } from 'lucide-react';
 
 import {
@@ -82,6 +83,7 @@ const navItems = [
         { href: '/faculty/assignments', label: 'Attribution des cours', icon: Briefcase },
         { href: '/faculty/schedule', label: 'Emploi du temps', icon: Clock },
         { href: '/faculty/workload', label: 'Charge horaire', icon: Hourglass },
+        { href: '/faculty/attendance', label: 'Feuille de présence', icon: CheckSquare },
     ]
   },
   { 
