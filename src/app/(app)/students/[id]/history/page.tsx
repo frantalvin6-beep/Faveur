@@ -171,7 +171,11 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
   const handleAddRecord = (record: AcademicRecord) => {
     const updatedStudents = students.map(s => {
       if (s.id === student.id) {
-        return { ...s, academicHistory: [...s.academicHistory, record] };
+        // Create a new academicHistory array with the new record
+        const newHistory = [...s.academicHistory, record];
+        // Sort the history to ensure chronological order (optional but good practice)
+        newHistory.sort((a, b) => a.year - b.year || a.semester.localeCompare(b.semester));
+        return { ...s, academicHistory: newHistory };
       }
       return s;
     });
@@ -202,7 +206,7 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
           {student.academicHistory.length > 0 ? (
             <Accordion type="single" collapsible className="w-full" defaultValue="item-0">
               {student.academicHistory.map((record, index) => (
-                <AccordionItem value={`item-${index}`} key={record.semester + record.year}>
+                <AccordionItem value={`item-${index}`} key={`${record.semester}-${record.year}-${index}`}>
                   <AccordionTrigger>
                     <div className="flex justify-between w-full pr-4">
                         <span className="font-semibold">{record.semester} - {record.year}</span>
