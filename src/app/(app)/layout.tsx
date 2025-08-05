@@ -117,12 +117,12 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     <SidebarMenuSub>
                         {item.subItems.map((subItem) => (
                              <SidebarMenuItem key={subItem.href}>
-                                <Link href={subItem.href} passHref>
-                                    <SidebarMenuSubButton isActive={pathname === subItem.href}>
-                                        <subItem.icon className="h-4 w-4" />
-                                        <span>{subItem.label}</span>
-                                    </SidebarMenuSubButton>
-                                </Link>
+                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                                  <Link href={subItem.href}>
+                                      <subItem.icon className="h-4 w-4" />
+                                      <span>{subItem.label}</span>
+                                  </Link>
+                                </SidebarMenuSubButton>
                              </SidebarMenuItem>
                         ))}
                     </SidebarMenuSub>
