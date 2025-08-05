@@ -26,11 +26,17 @@ export default function StudentsListPage() {
   const handleRename = (deptName: string) => alert(`La fonctionnalité pour renommer "${deptName}" sera bientôt disponible.`);
   const handleDelete = (deptName: string) => alert(`La fonctionnalité pour supprimer "${deptName}" sera bientôt disponible.`);
 
-  // Filter departments that have students or if there's a search term matching the department name
    const displayedDepartments = allDepartments.filter(dept => {
-        const studentsInDept = allStudents.some(s => s.department === dept.name);
-        const searchMatch = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
-        return studentsInDept || searchMatch;
+        const studentsInDept = getStudentsForDepartment(dept.name);
+        const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        if (!searchTerm) {
+            // If no search term, only show departments that have students
+            return allStudents.some(s => s.department === dept.name);
+        }
+        
+        // If there is a search term, show if the department name matches OR if there are students matching the search
+        return searchMatchInDeptName || studentsInDept.length > 0;
     });
 
 
@@ -52,7 +58,8 @@ export default function StudentsListPage() {
       {displayedDepartments.map((dept) => {
         const studentsForDept = getStudentsForDepartment(dept.name);
         
-        // Hide card if search term is active and no students are found for this department
+        // Hide card if there is a search term and no students were found for this department.
+        // But keep it if the search term matches the department name itself.
         if (searchTerm && studentsForDept.length === 0 && !dept.name.toLowerCase().includes(searchTerm.toLowerCase())) {
             return null;
         }

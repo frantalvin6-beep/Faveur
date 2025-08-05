@@ -26,9 +26,16 @@ export default function GradesPage() {
   };
   
   const displayedDepartments = allDepartments.filter(dept => {
-        const gradesInDept = allGrades.some(g => g.department === dept.name);
-        const searchMatch = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
-        return gradesInDept || searchMatch;
+        const gradesInDept = getGradesForDepartment(dept.name);
+        const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
+
+        if(!searchTerm) {
+            // If no search term, only show departments that have grades
+            return allGrades.some(g => g.department === dept.name);
+        }
+        
+        // If there is a search term, show if the department name matches OR if there are grades matching the search
+        return searchMatchInDeptName || gradesInDept.length > 0;
     });
 
   return (
