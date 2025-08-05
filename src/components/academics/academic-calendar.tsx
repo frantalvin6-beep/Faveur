@@ -63,17 +63,21 @@ export function AcademicCalendar() {
           const firstDayOfMonth = getDay(startOfMonth(month));
 
           return (
-            <div key={format(month, 'yyyy-MM')} className="rounded-lg border p-4">
-              <h3 className="font-bold text-center mb-2">{format(month, 'MMMM yyyy', { locale: fr })}</h3>
-              <div className="grid grid-cols-7 text-center text-xs text-muted-foreground">
-                {weekdays.map(day => <div key={day}>{day}</div>)}
+            <div key={format(month, 'yyyy-MM')} className="rounded-lg border">
+              <h3 className="font-bold text-center py-2 border-b">{format(month, 'MMMM yyyy', { locale: fr })}</h3>
+              <div className="grid grid-cols-7 text-center text-xs text-muted-foreground border-b">
+                {weekdays.map(day => <div key={day} className="py-1 border-r last:border-r-0">{day}</div>)}
               </div>
-              <div className="grid grid-cols-7 mt-2 text-sm">
-                {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`}></div>)}
-                {daysInMonth.map(day => {
+              <div className="grid grid-cols-7 text-sm">
+                {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} className="border-r border-b"></div>)}
+                {daysInMonth.map((day, index) => {
                     const event = getEventForDate(day);
+                    const colIndex = (firstDayOfMonth + index) % 7;
                     return (
-                        <div key={day.toString()} className="relative flex items-center justify-center h-8">
+                        <div key={day.toString()} className={cn(
+                            "relative flex items-center justify-center h-10 border-b",
+                             colIndex !== 6 && "border-r" // Add right border to all but last column
+                        )}>
                             <span className={cn(
                                 "flex items-center justify-center h-6 w-6 rounded-full",
                                 event && `${eventStyles[event.type]} cursor-pointer font-bold`,
@@ -86,6 +90,10 @@ export function AcademicCalendar() {
                         </div>
                     )
                 })}
+                 {/* Fill remaining cells to complete grid */}
+                {Array.from({ length: (7 - (firstDayOfMonth + daysInMonth.length) % 7) % 7 }).map((_, i) => (
+                    <div key={`fill-${i}`} className={cn("border-b", (firstDayOfMonth + daysInMonth.length + i) % 7 !== 6 && "border-r")}></div>
+                ))}
               </div>
             </div>
           );
