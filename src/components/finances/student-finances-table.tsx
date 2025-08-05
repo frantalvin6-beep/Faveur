@@ -49,13 +49,21 @@ function getStatusBadgeVariant(status: StudentFinance['statut']) {
   }
 }
 
-function UpdateAdvanceForm({ student, onUpdate }: { student: StudentFinance, onUpdate: (matricule: string, newAdvance: number) => void }) {
+function UpdateAdvanceForm({ student, onUpdate }: { student: StudentFinance, onUpdate: (updatedStudent: StudentFinance) => void }) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [newAdvance, setNewAdvance] = React.useState(student.avance);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        onUpdate(student.matricule, newAdvance);
+        
+        const updatedStudentData = { ...student, avance: newAdvance };
+        const calculated = calculerFinance(
+            updatedStudentData.inscription, updatedStudentData.fournitures, updatedStudentData.support, updatedStudentData.bourseType,
+            updatedStudentData.reduction, updatedStudentData.scolariteBase, updatedStudentData.latrine, updatedStudentData.session,
+            updatedStudentData.rattrapage, newAdvance
+        );
+        onUpdate({ ...updatedStudentData, ...calculated });
+        
         setIsOpen(false);
     };
     
@@ -97,34 +105,17 @@ function UpdateAdvanceForm({ student, onUpdate }: { student: StudentFinance, onU
 }
 
 
-export function StudentFinancesTable({ initialData }: { initialData: StudentFinance[] }) {
+export function StudentFinancesTable({ initialData, onUpdateStudent }: { initialData: StudentFinance[], onUpdateStudent: (student: StudentFinance) => void }) {
   const [finances, setFinances] = React.useState(initialData);
-  const [searchTerm, setSearchTerm] = React.useState('');
 
-  const filteredFinances = finances.filter(f =>
-    f.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.matricule.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    f.option.toLowerCase().includes(searchTerm.toLowerCase())
-  ).sort((a,b) => a.fullName.localeCompare(b.fullName));
+  React.useEffect(() => {
+    setFinances(initialData);
+  }, [initialData]);
   
-  const handleAdd = () => alert("L'ajout d'un nouvel étudiant sera bientôt disponible.");
   const handleExport = () => alert("L'exportation des données sera bientôt disponible.");
   
-  const handleUpdateAdvance = (matricule: string, newAdvance: number) => {
-    setFinances(prevFinances => {
-      return prevFinances.map(student => {
-        if (student.matricule === matricule) {
-            const updatedStudentData = { ...student, avance: newAdvance };
-            const calculated = calculerFinance(
-                updatedStudentData.inscription, updatedStudentData.fournitures, updatedStudentData.support, updatedStudentData.bourseType,
-                updatedStudentData.reduction, updatedStudentData.scolariteBase, updatedStudentData.latrine, updatedStudentData.session,
-                updatedStudentData.rattrapage, updatedStudentData.avance
-            );
-            return { ...updatedStudentData, ...calculated };
-        }
-        return student;
-      });
-    });
+  const handleUpdateAdvance = (updatedStudent: StudentFinance) => {
+    onUpdateStudent(updatedStudent);
   };
 
   return (
@@ -133,24 +124,12 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
         <div className="flex items-center justify-between">
           <div>
             <CardTitle>Suivi des Paiements</CardTitle>
-            <CardDescription>Détails financiers pour chaque étudiant.</CardDescription>
+            <CardDescription>Détails financiers pour chaque étudiant de ce groupe.</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
-            <Input
-              placeholder="Rechercher par nom, matricule..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="max-w-xs"
-            />
-            <Button onClick={handleAdd} variant="outline">
-              <PlusCircle className="mr-2 h-4 w-4" />
-              Ajouter
-            </Button>
-            <Button onClick={handleExport}>
-              <FileSpreadsheet className="mr-2 h-4 w-4" />
-              Exporter
-            </Button>
-          </div>
+          <Button onClick={handleExport}>
+            <FileSpreadsheet className="mr-2 h-4 w-4" />
+            Exporter ce groupe
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -180,7 +159,7 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredFinances.length > 0 ? filteredFinances.map((f) => (
+              {finances.length > 0 ? finances.map((f) => (
                 <TableRow key={f.matricule}>
                   <TableCell className="font-mono text-xs">{f.matricule}</TableCell>
                   <TableCell className="font-medium">{f.fullName}</TableCell>
@@ -217,7 +196,7 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={19} className="h-24 text-center">Aucun résultat.</TableCell>
+                  <TableCell colSpan={19} className="h-24 text-center">Aucun étudiant dans ce groupe.</TableCell>
                 </TableRow>
               )}
             </TableBody>
