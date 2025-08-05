@@ -11,7 +11,6 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { PlusCircle, MoreHorizontal, Edit, Trash2, BookOpen } from 'lucide-react';
 import {
   DropdownMenu,
@@ -22,16 +21,12 @@ import {
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Student } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { students as initialStudents } from '@/lib/data';
 
-// Props updated to remove Card wrapper elements
 export function StudentTable({ data }: { data: Student[] }) {
   const [students, setStudents] = React.useState(data);
 
-  // This component will now receive filtered data, so we don't need internal filtering.
-  // The state will be managed by the parent component to handle deletions.
   React.useEffect(() => {
     setStudents(data);
   }, [data]);
@@ -41,8 +36,6 @@ export function StudentTable({ data }: { data: Student[] }) {
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
     if(confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
-        // We filter the local state for an immediate UI update.
-        // A more robust solution would involve updating the source of truth in `data.ts` or via an API call and re-rendering.
         setStudents(currentStudents => currentStudents.filter(s => s.id !== id));
     }
   };
@@ -51,7 +44,7 @@ export function StudentTable({ data }: { data: Student[] }) {
   return (
     <>
         <div className="flex items-start justify-between mb-4">
-            <CardDescription>Consulter et gérer les dossiers des étudiants de cette filière.</CardDescription>
+            <CardDescription>Consulter et gérer les dossiers des étudiants.</CardDescription>
             <Button onClick={handleAdd}>
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Ajouter un étudiant
@@ -112,7 +105,7 @@ export function StudentTable({ data }: { data: Student[] }) {
             )) : (
                 <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                        Aucun étudiant trouvé pour les critères actuels.
+                        Aucun étudiant trouvé pour cette option.
                     </TableCell>
                 </TableRow>
             )}
