@@ -137,5 +137,5 @@ export interface Message {
     url: string;
   };
   sentAt: string;
-  status: 'Envoyé' | 'Lu' | 'Non lu';
+  status: 'Envoyé' | 'Lu' | 'Non lu' | 'Archivé' | 'Supprimé';
 }
