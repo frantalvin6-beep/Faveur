@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, Edit, PlusCircle, FileSpreadsheet } from 'lucide-react';
+import { MoreHorizontal, Edit, PlusCircle, FileSpreadsheet, Loader2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,7 +21,18 @@ import {
 import { StudentFinance } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
+import { calculerFinance } from '@/lib/data';
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
@@ -38,6 +49,54 @@ function getStatusBadgeVariant(status: StudentFinance['statut']) {
   }
 }
 
+function UpdateAdvanceForm({ student, onUpdate }: { student: StudentFinance, onUpdate: (matricule: string, newAdvance: number) => void }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [newAdvance, setNewAdvance] = React.useState(student.avance);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onUpdate(student.matricule, newAdvance);
+        setIsOpen(false);
+    };
+    
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DropdownMenuTrigger asChild>
+                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                    <Edit className="mr-2 h-4 w-4" />
+                    Mettre à jour l'avance
+                </DropdownMenuItem>
+            </DropdownMenuTrigger>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Mettre à jour l'avance pour {student.fullName}</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="grid gap-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="current-total">Total à Payer</Label>
+                            <Input id="current-total" value={formatCurrency(student.totalAPayer)} disabled />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="current-advance">Avance Actuelle</Label>
+                            <Input id="current-advance" value={formatCurrency(student.avance)} disabled />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new-advance">Nouvelle Avance</Label>
+                            <Input id="new-advance" type="number" value={newAdvance} onChange={(e) => setNewAdvance(Number(e.target.value))} />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+                        <Button type="submit">Enregistrer</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    )
+}
+
+
 export function StudentFinancesTable({ initialData }: { initialData: StudentFinance[] }) {
   const [finances, setFinances] = React.useState(initialData);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -46,11 +105,27 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
     f.fullName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     f.matricule.toLowerCase().includes(searchTerm.toLowerCase()) ||
     f.option.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  ).sort((a,b) => a.fullName.localeCompare(b.fullName));
   
   const handleAdd = () => alert("L'ajout d'un nouvel étudiant sera bientôt disponible.");
   const handleExport = () => alert("L'exportation des données sera bientôt disponible.");
-  const handleEdit = (matricule: string) => alert(`La modification pour ${matricule} sera bientôt disponible.`);
+  
+  const handleUpdateAdvance = (matricule: string, newAdvance: number) => {
+    setFinances(prevFinances => {
+      return prevFinances.map(student => {
+        if (student.matricule === matricule) {
+            const updatedStudentData = { ...student, avance: newAdvance };
+            const calculated = calculerFinance(
+                updatedStudentData.inscription, updatedStudentData.fournitures, updatedStudentData.support, updatedStudentData.bourseType,
+                updatedStudentData.reduction, updatedStudentData.scolariteBase, updatedStudentData.latrine, updatedStudentData.session,
+                updatedStudentData.rattrapage, updatedStudentData.avance
+            );
+            return { ...updatedStudentData, ...calculated };
+        }
+        return student;
+      });
+    });
+  };
 
   return (
     <Card>
@@ -135,10 +210,7 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEdit(f.matricule)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Mettre à jour l'avance
-                        </DropdownMenuItem>
+                         <UpdateAdvanceForm student={f} onUpdate={handleUpdateAdvance} />
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

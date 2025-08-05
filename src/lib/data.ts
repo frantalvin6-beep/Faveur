@@ -147,7 +147,7 @@ export const examSchedule: ExamSchedule[] = [
     { id: 'ES003', date: '2025-08-17', time: '14:00-16:00', courseName: 'Bases de données', supervisor: 'P. Ngoma', room: 'A3', level: 'L3', examType: 'Rattrapage' },
 ];
 
-export const teacherWorkload: TeacherWorkload[] = [
+export let teacherWorkload: TeacherWorkload[] = [
     { id: 'TW001', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'Introduction au Machine Learning', level: 'Master 1', semester: 'S1', plannedHours: 60, completedHours: 45 },
     { id: 'TW002', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Conception de Systèmes Embarqués', level: 'Licence 3', semester: 'S1', plannedHours: 50, completedHours: 50 },
     { id: 'TW003', teacherId: 'F003', teacherName: 'Dr. Ian Malcolm', courseName: 'Big Data Analytics', level: 'Master 2', semester: 'S2', plannedHours: 70, completedHours: 35 },
@@ -200,7 +200,7 @@ export const messages: Message[] = [
   },
 ];
 
-function calculerFinance(
+export function calculerFinance(
   inscription: number, fournitures: number, support: number, 
   bourseType: StudentFinance['bourseType'], reduction: number, scolariteBase: number,
   latrine: number, session: number, rattrapage: number, avance: number
