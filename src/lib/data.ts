@@ -1,11 +1,11 @@
-import type { Student, Faculty, Department } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord } from './types';
 
 export const students: Student[] = [
   { 
     id: 'S001', 
     name: 'Alice Johnson', 
     email: 'alice.j@university.edu', 
-    department: 'Intelligence Artificielle', 
+    department: 'Intelligence Artificielle (IA)', 
     year: 3, 
     gpa: 3.8, 
     enrollmentDate: '2021-09-01',
@@ -109,3 +109,5 @@ export const departments: Department[] = [
     { id: 'DEP05', name: 'Filière Digital Business', head: 'Mme. Sheryl Sandberg', facultyCount: 25, studentCount: 250, creationDate: '2021-08-01' },
     { id: 'DEP05-OPT01', name: 'Ressources Humaines axées Digital', head: 'Mme. Sheryl Sandberg', facultyCount: 25, studentCount: 250, creationDate: '2021-08-01' },
 ];
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord };

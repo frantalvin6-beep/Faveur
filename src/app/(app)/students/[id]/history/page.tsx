@@ -1,8 +1,9 @@
 'use client'
 
+import { useState } from 'react'
 import { notFound } from 'next/navigation'
-import { students } from '@/lib/data'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { students as initialStudents, Student, AcademicRecord, CourseRecord } from '@/lib/data'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   Table,
@@ -18,6 +19,19 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion"
+import { Button } from '@/components/ui/button'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { PlusCircle, Trash2 } from 'lucide-react'
 
 
 function getDecisionBadgeVariant(decision: string) {
@@ -33,12 +47,124 @@ function getDecisionBadgeVariant(decision: string) {
   }
 }
 
+function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecord: (record: AcademicRecord) => void }) {
+  const [semester, setSemester] = useState('')
+  const [year, setYear] = useState(new Date().getFullYear())
+  const [courses, setCourses] = useState<Partial<CourseRecord>[]>([{ name: '', grade: undefined }])
+  const [isOpen, setIsOpen] = useState(false);
+
+  const handleAddCourse = () => {
+    setCourses([...courses, { name: '', grade: undefined }])
+  }
+
+  const handleRemoveCourse = (index: number) => {
+    setCourses(courses.filter((_, i) => i !== index))
+  }
+
+  const handleCourseChange = (index: number, field: 'name' | 'grade', value: string | number) => {
+    const newCourses = [...courses]
+    newCourses[index] = { ...newCourses[index], [field]: value }
+    setCourses(newCourses)
+  }
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const finalCourses = courses.filter(c => c.name && c.grade !== undefined) as CourseRecord[];
+    if (!semester || !year || finalCourses.length === 0) {
+      alert("Veuillez remplir tous les champs requis.");
+      return;
+    }
+    
+    const totalPoints = finalCourses.reduce((acc, course) => acc + course.grade, 0);
+    const gpa = totalPoints / finalCourses.length;
+    
+    const newRecord: AcademicRecord = {
+      semester,
+      year,
+      courses: finalCourses,
+      gpa,
+      decision: gpa >= 10 ? 'Admis' : 'Échec', // Simple decision logic
+    };
+
+    onAddRecord(newRecord);
+    setIsOpen(false);
+    // Reset form
+    setSemester('');
+    setYear(new Date().getFullYear());
+    setCourses([{ name: '', grade: undefined }]);
+  }
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>Saisir les notes</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[625px]">
+        <DialogHeader>
+          <DialogTitle>Saisie des notes pour {student.name}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+            <div className="grid gap-4 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                      <Label htmlFor="semester">Semestre</Label>
+                      <Input id="semester" placeholder="Ex: Semestre 3" value={semester} onChange={e => setSemester(e.target.value)} required />
+                  </div>
+                  <div className="space-y-2">
+                      <Label htmlFor="year">Année</Label>
+                      <Input id="year" type="number" placeholder="Ex: 2024" value={year} onChange={e => setYear(parseInt(e.target.value))} required />
+                  </div>
+              </div>
+              <div>
+                <Label>Matières et notes</Label>
+                <div className="space-y-2 mt-2">
+                  {courses.map((course, index) => (
+                    <div key={index} className="flex items-center gap-2">
+                      <Input placeholder="Nom de la matière" value={course.name} onChange={e => handleCourseChange(index, 'name', e.target.value)} required />
+                      <Input type="number" placeholder="Note" value={course.grade ?? ''} onChange={e => handleCourseChange(index, 'grade', parseFloat(e.target.value))} required min="0" max="20" step="0.5" />
+                      <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveCourse(index)} disabled={courses.length === 1}>
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                 <Button type="button" variant="outline" size="sm" onClick={handleAddCourse} className="mt-2">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Ajouter une matière
+                </Button>
+              </div>
+            </div>
+            <DialogFooter>
+              <DialogClose asChild>
+                <Button type="button" variant="secondary">Annuler</Button>
+              </DialogClose>
+              <Button type="submit">Enregistrer les notes</Button>
+            </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  )
+}
+
+
 export default function StudentHistoryPage({ params }: { params: { id: string } }) {
+  const [students, setStudents] = useState(initialStudents);
   const student = students.find((s) => s.id === params.id)
 
   if (!student) {
     notFound()
   }
+  
+  const handleAddRecord = (record: AcademicRecord) => {
+    const updatedStudents = students.map(s => {
+      if (s.id === student.id) {
+        return { ...s, academicHistory: [...s.academicHistory, record] };
+      }
+      return s;
+    });
+    setStudents(updatedStudents);
+  };
+
 
   return (
     <div className="space-y-6">
@@ -100,6 +226,9 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
             </div>
           )}
         </CardContent>
+         <CardFooter>
+            <GradeEntryForm student={student} onAddRecord={handleAddRecord} />
+        </CardFooter>
       </Card>
     </div>
   )
