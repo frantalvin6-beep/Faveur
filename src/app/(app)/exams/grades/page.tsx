@@ -8,7 +8,7 @@ import { Input } from '@/components/ui/input';
 import { ExamGrade } from '@/lib/types';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { BookOpen } from 'lucide-react';
+import { Users } from 'lucide-react';
 
 export default function GradesPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,7 +36,7 @@ export default function GradesPage() {
        <div className="flex items-center justify-between">
          <div>
             <h1 className="text-3xl font-bold">Notes par Option</h1>
-            <p className="text-muted-foreground">Consultez et gérez les notes des étudiants, regroupées par option.</p>
+            <p className="text-muted-foreground">Consultez et géerez les notes des étudiants, regroupées par option.</p>
          </div>
          <Input
             placeholder="Rechercher une note ou une option..."
@@ -60,8 +60,8 @@ export default function GradesPage() {
                     <CardTitle>{dept.name}</CardTitle>
                     <Button asChild variant="outline">
                         <Link href="/students/list">
-                           <BookOpen className="mr-2 h-4 w-4" />
-                           Aller à la saisie
+                           <Users className="mr-2 h-4 w-4" />
+                           Gérer les étudiants
                         </Link>
                     </Button>
                 </div>
