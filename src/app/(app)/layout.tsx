@@ -60,6 +60,7 @@ const navItems = [
         { href: '/academics/calendar', label: 'Calendrier académique', icon: Calendar },
     ]
   },
+   { href: '/students', icon: Users, label: 'Étudiants' },
   { 
     id: 'faculty',
     icon: UserSquare, 
@@ -70,7 +71,6 @@ const navItems = [
         { href: '/faculty/schedule', label: 'Emploi du temps', icon: Clock },
     ]
   },
-  { href: '/students', icon: Users, label: 'Étudiants' },
   { href: '/exams', icon: PencilRuler, label: 'Examens et notes' },
   { href: '/communication', icon: MessageSquare, label: 'Communication' },
   { href: '/reports', icon: FileText, label: 'Rapports' },

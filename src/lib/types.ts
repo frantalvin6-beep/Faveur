@@ -17,3 +17,12 @@ export interface Faculty {
   specialization: string;
   hireDate: string;
 }
+
+export interface Department {
+    id: string;
+    name: string;
+    head: string;
+    facultyCount: number;
+    studentCount: number;
+    creationDate: string;
+}

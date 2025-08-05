@@ -1,4 +1,4 @@
-import type { Student, Faculty } from './types';
+import type { Student, Faculty, Department } from './types';
 
 export const students: Student[] = [
   { id: 'S001', name: 'Alice Johnson', email: 'alice.j@university.edu', department: 'Informatique', year: 3, gpa: 3.8, enrollmentDate: '2021-09-01' },
@@ -16,4 +16,11 @@ export const faculty: Faculty[] = [
   { id: 'F003', name: 'Dr. Ian Malcolm', email: 'ian.m@university.edu', department: 'Mathématiques', position: 'Professeur', specialization: 'Théorie du chaos', hireDate: '2012-01-10' },
   { id: 'F004', name: 'Dr. Sarah Harding', email: 'sarah.h@university.edu', department: 'Histoire', position: 'Professeur assistant', specialization: 'Civilisations anciennes', hireDate: '2018-09-01' },
   { id: 'F005', name: 'Dr. John Hammond', email: 'john.h@university.edu', department: 'Commerce', position: 'Chargé de cours', specialization: 'Entrepreneuriat', hireDate: '2020-02-25' },
+];
+
+export const departments: Department[] = [
+    { id: 'DEP01', name: 'Faculté des Sciences', head: 'Dr. Reed Richards', facultyCount: 58, studentCount: 850, creationDate: '1985-05-20' },
+    { id: 'DEP02', name: 'Faculté des Arts et Humanités', head: 'Dr. Indiana Jones', facultyCount: 45, studentCount: 650, creationDate: '1992-09-10' },
+    { id: 'DEP03', name: 'École d\'Ingénierie', head: 'Dr. Tony Stark', facultyCount: 72, studentCount: 1200, creationDate: '1998-03-15' },
+    { id: 'DEP04', name: 'École de Commerce', head: 'Prof. Gordon Gekko', facultyCount: 38, studentCount: 950, creationDate: '2001-08-01' },
 ];
