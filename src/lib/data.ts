@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry } from './types';
 
 export const students: Student[] = [
   { 
@@ -125,5 +125,14 @@ export const courseAssignments: CourseAssignment[] = [
     { id: 'CA005', teacherId: 'F004', teacherName: 'Dr. Sarah Harding', courseName: 'Design Urbain Durable', courseCode: 'AU201', department: 'Architecture et Urbanisme', level: 'Licence 2', semester: 'Semestre 1', hourlyVolume: 45 },
 ];
 
+export const scheduleData: ScheduleEntry[] = [
+    { id: 'SCH001', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'Intro au ML', courseCode: 'CS501', dayOfWeek: 'Lundi', startTime: '08:00', endTime: '10:00', location: 'Amphi A', level: 'Master 1' },
+    { id: 'SCH002', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Systèmes Embarqués', courseCode: 'EE402', dayOfWeek: 'Lundi', startTime: '10:00', endTime: '12:00', location: 'Salle B101', level: 'Licence 3' },
+    { id: 'SCH003', teacherId: 'F003', teacherName: 'Dr. Ian Malcolm', courseName: 'Big Data Analytics', courseCode: 'BD601', dayOfWeek: 'Mardi', startTime: '09:00', endTime: '12:00', location: 'Labo C', level: 'Master 2' },
+    { id: 'SCH004', teacherId: 'F004', teacherName: 'Dr. Sarah Harding', courseName: 'Design Urbain', courseCode: 'AU201', dayOfWeek: 'Mercredi', startTime: '14:00', endTime: '16:00', location: 'Atelier D', level: 'Licence 2' },
+    { id: 'SCH005', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'NLP', courseCode: 'CS505', dayOfWeek: 'Jeudi', startTime: '10:00', endTime: '12:00', location: 'Amphi A', level: 'Master 2' },
+    { id: 'SCH006', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Systèmes Embarqués (TP)', courseCode: 'EE402', dayOfWeek: 'Vendredi', startTime: '08:00', endTime: '10:00', location: 'Salle B102', level: 'Licence 3' },
+];
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment };
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry };

@@ -55,3 +55,16 @@ export interface CourseAssignment {
   semester: string;
   hourlyVolume: number;
 }
+
+export interface ScheduleEntry {
+  id: string;
+  teacherId: string;
+  teacherName: string;
+  courseName: string;
+  courseCode: string;
+  dayOfWeek: 'Lundi' | 'Mardi' | 'Mercredi' | 'Jeudi' | 'Vendredi';
+  startTime: string;
+  endTime: string;
+  location: string;
+  level: string;
+}
