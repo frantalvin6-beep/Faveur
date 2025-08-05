@@ -31,7 +31,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { PlusCircle, Trash2 } from 'lucide-react'
+import { PlusCircle, Trash2, Loader2 } from 'lucide-react'
+import { calculateGpa } from '@/ai/flows/calculate-student-gpa'
 
 
 function getDecisionBadgeVariant(decision: string) {
@@ -52,6 +53,7 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
   const [year, setYear] = useState(new Date().getFullYear())
   const [courses, setCourses] = useState<Partial<CourseRecord>[]>([{ name: '', grade: undefined }])
   const [isOpen, setIsOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleAddCourse = () => {
     setCourses([...courses, { name: '', grade: undefined }])
@@ -67,7 +69,7 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
     setCourses(newCourses)
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const finalCourses = courses.filter(c => c.name && c.grade !== undefined) as CourseRecord[];
     if (!semester || !year || finalCourses.length === 0) {
@@ -75,23 +77,31 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
       return;
     }
     
-    const totalPoints = finalCourses.reduce((acc, course) => acc + course.grade, 0);
-    const gpa = totalPoints / finalCourses.length;
+    setIsLoading(true);
     
-    const newRecord: AcademicRecord = {
-      semester,
-      year,
-      courses: finalCourses,
-      gpa,
-      decision: gpa >= 10 ? 'Admis' : 'Échec', // Simple decision logic
-    };
+    try {
+        const result = await calculateGpa({ courses: finalCourses });
 
-    onAddRecord(newRecord);
-    setIsOpen(false);
-    // Reset form
-    setSemester('');
-    setYear(new Date().getFullYear());
-    setCourses([{ name: '', grade: undefined }]);
+        const newRecord: AcademicRecord = {
+          semester,
+          year,
+          courses: finalCourses,
+          gpa: result.gpa,
+          decision: result.decision,
+        };
+
+        onAddRecord(newRecord);
+        setIsOpen(false);
+        // Reset form
+        setSemester('');
+        setYear(new Date().getFullYear());
+        setCourses([{ name: '', grade: undefined }]);
+    } catch (error) {
+        console.error("Failed to calculate GPA with AI:", error);
+        alert("Une erreur est survenue lors du calcul de la moyenne. Veuillez réessayer.");
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -120,7 +130,7 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
                 <div className="space-y-2 mt-2">
                   {courses.map((course, index) => (
                     <div key={index} className="flex items-center gap-2">
-                      <Input placeholder="Nom de la matière" value={course.name} onChange={e => handleCourseChange(index, 'name', e.target.value)} required />
+                      <Input placeholder="Nom de la matière" value={course.name ?? ''} onChange={e => handleCourseChange(index, 'name', e.target.value)} required />
                       <Input type="number" placeholder="Note" value={course.grade ?? ''} onChange={e => handleCourseChange(index, 'grade', parseFloat(e.target.value))} required min="0" max="20" step="0.5" />
                       <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveCourse(index)} disabled={courses.length === 1}>
                         <Trash2 className="h-4 w-4" />
@@ -136,9 +146,12 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
             </div>
             <DialogFooter>
               <DialogClose asChild>
-                <Button type="button" variant="secondary">Annuler</Button>
+                <Button type="button" variant="secondary" disabled={isLoading}>Annuler</Button>
               </DialogClose>
-              <Button type="submit">Enregistrer les notes</Button>
+              <Button type="submit" disabled={isLoading}>
+                {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                Enregistrer les notes
+              </Button>
             </DialogFooter>
         </form>
       </DialogContent>
