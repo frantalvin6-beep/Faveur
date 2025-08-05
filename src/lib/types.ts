@@ -6,6 +6,7 @@ export interface Student {
   year: number;
   gpa: number;
   enrollmentDate: string;
+  academicHistory: AcademicRecord[];
 }
 
 export interface Faculty {
@@ -25,4 +26,17 @@ export interface Department {
     facultyCount: number;
     studentCount: number;
     creationDate: string;
+}
+
+export interface AcademicRecord {
+  semester: string;
+  year: number;
+  courses: CourseRecord[];
+  gpa: number;
+  decision: 'Admis' | 'Échec' | 'Redoublant';
+}
+
+export interface CourseRecord {
+  name: string;
+  grade: number;
 }
