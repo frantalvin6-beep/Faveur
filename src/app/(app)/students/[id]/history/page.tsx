@@ -193,6 +193,7 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
         <CardContent className="grid md:grid-cols-2 gap-4">
           <div><span className="font-semibold">Matricule:</span> {student.id}</div>
           <div><span className="font-semibold">Email:</span> {student.email}</div>
+          <div><span className="font-semibold">Sexe:</span> {student.gender}</div>
           <div><span className="font-semibold">Département:</span> {student.department}</div>
           <div><span className="font-semibold">Année d'inscription:</span> {new Date(student.enrollmentDate).getFullYear()}</div>
         </CardContent>

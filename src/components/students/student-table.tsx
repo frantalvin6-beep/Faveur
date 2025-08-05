@@ -59,6 +59,7 @@ export function StudentTable({ data }: { data: Student[] }) {
               <TableHead>Département/Option</TableHead>
               <TableHead className="hidden sm:table-cell">Année</TableHead>
               <TableHead className="hidden sm:table-cell">Moyenne</TableHead>
+              <TableHead>Sexe</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -70,6 +71,7 @@ export function StudentTable({ data }: { data: Student[] }) {
                 <TableCell><Badge variant="outline">{student.department}</Badge></TableCell>
                 <TableCell className="hidden sm:table-cell">{student.year}</TableCell>
                 <TableCell className="hidden sm:table-cell">{student.gpa.toFixed(2)}</TableCell>
+                <TableCell>{student.gender}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -104,7 +106,7 @@ export function StudentTable({ data }: { data: Student[] }) {
               </TableRow>
             )) : (
                 <TableRow>
-                    <TableCell colSpan={6} className="h-24 text-center">
+                    <TableCell colSpan={7} className="h-24 text-center">
                         Aucun étudiant trouvé pour cette option.
                     </TableCell>
                 </TableRow>
