@@ -97,7 +97,14 @@ const navItems = [
   },
   { href: '/communication', icon: MessageSquare, label: 'Communication' },
   { href: '/reports', icon: FileText, label: 'Rapports' },
-  { href: '/finances', icon: DollarSign, label: 'Finances' },
+  { 
+    id: 'finances',
+    icon: DollarSign, 
+    label: 'Finances',
+    subItems: [
+        { href: '/finances/students', label: 'Finances Étudiants', icon: Users },
+    ]
+  },
   { href: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 

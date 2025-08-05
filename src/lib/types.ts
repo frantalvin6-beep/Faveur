@@ -139,3 +139,25 @@ export interface Message {
   sentAt: string;
   status: 'Envoyé' | 'Lu' | 'Non lu' | 'Archivé' | 'Supprimé';
 }
+
+export interface StudentFinance {
+  matricule: string;
+  fullName: string;
+  level: string;
+  option: string;
+  inscription: number;
+  semester: 'Pair' | 'Impair';
+  fournitures: number;
+  support: number;
+  bourseType: 'Non boursier' | 'Boursier' | 'Partiellement boursier';
+  reduction: number;
+  scolariteBase: number;
+  scolariteCalculee: number;
+  latrine: number;
+  session: number;
+  rattrapage: number;
+  totalAPayer: number;
+  avance: number;
+  reste: number;
+  statut: 'Finalisé' | 'Non finalisé';
+}

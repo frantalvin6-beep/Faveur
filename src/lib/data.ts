@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance } from './types';
 
 export const students: Student[] = [
   { 
@@ -200,5 +200,44 @@ export const messages: Message[] = [
   },
 ];
 
+function calculerFinance(
+  inscription: number, fournitures: number, support: number, 
+  bourseType: StudentFinance['bourseType'], reduction: number, scolariteBase: number,
+  latrine: number, session: number, rattrapage: number, avance: number
+) {
+  let scolariteCalculee = 0;
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message };
+  if (bourseType === "Boursier") {
+    scolariteCalculee = 0;
+  } else if (bourseType === "Partiellement boursier") {
+    scolariteCalculee = scolariteBase - (scolariteBase * reduction / 100);
+  } else {
+    scolariteCalculee = scolariteBase;
+  }
+
+  const totalAPayer = inscription + fournitures + support + scolariteCalculee + latrine + session + rattrapage;
+  const reste = totalAPayer - avance;
+  const statut: StudentFinance['statut'] = reste <= 0 ? "Finalisé" : "Non finalisé";
+
+  return { scolariteCalculee, totalAPayer, reste, statut };
+}
+
+const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'totalAPayer' | 'reste' | 'statut'>[] = [
+    { matricule: '2023-001', fullName: 'Alain Nkouka', level: 'Licence 1', option: 'Informatique', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 5000, avance: 300000 },
+    { matricule: '2023-002', fullName: 'Sarah Koumba', level: 'Licence 2', option: 'Gestion', inscription: 50000, semester: 'Pair', fournitures: 20000, support: 10000, bourseType: 'Boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 98000 }, // Avance adjusted to match finalisé status
+    { matricule: '2023-003', fullName: 'Paul Ngoma', level: 'Licence 3', option: 'Réseaux', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 10000, avance: 350000 },
+    { matricule: '2023-004', fullName: 'Marie Iloki', level: 'Licence 1', option: 'Informatique', inscription: 50000, semester: 'Pair', fournitures: 20000, support: 10000, bourseType: 'Partiellement boursier', reduction: 30, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 150000 },
+    { matricule: '2023-005', fullName: 'Kevin Elenga', level: 'Licence 2', option: 'Big Data', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 5000, avance: 250000 },
+];
+
+export const studentFinances: StudentFinance[] = studentFinancesData.map(data => {
+    const calculated = calculerFinance(
+        data.inscription, data.fournitures, data.support, data.bourseType,
+        data.reduction, data.scolariteBase, data.latrine, data.session,
+        data.rattrapage, data.avance
+    );
+    return { ...data, ...calculated };
+});
+
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance };
