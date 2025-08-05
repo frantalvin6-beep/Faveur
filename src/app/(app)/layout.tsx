@@ -10,6 +10,7 @@ import {
   Users,
   UserSquare,
   Package2,
+  Landmark,
 } from 'lucide-react';
 
 import {
@@ -33,12 +34,14 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
+import { SheetTitle } from '@/components/ui/sheet';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
   { href: '/students', icon: Users, label: 'Students' },
   { href: '/faculty', icon: UserSquare, label: 'Faculty' },
   { href: '/reports', icon: FileText, label: 'Reports' },
+  { href: '/finances', icon: Landmark, label: 'Finances' },
   { href: '/settings', icon: Settings, label: 'Settings' },
 ];
 
@@ -53,6 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Package2 className="h-6 w-6" />
             <span className="text-lg font-semibold">Campus Central</span>
           </Link>
+          <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
