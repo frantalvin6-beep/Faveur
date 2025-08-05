@@ -5,18 +5,19 @@ import {
   eachDayOfInterval,
   endOfMonth,
   format,
-  getDate,
-  getDay,
-  isSameMonth,
   startOfMonth,
-  startOfYear,
   addMonths,
+  subMonths,
   isSameDay,
+  getDay,
+  startOfWeek,
+  endOfWeek,
 } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const academicEvents = [
   { date: '2024-09-02', event: 'Rentrée universitaire', type: 'event' as const },
@@ -44,60 +45,68 @@ const getEventForDate = (date: Date) => {
 }
 
 export function AcademicCalendar() {
-  const currentYear = new Date();
-  const months = Array.from({ length: 12 }, (_, i) => startOfMonth(addMonths(startOfYear(currentYear), i)));
-  const weekdays = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+  const [currentMonth, setCurrentMonth] = React.useState(new Date());
+
+  const firstDayCurrentMonth = startOfMonth(currentMonth);
+
+  const daysInMonth = eachDayOfInterval({
+    start: startOfWeek(firstDayCurrentMonth, { locale: fr }),
+    end: endOfWeek(endOfMonth(firstDayCurrentMonth), { locale: fr }),
+  });
+  
+  const weekdays = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi', 'Dimanche'];
+
+  const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
+  const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
+
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Calendrier Annuel {format(currentYear, 'yyyy')}</CardTitle>
-        <CardDescription>Vue d'ensemble de l'année académique. Passez sur un événement pour voir les détails.</CardDescription>
-      </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {months.map(month => {
-          const daysInMonth = eachDayOfInterval({
-            start: startOfMonth(month),
-            end: endOfMonth(month),
-          });
-          const firstDayOfMonth = getDay(startOfMonth(month));
-
-          return (
-            <div key={format(month, 'yyyy-MM')} className="rounded-lg border">
-              <h3 className="font-bold text-center py-2 border-b">{format(month, 'MMMM yyyy', { locale: fr })}</h3>
-              <div className="grid grid-cols-7 text-center text-xs text-muted-foreground border-b">
-                {weekdays.map(day => <div key={day} className="py-1 border-r last:border-r-0">{day}</div>)}
-              </div>
-              <div className="grid grid-cols-7 text-sm">
-                {Array.from({ length: firstDayOfMonth }).map((_, i) => <div key={`empty-${i}`} className="border-r border-b"></div>)}
-                {daysInMonth.map((day, index) => {
-                    const event = getEventForDate(day);
-                    const colIndex = (firstDayOfMonth + index) % 7;
-                    return (
-                        <div key={day.toString()} className={cn(
-                            "relative flex items-center justify-center h-10 border-b",
-                             colIndex !== 6 && "border-r" // Add right border to all but last column
-                        )}>
-                            <span className={cn(
-                                "flex items-center justify-center h-6 w-6 rounded-full",
-                                event && `${eventStyles[event.type]} cursor-pointer font-bold`,
-                                isSameDay(day, new Date()) && "bg-primary text-primary-foreground",
-                            )}
-                            title={event ? event.event : undefined}
-                            >
-                                {format(day, 'd')}
-                            </span>
-                        </div>
-                    )
-                })}
-                 {/* Fill remaining cells to complete grid */}
-                {Array.from({ length: (7 - (firstDayOfMonth + daysInMonth.length) % 7) % 7 }).map((_, i) => (
-                    <div key={`fill-${i}`} className={cn("border-b", (firstDayOfMonth + daysInMonth.length + i) % 7 !== 6 && "border-r")}></div>
-                ))}
-              </div>
+        <div className="flex items-center justify-between">
+            <div>
+                <CardTitle>Calendrier académique</CardTitle>
+                <CardDescription>Vue mensuelle des événements importants.</CardDescription>
             </div>
-          );
-        })}
+            <div className="flex items-center gap-2">
+                <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
+                    <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <h2 className="text-xl font-semibold capitalize">{format(currentMonth, 'MMMM yyyy', { locale: fr })}</h2>
+                <Button variant="outline" size="icon" onClick={goToNextMonth}>
+                    <ChevronRight className="h-4 w-4" />
+                </Button>
+            </div>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-7 border-t border-l">
+            {weekdays.map(day => (
+              <div key={day} className="text-center font-semibold py-2 border-b border-r bg-muted/50">{day}</div>
+            ))}
+            {daysInMonth.map((day) => {
+              const event = getEventForDate(day);
+              const isCurrentMonth = format(day, 'M') === format(currentMonth, 'M');
+              return (
+                <div key={day.toString()} className={cn(
+                    "h-32 p-2 border-b border-r flex flex-col",
+                    !isCurrentMonth && "bg-muted/30 text-muted-foreground"
+                )}>
+                    <span className={cn(
+                        "font-medium",
+                        isSameDay(day, new Date()) && "text-primary font-bold"
+                    )}>
+                        {format(day, 'd')}
+                    </span>
+                    {event && isCurrentMonth && (
+                      <div className={cn("mt-1 p-1 rounded-md text-xs", eventStyles[event.type])}>
+                        {event.event}
+                      </div>
+                    )}
+                </div>
+              )
+            })}
+        </div>
       </CardContent>
     </Card>
   );
