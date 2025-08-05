@@ -19,6 +19,7 @@ import {
   Briefcase,
   Clock,
   Building,
+  BarChart3,
 } from 'lucide-react';
 
 import {
@@ -60,7 +61,15 @@ const navItems = [
         { href: '/academics/calendar', label: 'Calendrier académique', icon: Calendar },
     ]
   },
-   { href: '/students', icon: Users, label: 'Étudiants' },
+   { 
+    id: 'students',
+    icon: Users, 
+    label: 'Étudiants',
+    subItems: [
+        { href: '/students', label: 'Liste des étudiants', icon: Users },
+        { href: '/students/repartition', label: 'Répartition', icon: BarChart3 },
+    ]
+   },
   { 
     id: 'faculty',
     icon: UserSquare, 
