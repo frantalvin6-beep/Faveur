@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message } from './types';
 
 export const students: Student[] = [
   { 
@@ -160,5 +160,45 @@ export const teacherAttendance: TeacherAttendance[] = [
     { id: 'ATT004', teacherId: 'F004', teacherName: 'Dr. Sarah Harding', courseName: 'Design Urbain', courseCode: 'AU201', date: '2024-09-11', status: 'Présent' },
 ];
 
+export const messages: Message[] = [
+  {
+    id: 'MSG001',
+    sender: { name: 'Administration', role: 'Admin' },
+    recipients: [{ name: 'Tous les enseignants', role: 'Enseignant' }],
+    subject: 'Réunion pédagogique importante',
+    body: 'Bonjour à tous, une réunion pédagogique aura lieu ce vendredi à 10h dans la salle du conseil. Votre présence est requise. Cordialement, L\'administration.',
+    sentAt: '2024-09-10T09:00:00Z',
+    status: 'Lu',
+  },
+  {
+    id: 'MSG002',
+    sender: { name: 'Dr. Alan Grant', role: 'Enseignant' },
+    recipients: [{ name: 'Étudiants M1 IA', role: 'Étudiant' }],
+    subject: 'Rappel : Projet de Machine Learning',
+    body: 'N\'oubliez pas que la date limite pour le rendu du projet de ML est le 25 octobre. Aucun retard ne sera accepté.',
+    attachment: { name: 'consignes_projet.pdf', url: '#' },
+    sentAt: '2024-09-12T14:30:00Z',
+    status: 'Envoyé',
+  },
+   {
+    id: 'MSG003',
+    sender: { name: 'Alice Johnson', role: 'Étudiant' },
+    recipients: [{ name: 'Dr. Alan Grant', role: 'Enseignant' }],
+    subject: 'Question concernant le projet',
+    body: 'Bonjour Docteur, j\'aurais une question concernant le choix du dataset pour le projet. Serait-il possible d\'en discuter ? Merci.',
+    sentAt: '2024-09-13T11:00:00Z',
+    status: 'Non lu',
+  },
+  {
+    id: 'MSG004',
+    sender: { name: 'Administration', role: 'Admin' },
+    recipients: [{ name: 'Tous les étudiants', role: 'Étudiant' }],
+    subject: 'Annonce : Fermeture exceptionnelle',
+    body: 'L\'université sera fermée le lundi 20 octobre pour maintenance. Les cours reprendront normalement le mardi 21.',
+    sentAt: '2024-09-15T16:00:00Z',
+    status: 'Envoyé',
+  },
+];
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance };
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message };

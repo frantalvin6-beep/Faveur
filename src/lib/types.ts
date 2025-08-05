@@ -117,3 +117,25 @@ export interface TeacherAttendance {
   status: 'Présent' | 'Absent' | 'Justifié';
   remarks?: string;
 }
+
+export type UserRole = 'Admin' | 'Enseignant' | 'Étudiant';
+
+export interface Message {
+  id: string;
+  sender: {
+    name: string;
+    role: UserRole;
+  };
+  recipients: {
+    name: string;
+    role: UserRole;
+  }[];
+  subject: string;
+  body: string;
+  attachment?: {
+    name: string;
+    url: string;
+  };
+  sentAt: string;
+  status: 'Envoyé' | 'Lu' | 'Non lu';
+}
