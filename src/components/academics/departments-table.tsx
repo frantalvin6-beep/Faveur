@@ -29,7 +29,7 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
 
   const filteredDepartments = departments.filter((dept) =>
     dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    dept.head.toLowerCase().includes(searchTerm.toLowerCase())
+    (dept.head && dept.head.toLowerCase().includes(searchTerm.toLowerCase()))
   );
 
   const handleAdd = () => alert('La fonctionnalité d\'ajout sera bientôt implémentée.');
