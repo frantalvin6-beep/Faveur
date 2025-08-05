@@ -30,11 +30,11 @@ export default function GradesPage() {
         const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
 
         if(!searchTerm) {
-            // If no search term, only show departments that have grades
+            // Si aucun terme de recherche, afficher uniquement les départements qui ont des notes
             return allGrades.some(g => g.department === dept.name);
         }
         
-        // If there is a search term, show if the department name matches OR if there are grades matching the search
+        // S'il y a un terme de recherche, afficher si le nom du département correspond OU s'il y a des notes correspondant à la recherche
         return searchMatchInDeptName || gradesInDept.length > 0;
     });
 

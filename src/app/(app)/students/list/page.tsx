@@ -31,11 +31,11 @@ export default function StudentsListPage() {
         const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
         
         if (!searchTerm) {
-            // If no search term, only show departments that have students
+            // Si aucun terme de recherche, afficher uniquement les départements qui ont des étudiants
             return allStudents.some(s => s.department === dept.name);
         }
         
-        // If there is a search term, show if the department name matches OR if there are students matching the search
+        // S'il y a un terme de recherche, afficher si le nom du département correspond OU s'il y a des étudiants correspondant à la recherche
         return searchMatchInDeptName || studentsInDept.length > 0;
     });
 
@@ -58,8 +58,8 @@ export default function StudentsListPage() {
       {displayedDepartments.map((dept) => {
         const studentsForDept = getStudentsForDepartment(dept.name);
         
-        // Hide card if there is a search term and no students were found for this department.
-        // But keep it if the search term matches the department name itself.
+        // Masquer la carte s'il y a un terme de recherche et qu'aucun étudiant n'a été trouvé pour ce département.
+        // Mais la conserver si le terme de recherche correspond au nom du département lui-même.
         if (searchTerm && studentsForDept.length === 0 && !dept.name.toLowerCase().includes(searchTerm.toLowerCase())) {
             return null;
         }
