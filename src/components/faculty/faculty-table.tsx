@@ -64,7 +64,7 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
         </div>
       </CardHeader>
       <CardContent>
-          <div className="rounded-md border relative w-full overflow-auto">
+          <div className="rounded-md border">
             <Table>
             <TableHeader>
                 <TableRow>
