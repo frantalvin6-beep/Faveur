@@ -68,7 +68,7 @@ const navItems = [
     icon: Users, 
     label: 'Étudiants',
     subItems: [
-        { href: '/students', label: 'Liste des étudiants', icon: Users },
+        { href: '/students/list', label: 'Liste des étudiants', icon: Users },
         { href: '/students/repartition', label: 'Répartition', icon: BarChart3 },
     ]
    },

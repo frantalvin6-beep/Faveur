@@ -50,7 +50,7 @@ export function StudentTable({ data }: { data: Student[] }) {
                 Ajouter un étudiant
             </Button>
         </div>
-      <div className="rounded-md border">
+      <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
             <TableRow>
