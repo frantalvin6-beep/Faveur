@@ -68,3 +68,16 @@ export interface ScheduleEntry {
   location: string;
   level: string;
 }
+
+export interface ExamGrade {
+  id: string;
+  studentId: string;
+  studentName: string;
+  courseName: string;
+  courseCode: string;
+  teacherName: string;
+  examType: 'Contrôle' | 'Partiel' | 'Final';
+  grade: number;
+  coefficient: number;
+  date: string;
+}

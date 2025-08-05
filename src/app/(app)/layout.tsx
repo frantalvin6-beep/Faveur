@@ -20,6 +20,8 @@ import {
   Clock,
   Building,
   BarChart3,
+  ClipboardCheck,
+  CalendarPlus,
 } from 'lucide-react';
 
 import {
@@ -80,7 +82,15 @@ const navItems = [
         { href: '/faculty/schedule', label: 'Emploi du temps', icon: Clock },
     ]
   },
-  { href: '/exams', icon: PencilRuler, label: 'Examens et notes' },
+  { 
+    id: 'exams',
+    icon: PencilRuler, 
+    label: 'Examens et notes',
+    subItems: [
+        { href: '/exams/grades', label: 'Saisie des notes', icon: ClipboardCheck },
+        { href: '/exams/planning', label: 'Planification', icon: CalendarPlus },
+    ]
+  },
   { href: '/communication', icon: MessageSquare, label: 'Communication' },
   { href: '/reports', icon: FileText, label: 'Rapports' },
   { href: '/finances', icon: DollarSign, label: 'Finances' },
@@ -92,7 +102,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const { isMobile } = useSidebar();
 
   const isSubItemActive = (subItems: any[]) => {
-    return subItems.some(item => pathname === item.href);
+    return subItems.some(item => pathname.startsWith(item.href));
   }
 
   return (
