@@ -35,7 +35,7 @@ import { cn } from '@/lib/utils';
 import { calculerFinance } from '@/lib/data';
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', minimumFractionDigits: 0 }).format(amount);
+  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XAF', currencyDisplay: 'code', minimumFractionDigits: 0 }).format(amount).replace('XAF', 'FCFA');
 }
 
 function getStatusBadgeVariant(status: StudentFinance['statut']) {
