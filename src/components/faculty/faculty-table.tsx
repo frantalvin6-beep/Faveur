@@ -46,7 +46,7 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
       <CardHeader>
          <div className="flex items-center justify-between">
             <div>
-                <CardTitle>Personnel</CardTitle>
+                <CardTitle>Profils enseignants</CardTitle>
                 <CardDescription>Gérer les dossiers des membres du personnel.</CardDescription>
             </div>
             <div className="flex items-center gap-2">

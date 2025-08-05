@@ -47,8 +47,8 @@ export function StudentTable({ data }: { data: Student[] }) {
       <CardHeader>
         <div className="flex items-center justify-between">
             <div>
-                <CardTitle>Étudiants</CardTitle>
-                <CardDescription>Gérer les dossiers des étudiants.</CardDescription>
+                <CardTitle>Liste des étudiants</CardTitle>
+                <CardDescription>Consulter et gérer les dossiers des étudiants.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
                 <Input

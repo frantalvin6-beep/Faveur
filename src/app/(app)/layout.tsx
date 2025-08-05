@@ -11,6 +11,11 @@ import {
   UserSquare,
   Package2,
   Landmark,
+  GraduationCap,
+  BookCopy,
+  CalendarDays,
+  PencilRuler,
+  MessageSquare,
 } from 'lucide-react';
 
 import {
@@ -39,10 +44,20 @@ import { SheetTitle } from '@/components/ui/sheet';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
+  { 
+    href: '/academics', 
+    icon: GraduationCap, 
+    label: 'Gestion académique',
+    subItems: [
+        { href: '/academics/courses', label: 'Cours et matières' },
+        { href: '/academics/calendar', label: 'Calendrier académique' },
+    ]
+  },
   { href: '/students', icon: Users, label: 'Étudiants' },
-  { href: '/faculty', icon: UserSquare, label: 'Personnel' },
+  { href: '/faculty', icon: UserSquare, label: 'Personnel enseignant' },
+  { href: '/exams', icon: PencilRuler, label: 'Examens et notes' },
+  { href: '/communication', icon: MessageSquare, label: 'Communication' },
   { href: '/reports', icon: FileText, label: 'Rapports' },
-  { href: '/finances', icon: Landmark, label: 'Finances' },
   { href: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
