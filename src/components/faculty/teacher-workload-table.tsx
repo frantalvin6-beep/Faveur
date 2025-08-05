@@ -22,6 +22,97 @@ import {
 import { TeacherWorkload } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { faculty as allFaculty, courseAssignments as allAssignments } from '@/lib/data';
+
+function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) => void }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [teacherId, setTeacherId] = React.useState('');
+  const [assignmentId, setAssignmentId] = React.useState('');
+
+  const teacherAssignments = allAssignments.filter(a => a.teacherId === teacherId);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const assignment = allAssignments.find(a => a.id === assignmentId);
+    
+    if (!assignment) {
+      alert("Veuillez sélectionner un enseignant et un cours valide.");
+      return;
+    }
+
+    const newEntry: TeacherWorkload = {
+      id: `TW${Date.now()}`,
+      teacherId: assignment.teacherId,
+      teacherName: assignment.teacherName,
+      courseName: assignment.courseName,
+      level: assignment.level,
+      semester: assignment.semester,
+      plannedHours: assignment.hourlyVolume,
+      completedHours: 0,
+    };
+
+    onAddEntry(newEntry);
+    setIsOpen(false);
+    // Reset form
+    setTeacherId('');
+    setAssignmentId('');
+  };
+  
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Ajouter
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Ajouter une charge horaire</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="teacher">Enseignant</Label>
+              <Select onValueChange={setTeacherId} value={teacherId}>
+                <SelectTrigger id="teacher"><SelectValue placeholder="Sélectionner un enseignant..." /></SelectTrigger>
+                <SelectContent>{allFaculty.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+              </Select>
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="assignment">Cours attribué</Label>
+              <Select onValueChange={setAssignmentId} value={assignmentId} disabled={!teacherId}>
+                <SelectTrigger id="assignment"><SelectValue placeholder="Sélectionner un cours..." /></SelectTrigger>
+                <SelectContent>
+                  {teacherAssignments.map(a => <SelectItem key={a.id} value={a.id}>{a.courseName} ({a.level})</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              Les heures prévues, le niveau et le semestre seront automatiquement remplis en fonction de l'attribution du cours.
+            </p>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+            <Button type="submit">Ajouter l'entrée</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export function TeacherWorkloadTable({ data }: { data: TeacherWorkload[] }) {
   const [workload, setWorkload] = React.useState(data);
@@ -32,7 +123,16 @@ export function TeacherWorkloadTable({ data }: { data: TeacherWorkload[] }) {
     item.courseName.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const handleAdd = () => alert("La fonctionnalité d'ajout sera bientôt implémentée.");
+  const handleAddWorkload = (newEntry: TeacherWorkload) => {
+    // Check if a workload for this teacher and course already exists
+    const existing = workload.find(w => w.teacherId === newEntry.teacherId && w.courseName === newEntry.courseName);
+    if (existing) {
+        alert("Une charge horaire pour cet enseignant et ce cours existe déjà.");
+        return;
+    }
+    setWorkload(prev => [...prev, newEntry]);
+  };
+  
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification pour ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
     if(confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
@@ -55,10 +155,7 @@ export function TeacherWorkloadTable({ data }: { data: TeacherWorkload[] }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <Button onClick={handleAdd}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter
-                </Button>
+                <AddWorkloadForm onAddEntry={handleAddWorkload} />
             </div>
         </div>
       </CardHeader>
