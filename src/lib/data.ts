@@ -86,11 +86,11 @@ export const students: Student[] = [
 ];
 
 export const faculty: Faculty[] = [
-  { id: 'F001', name: 'Dr. Alan Grant', email: 'alan.g@university.edu', department: 'Intelligence Artificielle', position: 'Professeur', specialization: 'Machine Learning', hireDate: '2010-08-15' },
-  { id: 'F002', name: 'Dr. Ellie Sattler', email: 'ellie.s@university.edu', department: 'Génie Électrique et Informatique Industrielle', position: 'Professeur agrégé', specialization: 'Systèmes embarqués', hireDate: '2015-07-20' },
-  { id: 'F003', name: 'Dr. Ian Malcolm', email: 'ian.m@university.edu', department: 'Big Data', position: 'Professeur', specialization: 'Analyse de données', hireDate: '2012-01-10' },
-  { id: 'F004', name: 'Dr. Sarah Harding', email: 'sarah.h@university.edu', department: 'Architecture et Urbanisme', position: 'Professeur assistant', specialization: 'Urbanisme durable', hireDate: '2018-09-01' },
-  { id: 'F005', name: 'Dr. John Hammond', email: 'john.h@university.edu', department: 'Ressources Humaines axées Digital', position: 'Chargé de cours', specialization: 'Management digital', hireDate: '2020-02-25' },
+  { id: 'F001', name: 'Dr. Alan Grant', email: 'alan.g@university.edu', phone: '+1-202-555-0191', department: 'Intelligence Artificielle (IA)', position: 'Professeur', specialization: 'Machine Learning, NLP', teachingLevels: ['Master', 'Doctorat'], hireDate: '2010-08-15' },
+  { id: 'F002', name: 'Dr. Ellie Sattler', email: 'ellie.s@university.edu', phone: '+1-202-555-0143', department: 'Électronique', position: 'Professeur agrégé', specialization: 'Systèmes embarqués, IoT', teachingLevels: ['Licence', 'Master'], hireDate: '2015-07-20' },
+  { id: 'F003', name: 'Dr. Ian Malcolm', email: 'ian.m@university.edu', phone: '+1-202-555-0111', department: 'Big Data', position: 'Professeur', specialization: 'Analyse de données, Modélisation', teachingLevels: ['Licence', 'Master'], hireDate: '2012-01-10' },
+  { id: 'F004', name: 'Dr. Sarah Harding', email: 'sarah.h@university.edu', phone: '+1-202-555-0189', department: 'Architecture et Urbanisme', position: 'Professeur assistant', specialization: 'Urbanisme durable, CAO', teachingLevels: ['Licence'], hireDate: '2018-09-01' },
+  { id: 'F005', name: 'Dr. John Hammond', email: 'john.h@university.edu', phone: '+1-202-555-0154', department: 'Ressources Humaines axées Digital', position: 'Chargé de cours', specialization: 'Management digital, SIRH', teachingLevels: ['Licence', 'Master'], hireDate: '2020-02-25' },
 ];
 
 export const departments: Department[] = [

@@ -14,9 +14,11 @@ export interface Faculty {
   id: string;
   name: string;
   email: string;
+  phone: string;
   department: string;
   position: 'Professeur' | 'Professeur agrégé' | 'Professeur assistant' | 'Chargé de cours';
   specialization: string;
+  teachingLevels: ('Licence' | 'Master' | 'Doctorat')[];
   hireDate: string;
 }
 

@@ -69,10 +69,11 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
             <TableHeader>
                 <TableRow>
                 <TableHead>Nom</TableHead>
-                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead>Contact</TableHead>
                 <TableHead>Département</TableHead>
-                <TableHead className="hidden sm:table-cell">Poste</TableHead>
-                <TableHead className="hidden lg:table-cell">Spécialisation</TableHead>
+                <TableHead>Poste</TableHead>
+                <TableHead>Spécialisation</TableHead>
+                <TableHead>Niveau d'enseignement</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -80,10 +81,22 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
                 {filteredFaculty.length > 0 ? filteredFaculty.map((member) => (
                 <TableRow key={member.id}>
                     <TableCell className="font-medium">{member.name}</TableCell>
-                    <TableCell className="hidden md:table-cell">{member.email}</TableCell>
+                    <TableCell>
+                        <div className="flex flex-col">
+                            <span className="text-sm">{member.email}</span>
+                            <span className="text-xs text-muted-foreground">{member.phone}</span>
+                        </div>
+                    </TableCell>
                     <TableCell><Badge variant="outline">{member.department}</Badge></TableCell>
-                    <TableCell className="hidden sm:table-cell">{member.position}</TableCell>
-                    <TableCell className="hidden lg:table-cell">{member.specialization}</TableCell>
+                    <TableCell>{member.position}</TableCell>
+                    <TableCell>{member.specialization}</TableCell>
+                    <TableCell>
+                        <div className="flex flex-wrap gap-1">
+                            {member.teachingLevels.map(level => (
+                                <Badge key={level} variant="secondary">{level}</Badge>
+                            ))}
+                        </div>
+                    </TableCell>
                     <TableCell className="text-right">
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -111,7 +124,7 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
                 </TableRow>
                 )) : (
                     <TableRow>
-                        <TableCell colSpan={6} className="h-24 text-center">
+                        <TableCell colSpan={7} className="h-24 text-center">
                             Aucun résultat trouvé.
                         </TableCell>
                     </TableRow>
