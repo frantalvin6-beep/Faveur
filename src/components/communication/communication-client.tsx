@@ -51,11 +51,24 @@ interface CommunicationClientProps {
   messages: Message[];
 }
 
-export function CommunicationClient({ messages }: CommunicationClientProps) {
+export function CommunicationClient({ messages: initialMessages }: CommunicationClientProps) {
   const isMobile = useIsMobile();
+  const [messages, setMessages] = React.useState<Message[]>(initialMessages);
   const [selected, setSelected] = React.useState<string | null>(messages[0]?.id ?? null);
 
   const message = messages.find((item) => item.id === selected) ?? null;
+
+  const handleSendMessage = (newMessage: Omit<Message, 'id' | 'sentAt' | 'status'>) => {
+    const messageToSend: Message = {
+      id: `MSG${Date.now()}`,
+      ...newMessage,
+      sentAt: new Date().toISOString(),
+      status: 'Envoyé',
+    };
+    setMessages(prev => [messageToSend, ...prev]);
+    // In a real app, you would also send this to a server.
+    alert("Message envoyé !");
+  };
 
   return (
     <ResizablePanelGroup
@@ -66,10 +79,13 @@ export function CommunicationClient({ messages }: CommunicationClientProps) {
         <Tabs defaultValue="inbox">
           <div className="flex items-center px-4 py-2">
             <h1 className="text-xl font-bold">Boîte de réception</h1>
-            <TabsList className="ml-auto">
-              <TabsTrigger value="inbox">Boîte de réception</TabsTrigger>
-              <TabsTrigger value="sent">Envoyés</TabsTrigger>
-            </TabsList>
+            <div className="ml-auto flex items-center gap-2">
+                <ComposeMessageDialog onSendMessage={handleSendMessage} />
+                <TabsList>
+                  <TabsTrigger value="inbox">Boîte de réception</TabsTrigger>
+                  <TabsTrigger value="sent">Envoyés</TabsTrigger>
+                </TabsList>
+            </div>
           </div>
           <Separator />
           <MessageList messages={messages} selected={selected} setSelected={setSelected} />
@@ -138,7 +154,7 @@ function MessageList({
 function MessageDisplay({ message }: { message: Message | null }) {
   if (!message) {
     return (
-      <div className="p-4 text-center text-muted-foreground">
+      <div className="flex h-full items-center justify-center p-4 text-center text-muted-foreground">
         Aucun message sélectionné
       </div>
     );
@@ -229,4 +245,81 @@ function MessageDisplay({ message }: { message: Message | null }) {
       </div>
     </div>
   );
+}
+
+function ComposeMessageDialog({ onSendMessage }: { onSendMessage: (message: Omit<Message, 'id' | 'sentAt' | 'status'>) => void }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [to, setTo] = React.useState('');
+    const [subject, setSubject] = React.useState('');
+    const [body, setBody] = React.useState('');
+    const [attachment, setAttachment] = React.useState<File | null>(null);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!to || !subject || !body) {
+            alert("Veuillez remplir les champs destinataire, objet et message.");
+            return;
+        }
+
+        onSendMessage({
+            sender: { name: 'Admin', role: 'Admin' }, // Assuming the user is always Admin for now
+            recipients: [{ name: to, role: 'Étudiant' }], // Simple parsing for now
+            subject,
+            body,
+            attachment: attachment ? { name: attachment.name, url: '#' } : undefined,
+        });
+
+        setIsOpen(false);
+        // Reset form
+        setTo('');
+        setSubject('');
+        setBody('');
+        setAttachment(null);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                <Button variant="outline">
+                    <PenSquare className="mr-2 h-4 w-4" />
+                    Nouveau message
+                </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle>Écrire un nouveau message</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="grid gap-4 py-4">
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="to" className="text-right">À</Label>
+                            <Input id="to" value={to} onChange={(e) => setTo(e.target.value)} className="col-span-3" placeholder="email@exemple.com ou nom du groupe" />
+                        </div>
+                        <div className="grid grid-cols-4 items-center gap-4">
+                            <Label htmlFor="subject" className="text-right">Objet</Label>
+                            <Input id="subject" value={subject} onChange={(e) => setSubject(e.target.value)} className="col-span-3" placeholder="Sujet de votre message" />
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                            <Label htmlFor="body">Message</Label>
+                            <Textarea id="body" value={body} onChange={(e) => setBody(e.target.value)} className="min-h-[200px]" placeholder="Écrivez votre message ici..." />
+                        </div>
+                        <div className="grid grid-cols-1 gap-2">
+                           <Label htmlFor="attachment">Pièce jointe</Label>
+                           <Input 
+                                id="attachment" 
+                                type="file" 
+                                onChange={(e) => setAttachment(e.target.files?.[0] || null)} 
+                                className="col-span-3" 
+                            />
+                            {attachment && <p className="text-sm text-muted-foreground">Fichier sélectionné : {attachment.name}</p>}
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+                        <Button type="submit"><Send className="mr-2 h-4 w-4" />Envoyer</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
 }
