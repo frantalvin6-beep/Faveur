@@ -4,12 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 
 const studentData = [
-  { name: 'Informatique', total: 450 },
-  { name: 'Physique', total: 210 },
-  { name: 'Maths', total: 320 },
-  { name: 'Histoire', total: 180 },
-  { name: 'Commerce', total: 520 },
-  { name: 'Chimie', total: 150 },
+  { name: 'IA & Robotique', total: 450 },
+  { name: 'Génie Elec & Info', total: 600 },
+  { name: 'Génie Info', total: 550 },
+  { name: 'Génie Civil', total: 300 },
+  { name: 'Digital Business', total: 250 },
 ];
 
 const facultyData = [
