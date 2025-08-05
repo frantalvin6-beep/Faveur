@@ -73,7 +73,7 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
                 <TableHead>Département</TableHead>
                 <TableHead>Poste</TableHead>
                 <TableHead>Spécialisation</TableHead>
-                <TableHead>Niveau d'enseignement</TableHead>
+                <TableHead className="whitespace-nowrap">Niveau d'enseignement</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
