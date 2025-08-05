@@ -68,6 +68,7 @@ export interface ScheduleEntry {
   endTime: string;
   location: string;
   level: string;
+  semester: string;
 }
 
 export interface ExamGrade {
@@ -82,4 +83,26 @@ export interface ExamGrade {
   grade: number;
   coefficient: number;
   date: string;
+}
+
+export interface ExamSchedule {
+    id: string;
+    date: string;
+    time: string;
+    courseName: string;
+    supervisor: string;
+    room: string;
+    level: string;
+    examType: 'Contrôle' | 'Partiel' | 'Final' | 'Rattrapage';
+}
+
+export interface TeacherWorkload {
+    id: string;
+    teacherId: string;
+    teacherName: string;
+    courseName: string;
+    level: string;
+    semester: string;
+    plannedHours: number;
+    completedHours: number;
 }

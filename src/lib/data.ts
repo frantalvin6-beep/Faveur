@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload } from './types';
 
 export const students: Student[] = [
   { 
@@ -126,12 +126,12 @@ export const courseAssignments: CourseAssignment[] = [
 ];
 
 export const scheduleData: ScheduleEntry[] = [
-    { id: 'SCH001', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'Intro au ML', courseCode: 'CS501', dayOfWeek: 'Lundi', startTime: '08:00', endTime: '10:00', location: 'Amphi A', level: 'Master 1' },
-    { id: 'SCH002', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Systèmes Embarqués', courseCode: 'EE402', dayOfWeek: 'Lundi', startTime: '10:00', endTime: '12:00', location: 'Salle B101', level: 'Licence 3' },
-    { id: 'SCH003', teacherId: 'F003', teacherName: 'Dr. Ian Malcolm', courseName: 'Big Data Analytics', courseCode: 'BD601', dayOfWeek: 'Mardi', startTime: '09:00', endTime: '12:00', location: 'Labo C', level: 'Master 2' },
-    { id: 'SCH004', teacherId: 'F004', teacherName: 'Dr. Sarah Harding', courseName: 'Design Urbain', courseCode: 'AU201', dayOfWeek: 'Mercredi', startTime: '14:00', endTime: '16:00', location: 'Atelier D', level: 'Licence 2' },
-    { id: 'SCH005', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'NLP', courseCode: 'CS505', dayOfWeek: 'Jeudi', startTime: '10:00', endTime: '12:00', location: 'Amphi A', level: 'Master 2' },
-    { id: 'SCH006', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Systèmes Embarqués (TP)', courseCode: 'EE402', dayOfWeek: 'Vendredi', startTime: '08:00', endTime: '10:00', location: 'Salle B102', level: 'Licence 3' },
+    { id: 'SCH001', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'Intro au ML', courseCode: 'CS501', dayOfWeek: 'Lundi', startTime: '08:00', endTime: '10:00', location: 'Amphi A', level: 'Master 1', semester: 'S1' },
+    { id: 'SCH002', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Systèmes Embarqués', courseCode: 'EE402', dayOfWeek: 'Lundi', startTime: '10:00', endTime: '12:00', location: 'Salle B101', level: 'Licence 3', semester: 'S1' },
+    { id: 'SCH003', teacherId: 'F003', teacherName: 'Dr. Ian Malcolm', courseName: 'Big Data Analytics', courseCode: 'BD601', dayOfWeek: 'Mardi', startTime: '09:00', endTime: '12:00', location: 'Labo C', level: 'Master 2', semester: 'S2' },
+    { id: 'SCH004', teacherId: 'F004', teacherName: 'Dr. Sarah Harding', courseName: 'Design Urbain', courseCode: 'AU201', dayOfWeek: 'Mercredi', startTime: '14:00', endTime: '16:00', location: 'Atelier D', level: 'Licence 2', semester: 'S1' },
+    { id: 'SCH005', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'NLP', courseCode: 'CS505', dayOfWeek: 'Jeudi', startTime: '10:00', endTime: '12:00', location: 'Amphi A', level: 'Master 2', semester: 'S2' },
+    { id: 'SCH006', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Systèmes Embarqués (TP)', courseCode: 'EE402', dayOfWeek: 'Vendredi', startTime: '08:00', endTime: '10:00', location: 'Salle B102', level: 'Licence 3', semester: 'S2' },
 ];
 
 export const examGrades: ExamGrade[] = [
@@ -141,5 +141,17 @@ export const examGrades: ExamGrade[] = [
     { id: 'G004', studentId: 'S003', studentName: 'Charlie Brown', courseName: 'Big Data Analytics', courseCode: 'BD601', teacherName: 'Dr. Ian Malcolm', department: 'Big Data', examType: 'Partiel', grade: 18, coefficient: 2, date: '2024-10-20' },
 ];
 
+export const examSchedule: ExamSchedule[] = [
+    { id: 'ES001', date: '2025-08-15', time: '08:00-10:00', courseName: 'Mathématiques', supervisor: 'J. Mbemba', room: 'A1', level: 'L1', examType: 'Final' },
+    { id: 'ES002', date: '2025-08-16', time: '10:00-12:00', courseName: 'Réseaux', supervisor: 'A. Bissila', room: 'B2', level: 'L2', examType: 'Partiel' },
+    { id: 'ES003', date: '2025-08-17', time: '14:00-16:00', courseName: 'Bases de données', supervisor: 'P. Ngoma', room: 'A3', level: 'L3', examType: 'Rattrapage' },
+];
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade };
+export const teacherWorkload: TeacherWorkload[] = [
+    { id: 'TW001', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'Introduction au Machine Learning', level: 'Master 1', semester: 'S1', plannedHours: 60, completedHours: 45 },
+    { id: 'TW002', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Conception de Systèmes Embarqués', level: 'Licence 3', semester: 'S1', plannedHours: 50, completedHours: 50 },
+    { id: 'TW003', teacherId: 'F003', teacherName: 'Dr. Ian Malcolm', courseName: 'Big Data Analytics', level: 'Master 2', semester: 'S2', plannedHours: 70, completedHours: 35 },
+];
+
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload };

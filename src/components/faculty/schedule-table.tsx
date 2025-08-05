@@ -21,7 +21,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ScheduleEntry } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -36,11 +35,12 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntr
   const [endTime, setEndTime] = React.useState('');
   const [location, setLocation] = React.useState('');
   const [level, setLevel] = React.useState('');
+  const [semester, setSemester] = React.useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const teacher = allFaculty.find(f => f.id === teacherId);
-    if (!teacher || !courseName || !dayOfWeek || !startTime || !endTime || !location || !level) {
+    if (!teacher || !courseName || !dayOfWeek || !startTime || !endTime || !location || !level || !semester) {
       alert("Veuillez remplir tous les champs.");
       return;
     }
@@ -56,6 +56,7 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntr
       endTime,
       location,
       level,
+      semester,
     };
     onAddEntry(newEntry);
     setIsOpen(false);
@@ -67,17 +68,17 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntr
     setEndTime('');
     setLocation('');
     setLevel('');
+    setSemester('');
   };
   
   const daysOfWeek: ScheduleEntry['dayOfWeek'][] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
         <Button>
           <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un cours
+          Planifier un cours
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-xl">
@@ -116,9 +117,13 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntr
               <Label htmlFor="endTime">Heure de fin</Label>
               <Input id="endTime" type="time" value={endTime} onChange={e => setEndTime(e.target.value)} />
             </div>
-             <div className="space-y-2 col-span-full">
+             <div className="space-y-2">
               <Label htmlFor="location">Salle / Lieu</Label>
               <Input id="location" value={location} onChange={e => setLocation(e.target.value)} placeholder="Ex: Amphi A" />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="semester">Semestre</Label>
+              <Input id="semester" value={semester} onChange={e => setSemester(e.target.value)} placeholder="Ex: S1" />
             </div>
           </div>
           <DialogFooter>
@@ -136,34 +141,22 @@ export function ScheduleTable({ data }: { data: ScheduleEntry[] }) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [schedule, setSchedule] = React.useState(data);
 
-  const daysOfWeek: ScheduleEntry['dayOfWeek'][] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
-  const timeSlots = Array.from({ length: 11 }, (_, i) => `${String(i + 8).padStart(2, '0')}:00`);
-  
   const currentFacultyIds = React.useMemo(() => allFaculty.map(f => f.id), []);
   const activeSchedule = React.useMemo(() => schedule.filter(entry => currentFacultyIds.includes(entry.teacherId)), [schedule, currentFacultyIds]);
-
 
   const filteredSchedule = activeSchedule.filter((item) =>
     item.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.location.toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const getEntry = (day: string, time: string) => {
-    return filteredSchedule.find(
-      (entry) =>
-        entry.dayOfWeek === day &&
-        entry.startTime.split(':')[0] === time.split(':')[0]
-    );
-  };
   
   const handleAddEntry = (newEntry: ScheduleEntry) => {
-    setSchedule(prev => [...prev, newEntry]);
+    setSchedule(prev => [...prev, newEntry].sort((a,b) => a.dayOfWeek.localeCompare(b.dayOfWeek) || a.startTime.localeCompare(b.startTime)));
   };
 
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification pour ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
-    if(confirm('Êtes-vous sûr de vouloir supprimer cette entrée de l\'emploi du temps ?')) {
+    if(confirm("Êtes-vous sûr de vouloir supprimer cette entrée de l'emploi du temps ?")) {
         setSchedule(schedule.filter(s => s.id !== id));
     }
   };
@@ -174,8 +167,8 @@ export function ScheduleTable({ data }: { data: ScheduleEntry[] }) {
       <CardHeader>
         <div className="flex items-center justify-between">
           <div>
-            <CardTitle>Emploi du temps de la semaine</CardTitle>
-            <CardDescription>Vue hebdomadaire des cours planifiés.</CardDescription>
+            <CardTitle>Emploi du temps</CardTitle>
+            <CardDescription>Liste des cours planifiés.</CardDescription>
           </div>
           <div className="flex items-center gap-2">
             <Input
@@ -189,55 +182,57 @@ export function ScheduleTable({ data }: { data: ScheduleEntry[] }) {
         </div>
       </CardHeader>
       <CardContent>
-        <div className="relative w-full overflow-auto rounded-md border">
-          <Table className="min-w-max">
+        <div className="rounded-md border">
+          <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[100px]">Heure</TableHead>
-                {daysOfWeek.map((day) => (
-                  <TableHead key={day} className="w-[200px] text-center">{day}</TableHead>
-                ))}
+                <TableHead>Jour</TableHead>
+                <TableHead>Heure</TableHead>
+                <TableHead>Matière</TableHead>
+                <TableHead>Enseignant</TableHead>
+                <TableHead>Salle</TableHead>
+                <TableHead>Niveau</TableHead>
+                <TableHead>Semestre</TableHead>
+                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {timeSlots.map((time) => (
-                <TableRow key={time}>
-                  <TableCell className="font-medium text-center">{time}</TableCell>
-                  {daysOfWeek.map((day) => {
-                    const entry = getEntry(day, time);
-                    return (
-                      <TableCell key={`${day}-${time}`} className="p-1 align-top h-24">
-                        {entry && (
-                          <div className="group relative h-full rounded-lg bg-muted p-2 text-left">
-                            <p className="font-semibold text-primary">{entry.courseName}</p>
-                            <p className="text-sm text-muted-foreground">{entry.teacherName}</p>
-                            <p className="text-xs text-muted-foreground">{entry.startTime} - {entry.endTime}</p>
-                            <Badge variant="secondary" className="mt-1">{entry.location}</Badge>
-                            <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100">
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button variant="ghost" size="icon" className="h-6 w-6">
-                                            <MoreHorizontal className="h-4 w-4" />
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem onClick={() => handleEdit(entry.id)}>
-                                            <Edit className="mr-2 h-4 w-4" /> Modifier
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem onClick={() => handleDelete(entry.id)} className="text-destructive">
-                                            <Trash2 className="mr-2 h-4 w-4" /> Supprimer
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                            </div>
-                          </div>
-                        )}
-                      </TableCell>
-                    );
-                  })}
+              {filteredSchedule.length > 0 ? filteredSchedule.map((entry) => (
+                <TableRow key={entry.id}>
+                  <TableCell className="font-medium">{entry.dayOfWeek}</TableCell>
+                  <TableCell>{entry.startTime} - {entry.endTime}</TableCell>
+                  <TableCell>{entry.courseName}</TableCell>
+                  <TableCell>{entry.teacherName}</TableCell>
+                  <TableCell>{entry.location}</TableCell>
+                  <TableCell>{entry.level}</TableCell>
+                  <TableCell>{entry.semester}</TableCell>
+                  <TableCell className="text-right">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" className="h-8 w-8 p-0">
+                              <span className="sr-only">Ouvrir le menu</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <DropdownMenuItem onClick={() => handleEdit(entry.id)}>
+                              <Edit className="mr-2 h-4 w-4" /> Modifier
+                          </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => handleDelete(entry.id)} className="text-destructive">
+                              <Trash2 className="mr-2 h-4 w-4" /> Supprimer
+                          </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </TableCell>
                 </TableRow>
-              ))}
+              )) : (
+                <TableRow>
+                  <TableCell colSpan={8} className="h-24 text-center">
+                    Aucune entrée trouvée.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </div>

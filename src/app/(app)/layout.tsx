@@ -22,6 +22,7 @@ import {
   BarChart3,
   ClipboardCheck,
   CalendarPlus,
+  Hourglass,
 } from 'lucide-react';
 
 import {
@@ -80,6 +81,7 @@ const navItems = [
         { href: '/faculty/profiles', label: 'Profils enseignants', icon: Users },
         { href: '/faculty/assignments', label: 'Attribution des cours', icon: Briefcase },
         { href: '/faculty/schedule', label: 'Emploi du temps', icon: Clock },
+        { href: '/faculty/workload', label: 'Charge horaire', icon: Hourglass },
     ]
   },
   { 
