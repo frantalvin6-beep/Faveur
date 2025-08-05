@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment } from './types';
 
 export const students: Student[] = [
   { 
@@ -117,4 +117,13 @@ export const departments: Department[] = [
     { id: 'DEP05-OPT01', name: 'Ressources Humaines axées Digital', head: 'Mme. Sheryl Sandberg', facultyCount: 25, studentCount: 250, creationDate: '2021-08-01' },
 ];
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord };
+export const courseAssignments: CourseAssignment[] = [
+    { id: 'CA001', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'Introduction au Machine Learning', courseCode: 'CS501', department: 'Intelligence Artificielle (IA)', level: 'Master 1', semester: 'Semestre 1', hourlyVolume: 60 },
+    { id: 'CA002', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Conception de Systèmes Embarqués', courseCode: 'EE402', department: 'Électronique', level: 'Licence 3', semester: 'Semestre 2', hourlyVolume: 50 },
+    { id: 'CA003', teacherId: 'F003', teacherName: 'Dr. Ian Malcolm', courseName: 'Big Data Analytics', courseCode: 'BD601', department: 'Big Data', level: 'Master 2', semester: 'Semestre 1', hourlyVolume: 70 },
+    { id: 'CA004', teacherId: 'F001', teacherName: 'Dr. Alan Grant', courseName: 'Traitement du Langage Naturel', courseCode: 'CS505', department: 'Intelligence Artificielle (IA)', level: 'Master 2', semester: 'Semestre 2', hourlyVolume: 60 },
+    { id: 'CA005', teacherId: 'F004', teacherName: 'Dr. Sarah Harding', courseName: 'Design Urbain Durable', courseCode: 'AU201', department: 'Architecture et Urbanisme', level: 'Licence 2', semester: 'Semestre 1', hourlyVolume: 45 },
+];
+
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment };

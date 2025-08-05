@@ -43,3 +43,15 @@ export interface CourseRecord {
   name: string;
   grade: number;
 }
+
+export interface CourseAssignment {
+  id: string;
+  teacherId: string;
+  teacherName: string;
+  courseName: string;
+  courseCode: string;
+  department: string;
+  level: string;
+  semester: string;
+  hourlyVolume: number;
+}
