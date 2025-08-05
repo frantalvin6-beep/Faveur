@@ -85,9 +85,18 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
               <TableRow>
                 <TableHead>Matricule</TableHead>
                 <TableHead>Nom & Prénom</TableHead>
-                <TableHead>Niveau</TableHead>
+                <TableHead>Niveau d’études</TableHead>
                 <TableHead>Option</TableHead>
-                <TableHead>Bourse</TableHead>
+                <TableHead className="text-right">Inscription</TableHead>
+                <TableHead>Semestre</TableHead>
+                <TableHead className="text-right">Fournitures</TableHead>
+                <TableHead className="text-right">Support</TableHead>
+                <TableHead>Type de Bourse</TableHead>
+                <TableHead>% Réduction</TableHead>
+                <TableHead className="text-right">Scolarité</TableHead>
+                <TableHead className="text-right">Latrine</TableHead>
+                <TableHead className="text-right">Session</TableHead>
+                <TableHead className="text-right">Rattrapage</TableHead>
                 <TableHead className="text-right">Total à Payer</TableHead>
                 <TableHead className="text-right">Avancé</TableHead>
                 <TableHead className="text-right">Reste</TableHead>
@@ -102,12 +111,18 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
                   <TableCell className="font-medium">{f.fullName}</TableCell>
                   <TableCell>{f.level}</TableCell>
                   <TableCell><Badge variant="secondary">{f.option}</Badge></TableCell>
-                  <TableCell>
-                    {f.bourseType}
-                    {f.bourseType === 'Partiellement boursier' && ` (${f.reduction}%)`}
-                  </TableCell>
+                  <TableCell className="text-right">{formatCurrency(f.inscription)}</TableCell>
+                  <TableCell>{f.semester}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(f.fournitures)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(f.support)}</TableCell>
+                  <TableCell>{f.bourseType}</TableCell>
+                  <TableCell>{f.bourseType === 'Partiellement boursier' ? `${f.reduction}%` : 'N/A'}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(f.scolariteCalculee)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(f.latrine)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(f.session)}</TableCell>
+                  <TableCell className="text-right">{formatCurrency(f.rattrapage)}</TableCell>
                   <TableCell className="text-right font-semibold">{formatCurrency(f.totalAPayer)}</TableCell>
-                  <TableCell className="text-right text-green-600">{formatCurrency(f.avance)}</TableCell>
+                  <TableCell className="text-right text-green-600 font-semibold">{formatCurrency(f.avance)}</TableCell>
                   <TableCell className={cn("text-right font-bold", f.reste > 0 ? "text-red-600" : "text-gray-500")}>{formatCurrency(f.reste)}</TableCell>
                   <TableCell className="text-center">
                     <Badge variant={getStatusBadgeVariant(f.statut)}>{f.statut}</Badge>
@@ -115,7 +130,7 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon">
+                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
@@ -130,7 +145,7 @@ export function StudentFinancesTable({ initialData }: { initialData: StudentFina
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={10} className="h-24 text-center">Aucun résultat.</TableCell>
+                  <TableCell colSpan={19} className="h-24 text-center">Aucun résultat.</TableCell>
                 </TableRow>
               )}
             </TableBody>
