@@ -4,19 +4,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 
 const studentData = [
-  { name: 'Comp Sci', total: 450 },
-  { name: 'Physics', total: 210 },
-  { name: 'Math', total: 320 },
-  { name: 'History', total: 180 },
-  { name: 'Business', total: 520 },
-  { name: 'Chemistry', total: 150 },
+  { name: 'Informatique', total: 450 },
+  { name: 'Physique', total: 210 },
+  { name: 'Maths', total: 320 },
+  { name: 'Histoire', total: 180 },
+  { name: 'Commerce', total: 520 },
+  { name: 'Chimie', total: 150 },
 ];
 
 const facultyData = [
-  { name: 'Professors', total: 60 },
-  { name: 'Assoc. Prof.', total: 85 },
-  { name: 'Asst. Prof.', total: 110 },
-  { name: 'Lecturers', total: 95 },
+  { name: 'Professeurs', total: 60 },
+  { name: 'Prof. agrégés', total: 85 },
+  { name: 'Prof. assistants', total: 110 },
+  { name: 'Chargés de cours', total: 95 },
 ]
 
 export function DashboardCharts() {
@@ -24,8 +24,8 @@ export function DashboardCharts() {
     <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <CardTitle>Students by Department</CardTitle>
-            <CardDescription>Distribution of students across major departments.</CardDescription>
+            <CardTitle>Étudiants par département</CardTitle>
+            <CardDescription>Répartition des étudiants dans les principaux départements.</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
@@ -45,8 +45,8 @@ export function DashboardCharts() {
         </Card>
         <Card>
           <CardHeader>
-            <CardTitle>Faculty by Position</CardTitle>
-            <CardDescription>Breakdown of faculty members by their academic rank.</CardDescription>
+            <CardTitle>Personnel par poste</CardTitle>
+            <CardDescription>Répartition des membres du personnel par leur rang académique.</CardDescription>
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>

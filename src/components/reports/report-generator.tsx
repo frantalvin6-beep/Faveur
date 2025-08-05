@@ -56,14 +56,14 @@ export function ReportGenerator() {
       });
       setReport(result.report);
       toast({
-        title: "Report Generated",
-        description: "Your AI-powered report has been successfully created.",
+        title: "Rapport généré",
+        description: "Votre rapport alimenté par l'IA a été créé avec succès.",
       });
     } catch (e) {
       toast({
         variant: "destructive",
-        title: "Error",
-        description: "Failed to generate report. Please try again.",
+        title: "Erreur",
+        description: "Échec de la génération du rapport. Veuillez réessayer.",
       });
       console.error(e);
     } finally {
@@ -76,49 +76,49 @@ export function ReportGenerator() {
       <Card>
         <form onSubmit={handleSubmit(onSubmit)}>
           <CardHeader>
-            <CardTitle>Report Configuration</CardTitle>
-            <CardDescription>Select the parameters for your AI-generated report.</CardDescription>
+            <CardTitle>Configuration du rapport</CardTitle>
+            <CardDescription>Sélectionnez les paramètres de votre rapport généré par l'IA.</CardDescription>
           </CardHeader>
           <CardContent className="grid gap-6">
             <div className="grid gap-2">
-              <Label htmlFor="reportType">Report Type</Label>
+              <Label htmlFor="reportType">Type de rapport</Label>
               <Controller
                 name="reportType"
                 control={control}
                 render={({ field }) => (
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <SelectTrigger id="reportType">
-                      <SelectValue placeholder="Select report type" />
+                      <SelectValue placeholder="Sélectionnez le type de rapport" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Student">Students</SelectItem>
-                      <SelectItem value="Faculty">Faculty</SelectItem>
-                      <SelectItem value="Both">Students & Faculty</SelectItem>
+                      <SelectItem value="Student">Étudiants</SelectItem>
+                      <SelectItem value="Faculty">Personnel</SelectItem>
+                      <SelectItem value="Both">Étudiants et personnel</SelectItem>
                     </SelectContent>
                   </Select>
                 )}
               />
             </div>
             <div className="grid gap-4">
-                <Label>Report Content</Label>
+                <Label>Contenu du rapport</Label>
                 <div className="flex items-center space-x-2">
                   <Controller name="includeGraphs" control={control} render={({ field }) => <Switch id="includeGraphs" checked={field.value} onCheckedChange={field.onChange} />} />
-                  <Label htmlFor="includeGraphs">Include Graphs</Label>
+                  <Label htmlFor="includeGraphs">Inclure des graphiques</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Controller name="includeMetrics" control={control} render={({ field }) => <Switch id="includeMetrics" checked={field.value} onCheckedChange={field.onChange} />} />
-                  <Label htmlFor="includeMetrics">Include Metrics</Label>
+                  <Label htmlFor="includeMetrics">Inclure des métriques</Label>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Controller name="includeEvaluation" control={control} render={({ field }) => <Switch id="includeEvaluation" checked={field.value} onCheckedChange={field.onChange} />} />
-                  <Label htmlFor="includeEvaluation">Include Overall Evaluation</Label>
+                  <Label htmlFor="includeEvaluation">Inclure une évaluation globale</Label>
                 </div>
             </div>
           </CardContent>
           <CardFooter>
             <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Generate Report
+              Générer un rapport
             </Button>
           </CardFooter>
         </form>
@@ -126,21 +126,21 @@ export function ReportGenerator() {
 
       <Card className="flex flex-col">
         <CardHeader>
-          <CardTitle>Generated Report</CardTitle>
-          <CardDescription>The AI-powered report will appear below.</CardDescription>
+          <CardTitle>Rapport généré</CardTitle>
+          <CardDescription>Le rapport généré par l'IA apparaîtra ci-dessous.</CardDescription>
         </CardHeader>
         <CardContent className="flex-grow">
           {isLoading && (
             <div className="flex items-center justify-center h-full">
               <div className="text-center">
                 <Loader2 className="h-8 w-8 animate-spin text-primary mx-auto" />
-                <p className="mt-2 text-muted-foreground">Generating report...</p>
+                <p className="mt-2 text-muted-foreground">Génération du rapport...</p>
               </div>
             </div>
           )}
           {!isLoading && !report && (
             <div className="flex items-center justify-center h-full">
-                <p className="text-muted-foreground">Your report will be displayed here.</p>
+                <p className="text-muted-foreground">Votre rapport sera affiché ici.</p>
             </div>
           )}
           {report && (
@@ -148,7 +148,7 @@ export function ReportGenerator() {
               readOnly
               value={report}
               className="min-h-[400px] bg-muted/50 text-sm"
-              aria-label="Generated Report"
+              aria-label="Rapport généré"
             />
           )}
         </CardContent>

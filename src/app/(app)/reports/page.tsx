@@ -4,9 +4,9 @@ export default function ReportsPage() {
     return (
         <div className="space-y-4">
             <div>
-                <h1 className="text-3xl font-bold">AI-Powered Reports</h1>
+                <h1 className="text-3xl font-bold">Rapports IA</h1>
                 <p className="text-muted-foreground">
-                    Generate comprehensive reports on student and faculty data using AI.
+                    Générez des rapports complets sur les données des étudiants et du personnel à l'aide de l'IA.
                 </p>
             </div>
             <ReportGenerator />

@@ -13,7 +13,7 @@ export interface Faculty {
   name: string;
   email: string;
   department: string;
-  position: 'Professor' | 'Associate Professor' | 'Assistant Professor' | 'Lecturer';
+  position: 'Professeur' | 'Professeur agrégé' | 'Professeur assistant' | 'Chargé de cours';
   specialization: string;
   hireDate: string;
 }

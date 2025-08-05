@@ -1,29 +1,29 @@
 'use server';
 /**
- * @fileOverview Generates AI-powered reports on student and faculty data.
+ * @fileOverview Génère des rapports basés sur l'IA sur les données des étudiants et du personnel.
  *
- * - generateReport - A function that generates the report.
- * - GenerateReportInput - The input type for the generateReport function.
- * - GenerateReportOutput - The return type for the generateReport function.
+ * - generateReport - Une fonction qui génère le rapport.
+ * - GenerateReportInput - Le type d'entrée pour la fonction generateReport.
+ * - GenerateReportOutput - Le type de retour pour la fonction generateReport.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const GenerateReportInputSchema = z.object({
-  studentData: z.string().describe('Student data in JSON format.'),
-  facultyData: z.string().describe('Faculty data in JSON format.'),
+  studentData: z.string().describe('Données des étudiants au format JSON.'),
+  facultyData: z.string().describe('Données du personnel au format JSON.'),
   reportType: z
     .enum(['Student', 'Faculty', 'Both'])
-    .describe('The type of report to generate.'),
-  includeGraphs: z.boolean().optional().describe('Whether to include graphs in the report.'),
-  includeMetrics: z.boolean().optional().describe('Whether to include metrics in the report.'),
-  includeEvaluation: z.boolean().optional().describe('Whether to include an overall evaluation in the report.'),
+    .describe('Le type de rapport à générer.'),
+  includeGraphs: z.boolean().optional().describe('Indique si des graphiques doivent être inclus dans le rapport.'),
+  includeMetrics: z.boolean().optional().describe('Indique si des métriques doivent être incluses dans le rapport.'),
+  includeEvaluation: z.boolean().optional().describe('Indique si une évaluation globale doit être incluse dans le rapport.'),
 });
 export type GenerateReportInput = z.infer<typeof GenerateReportInputSchema>;
 
 const GenerateReportOutputSchema = z.object({
-  report: z.string().describe('The generated AI-powered report.'),
+  report: z.string().describe('Le rapport généré par l\'IA.'),
 });
 export type GenerateReportOutput = z.infer<typeof GenerateReportOutputSchema>;
 
@@ -35,20 +35,20 @@ const prompt = ai.definePrompt({
   name: 'generateReportPrompt',
   input: {schema: GenerateReportInputSchema},
   output: {schema: GenerateReportOutputSchema},
-  prompt: `You are an AI assistant specialized in generating reports for university administrators.
+  prompt: `Vous êtes un assistant IA spécialisé dans la génération de rapports pour les administrateurs d'université.
 
-You will receive student and faculty data, and your task is to generate a comprehensive report based on the data and the requested report type.
+Vous recevrez des données sur les étudiants et le personnel, et votre tâche est de générer un rapport complet basé sur ces données et le type de rapport demandé.
 
-Student Data: {{{studentData}}}
-Faculty Data: {{{facultyData}}}
-Report Type: {{{reportType}}}
+Données des étudiants: {{{studentData}}}
+Données du personnel: {{{facultyData}}}
+Type de rapport: {{{reportType}}}
 
 Instructions:
-- If includeGraphs is true, include relevant graphs in the report.{{{includeGraphs}}}
-- If includeMetrics is true, include key metrics and statistics.{{{includeMetrics}}}
-- If includeEvaluation is true, provide an overall evaluation and insights.{{{includeEvaluation}}}
+- Si includeGraphs est vrai, incluez des graphiques pertinents dans le rapport.{{{includeGraphs}}}
+- Si includeMetrics est vrai, incluez des métriques et des statistiques clés.{{{includeMetrics}}}
+- Si includeEvaluation est vrai, fournissez une évaluation globale et des aperçus.{{{includeEvaluation}}}
 
-Make sure the report is well-structured, easy to understand, and provides actionable insights for the administrators.
+Assurez-vous que le rapport est bien structuré, facile à comprendre et qu'il fournit des informations exploitables pour les administrateurs.
 `,config: {
     safetySettings: [
       {

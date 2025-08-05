@@ -33,10 +33,10 @@ export function StudentTable({ data }: { data: Student[] }) {
     student.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAdd = () => alert('Add new student functionality to be implemented.');
-  const handleEdit = (id: string) => alert(`Edit student ${id} functionality to be implemented.`);
+  const handleAdd = () => alert('La fonctionnalité d\'ajout d\'un nouvel étudiant sera bientôt implémentée.');
+  const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
-    if(confirm('Are you sure you want to delete this student?')) {
+    if(confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
         setStudents(students.filter(s => s.id !== id));
     }
   };
@@ -47,19 +47,19 @@ export function StudentTable({ data }: { data: Student[] }) {
       <CardHeader>
         <div className="flex items-center justify-between">
             <div>
-                <CardTitle>Students</CardTitle>
-                <CardDescription>Manage student records.</CardDescription>
+                <CardTitle>Étudiants</CardTitle>
+                <CardDescription>Gérer les dossiers des étudiants.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
                 <Input
-                placeholder="Search students..."
+                placeholder="Rechercher des étudiants..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
                 <Button onClick={handleAdd}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Student
+                    Ajouter un étudiant
                 </Button>
             </div>
         </div>
@@ -69,11 +69,11 @@ export function StudentTable({ data }: { data: Student[] }) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Name</TableHead>
+              <TableHead>Nom</TableHead>
               <TableHead className="hidden md:table-cell">Email</TableHead>
-              <TableHead>Department</TableHead>
-              <TableHead className="hidden sm:table-cell">Year</TableHead>
-              <TableHead className="hidden sm:table-cell">GPA</TableHead>
+              <TableHead>Département</TableHead>
+              <TableHead className="hidden sm:table-cell">Année</TableHead>
+              <TableHead className="hidden sm:table-cell">Moyenne</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -89,7 +89,7 @@ export function StudentTable({ data }: { data: Student[] }) {
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">Ouvrir le menu</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -97,14 +97,14 @@ export function StudentTable({ data }: { data: Student[] }) {
                       <DropdownMenuLabel>Actions</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => handleEdit(student.id)}>
                         <Edit className="mr-2 h-4 w-4" />
-                        Edit
+                        Modifier
                       </DropdownMenuItem>
                       <DropdownMenuItem
                         onClick={() => handleDelete(student.id)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
-                        Delete
+                        Supprimer
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
@@ -113,7 +113,7 @@ export function StudentTable({ data }: { data: Student[] }) {
             )) : (
                 <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                        No results found.
+                        Aucun résultat trouvé.
                     </TableCell>
                 </TableRow>
             )}

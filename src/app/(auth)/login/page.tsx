@@ -11,7 +11,7 @@ export default function LoginPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, you'd have authentication logic here
+    // Dans une vraie application, vous auriez une logique d'authentification ici
     router.push('/dashboard');
   };
 
@@ -20,7 +20,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-2xl font-bold">Campus Central</CardTitle>
-          <CardDescription>Enter your credentials to access the admin panel.</CardDescription>
+          <CardDescription>Entrez vos identifiants pour accéder au panneau d'administration.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleLogin} className="grid gap-4">
@@ -29,11 +29,11 @@ export default function LoginPage() {
               <Input id="email" type="email" placeholder="admin@university.edu" required defaultValue="admin@university.edu" />
             </div>
             <div className="grid gap-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">Mot de passe</Label>
               <Input id="password" type="password" required defaultValue="password" />
             </div>
             <Button type="submit" className="w-full">
-              Login
+              Connexion
             </Button>
           </form>
         </CardContent>

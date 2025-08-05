@@ -37,12 +37,12 @@ import { Button } from '@/components/ui/button';
 import { SheetTitle } from '@/components/ui/sheet';
 
 const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { href: '/students', icon: Users, label: 'Students' },
-  { href: '/faculty', icon: UserSquare, label: 'Faculty' },
-  { href: '/reports', icon: FileText, label: 'Reports' },
+  { href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
+  { href: '/students', icon: Users, label: 'Étudiants' },
+  { href: '/faculty', icon: UserSquare, label: 'Personnel' },
+  { href: '/reports', icon: FileText, label: 'Rapports' },
   { href: '/finances', icon: Landmark, label: 'Finances' },
-  { href: '/settings', icon: Settings, label: 'Settings' },
+  { href: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -56,7 +56,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             <Package2 className="h-6 w-6" />
             <span className="text-lg font-semibold">Campus Central</span>
           </Link>
-          <SheetTitle className="sr-only">Mobile Menu</SheetTitle>
+          <SheetTitle className="sr-only">Menu Mobile</SheetTitle>
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -100,15 +100,15 @@ function UserMenu() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Admin Account</DropdownMenuLabel>
+        <DropdownMenuLabel>Compte Administrateur</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Link href="/settings">
-            <DropdownMenuItem>Settings</DropdownMenuItem>
+            <DropdownMenuItem>Paramètres</DropdownMenuItem>
         </Link>
         <DropdownMenuItem>Support</DropdownMenuItem>
         <DropdownMenuSeparator />
         <Link href="/login" passHref>
-          <DropdownMenuItem>Logout</DropdownMenuItem>
+          <DropdownMenuItem>Déconnexion</DropdownMenuItem>
         </Link>
       </DropdownMenuContent>
     </DropdownMenu>

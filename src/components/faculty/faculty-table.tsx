@@ -33,10 +33,10 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
     member.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAdd = () => alert('Add new faculty member functionality to be implemented.');
-  const handleEdit = (id: string) => alert(`Edit faculty member ${id} functionality to be implemented.`);
+  const handleAdd = () => alert('La fonctionnalité d\'ajout d\'un nouveau membre du personnel sera bientôt implémentée.');
+  const handleEdit = (id: string) => alert(`La fonctionnalité de modification du membre du personnel ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
-    if(confirm('Are you sure you want to delete this faculty member?')) {
+    if(confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ?')) {
         setFaculty(faculty.filter(f => f.id !== id));
     }
   };
@@ -46,19 +46,19 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
       <CardHeader>
          <div className="flex items-center justify-between">
             <div>
-                <CardTitle>Faculty</CardTitle>
-                <CardDescription>Manage faculty member records.</CardDescription>
+                <CardTitle>Personnel</CardTitle>
+                <CardDescription>Gérer les dossiers des membres du personnel.</CardDescription>
             </div>
             <div className="flex items-center gap-2">
                 <Input
-                placeholder="Search faculty..."
+                placeholder="Rechercher du personnel..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
                 <Button onClick={handleAdd}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Add Faculty
+                    Ajouter un membre
                 </Button>
             </div>
         </div>
@@ -68,11 +68,11 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>Name</TableHead>
+                <TableHead>Nom</TableHead>
                 <TableHead className="hidden md:table-cell">Email</TableHead>
-                <TableHead>Department</TableHead>
-                <TableHead className="hidden sm:table-cell">Position</TableHead>
-                <TableHead className="hidden lg:table-cell">Specialization</TableHead>
+                <TableHead>Département</TableHead>
+                <TableHead className="hidden sm:table-cell">Poste</TableHead>
+                <TableHead className="hidden lg:table-cell">Spécialisation</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
@@ -88,7 +88,7 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                         <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Open menu</span>
+                            <span className="sr-only">Ouvrir le menu</span>
                             <MoreHorizontal className="h-4 w-4" />
                         </Button>
                         </DropdownMenuTrigger>
@@ -96,14 +96,14 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEdit(member.id)}>
                             <Edit className="mr-2 h-4 w-4" />
-                            Edit
+                            Modifier
                         </DropdownMenuItem>
                         <DropdownMenuItem
                             onClick={() => handleDelete(member.id)}
                             className="text-destructive focus:text-destructive"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
-                            Delete
+                            Supprimer
                         </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -112,7 +112,7 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
                 )) : (
                     <TableRow>
                         <TableCell colSpan={6} className="h-24 text-center">
-                            No results found.
+                            Aucun résultat trouvé.
                         </TableCell>
                     </TableRow>
                 )}
