@@ -24,63 +24,53 @@ import {
 import { Student } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { students as initialStudents } from '@/lib/data';
 
+// Props updated to remove Card wrapper elements
 export function StudentTable({ data }: { data: Student[] }) {
-  const [searchTerm, setSearchTerm] = React.useState('');
   const [students, setStudents] = React.useState(data);
 
-  const filteredStudents = students.filter((student) =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    student.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  // This component will now receive filtered data, so we don't need internal filtering.
+  // The state will be managed by the parent component to handle deletions.
+  React.useEffect(() => {
+    setStudents(data);
+  }, [data]);
+
 
   const handleAdd = () => alert('La fonctionnalité d\'ajout d\'un nouvel étudiant sera bientôt implémentée.');
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
     if(confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
-        setStudents(students.filter(s => s.id !== id));
+        // We filter the local state for an immediate UI update.
+        // A more robust solution would involve updating the source of truth in `data.ts` or via an API call and re-rendering.
+        setStudents(currentStudents => currentStudents.filter(s => s.id !== id));
     }
   };
 
 
   return (
-    <Card>
-      <CardHeader>
-        <div className="flex items-start justify-between">
-            <div>
-                <CardTitle>Liste des étudiants</CardTitle>
-                <CardDescription>Consulter et gérer les dossiers des étudiants.</CardDescription>
-            </div>
-            <div className="flex flex-col items-end gap-2">
-                <Input
-                  placeholder="Rechercher des étudiants..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="max-w-xs"
-                />
-                <Button onClick={handleAdd}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter un étudiant
-                </Button>
-            </div>
+    <>
+        <div className="flex items-start justify-between mb-4">
+            <CardDescription>Consulter et gérer les dossiers des étudiants de cette filière.</CardDescription>
+            <Button onClick={handleAdd}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Ajouter un étudiant
+            </Button>
         </div>
-      </CardHeader>
-      <CardContent>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>Nom</TableHead>
               <TableHead className="hidden md:table-cell">Email</TableHead>
-              <TableHead>Département</TableHead>
+              <TableHead>Département/Option</TableHead>
               <TableHead className="hidden sm:table-cell">Année</TableHead>
               <TableHead className="hidden sm:table-cell">Moyenne</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredStudents.length > 0 ? filteredStudents.map((student) => (
+            {students.length > 0 ? students.map((student) => (
               <TableRow key={student.id}>
                 <TableCell className="font-medium">{student.name}</TableCell>
                 <TableCell className="hidden md:table-cell">{student.email}</TableCell>
@@ -122,14 +112,13 @@ export function StudentTable({ data }: { data: Student[] }) {
             )) : (
                 <TableRow>
                     <TableCell colSpan={6} className="h-24 text-center">
-                        Aucun résultat trouvé.
+                        Aucun étudiant trouvé pour les critères actuels.
                     </TableCell>
                 </TableRow>
             )}
           </TableBody>
         </Table>
       </div>
-      </CardContent>
-    </Card>
+      </>
   );
 }
