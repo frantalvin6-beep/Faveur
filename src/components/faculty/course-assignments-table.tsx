@@ -64,7 +64,7 @@ export function CourseAssignmentsTable({ data }: { data: CourseAssignment[] }) {
             </div>
         </div>
       </CardHeader>
-      <CardContent className="overflow-x-auto">
+      <CardContent>
           <div className="rounded-md border">
             <Table>
             <TableHeader>
