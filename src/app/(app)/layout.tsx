@@ -10,12 +10,15 @@ import {
   Users,
   UserSquare,
   Package2,
-  Landmark,
   GraduationCap,
-  BookCopy,
-  CalendarDays,
   PencilRuler,
   MessageSquare,
+  BookOpen,
+  Calendar,
+  DollarSign,
+  Briefcase,
+  Clock,
+  Building,
 } from 'lucide-react';
 
 import {
@@ -29,6 +32,8 @@ import {
   SidebarInset,
   SidebarTrigger,
   useSidebar,
+  SidebarMenuSub,
+  SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -41,29 +46,45 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { SheetTitle } from '@/components/ui/sheet';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const navItems = [
   { href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
   { 
-    href: '/academics', 
+    id: 'academics',
     icon: GraduationCap, 
     label: 'Gestion académique',
     subItems: [
-        { href: '/academics/courses', label: 'Cours et matières' },
-        { href: '/academics/calendar', label: 'Calendrier académique' },
+        { href: '/academics/departments', label: 'Facultés et départements', icon: Building },
+        { href: '/academics/courses', label: 'Cours et matières', icon: BookOpen },
+        { href: '/academics/calendar', label: 'Calendrier académique', icon: Calendar },
+    ]
+  },
+  { 
+    id: 'faculty',
+    icon: UserSquare, 
+    label: 'Personnel enseignant',
+    subItems: [
+        { href: '/faculty/profiles', label: 'Profils enseignants', icon: Users },
+        { href: '/faculty/assignments', label: 'Attribution des cours', icon: Briefcase },
+        { href: '/faculty/schedule', label: 'Emploi du temps', icon: Clock },
     ]
   },
   { href: '/students', icon: Users, label: 'Étudiants' },
-  { href: '/faculty', icon: UserSquare, label: 'Personnel enseignant' },
   { href: '/exams', icon: PencilRuler, label: 'Examens et notes' },
   { href: '/communication', icon: MessageSquare, label: 'Communication' },
   { href: '/reports', icon: FileText, label: 'Rapports' },
+  { href: '/finances', icon: DollarSign, label: 'Finances' },
   { href: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isMobile } = useSidebar();
+
+  const isSubItemActive = (subItems: any[]) => {
+    return subItems.some(item => pathname === item.href);
+  }
 
   return (
     <>
@@ -78,18 +99,49 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         <SidebarContent>
           <SidebarMenu>
             {navItems.map((item) => (
-              <SidebarMenuItem key={item.href}>
-                <Link href={item.href} passHref>
-                  <SidebarMenuButton
-                    isActive={pathname.startsWith(item.href)}
-                    tooltip={item.label}
-                    className="w-full justify-start"
-                  >
-                    <item.icon className="h-4 w-4" />
-                    <span>{item.label}</span>
-                  </SidebarMenuButton>
-                </Link>
-              </SidebarMenuItem>
+              item.subItems ? (
+                <Collapsible key={item.id} className="w-full" defaultOpen={isSubItemActive(item.subItems)}>
+                  <CollapsibleTrigger asChild>
+                     <SidebarMenuItem>
+                        <SidebarMenuButton
+                            className="w-full justify-start"
+                            tooltip={item.label}
+                            isActive={isSubItemActive(item.subItems)}
+                        >
+                            <item.icon className="h-4 w-4" />
+                            <span>{item.label}</span>
+                        </SidebarMenuButton>
+                     </SidebarMenuItem>
+                  </CollapsibleTrigger>
+                  <CollapsibleContent>
+                    <SidebarMenuSub>
+                        {item.subItems.map((subItem) => (
+                             <SidebarMenuItem key={subItem.href}>
+                                <Link href={subItem.href} passHref>
+                                    <SidebarMenuSubButton isActive={pathname === subItem.href}>
+                                        <subItem.icon className="h-4 w-4" />
+                                        <span>{subItem.label}</span>
+                                    </SidebarMenuSubButton>
+                                </Link>
+                             </SidebarMenuItem>
+                        ))}
+                    </SidebarMenuSub>
+                  </CollapsibleContent>
+                </Collapsible>
+              ) : (
+                <SidebarMenuItem key={item.href}>
+                  <Link href={item.href!} passHref>
+                    <SidebarMenuButton
+                      isActive={pathname.startsWith(item.href!)}
+                      tooltip={item.label}
+                      className="w-full justify-start"
+                    >
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.label}</span>
+                    </SidebarMenuButton>
+                  </Link>
+                </SidebarMenuItem>
+              )
             ))}
           </SidebarMenu>
         </SidebarContent>
