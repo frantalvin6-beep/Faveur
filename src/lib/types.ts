@@ -76,6 +76,7 @@ export interface ExamGrade {
   courseName: string;
   courseCode: string;
   teacherName: string;
+  department: string;
   examType: 'Contrôle' | 'Partiel' | 'Final';
   grade: number;
   coefficient: number;
