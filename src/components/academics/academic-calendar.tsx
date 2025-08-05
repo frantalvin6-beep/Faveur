@@ -53,9 +53,9 @@ const initialAcademicEvents: AcademicEvent[] = [
 ];
 
 const eventStyles = {
-  event: "bg-blue-100 text-blue-800 border-blue-300",
-  exam: "bg-red-100 text-red-800 border-red-300",
-  holiday: "bg-green-100 text-green-800 border-green-300",
+  event: "bg-primary/10 text-primary border-primary/20",
+  exam: "bg-destructive/10 text-destructive border-destructive/20",
+  holiday: "bg-accent/20 text-accent-foreground border-accent/30",
 };
 
 export function AcademicCalendar() {
@@ -132,8 +132,8 @@ export function AcademicCalendar() {
                 const isCurrentMonthDay = format(day, 'M') === format(currentMonth, 'M');
                 return (
                   <div key={day.toString()} className={cn(
-                      "h-32 p-2 border-b border-r flex flex-col relative group cursor-pointer",
-                      !isCurrentMonthDay && "bg-muted/30 text-muted-foreground"
+                      "h-32 p-2 border-b border-r flex flex-col relative group transition-colors duration-150",
+                      isCurrentMonthDay ? "hover:bg-accent/5" : "bg-muted/30 text-muted-foreground"
                   )} onClick={() => isCurrentMonthDay && handleDayClick(day)}>
                       <span className={cn(
                           "font-medium",
@@ -142,14 +142,14 @@ export function AcademicCalendar() {
                           {format(day, 'd')}
                       </span>
                       {event && isCurrentMonthDay && (
-                        <div className={cn("mt-1 p-1 rounded-md text-xs", eventStyles[event.type])}>
+                        <div className={cn("mt-1 p-1 rounded-md text-xs border truncate", eventStyles[event.type])}>
                           {event.event}
                         </div>
                       )}
                       {isCurrentMonthDay && (
-                        <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100">
-                          <Plus className="h-4 w-4" />
-                        </Button>
+                         <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Plus className="h-4 w-4" />
+                         </Button>
                       )}
                   </div>
                 )
