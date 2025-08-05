@@ -22,7 +22,8 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarInset,
-  SidebarTrigger
+  SidebarTrigger,
+  useSidebar,
 } from '@/components/ui/sidebar';
 import {
   DropdownMenu,
@@ -45,18 +46,19 @@ const navItems = [
   { href: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const { isMobile } = useSidebar();
 
   return (
-    <SidebarProvider>
+    <>
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <Link href="/dashboard" className="flex items-center gap-2">
             <Package2 className="h-6 w-6" />
             <span className="text-lg font-semibold">Campus Central</span>
           </Link>
-          <SheetTitle className="sr-only">Menu Mobile</SheetTitle>
+          {isMobile && <SheetTitle className="sr-only">Menu Mobile</SheetTitle>}
         </SidebarHeader>
         <SidebarContent>
           <SidebarMenu>
@@ -84,6 +86,14 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-4 sm:p-6 bg-background">{children}</main>
       </SidebarInset>
+    </>
+  );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
     </SidebarProvider>
   );
 }
