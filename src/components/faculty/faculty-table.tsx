@@ -24,8 +24,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Badge } from '@/components/ui/badge';
 
 export function FacultyTable({ data }: { data: Faculty[] }) {
-  const [searchTerm, setSearchTerm] = React.useState('');
   const [faculty, setFaculty] = React.useState(data);
+  const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredFaculty = faculty.filter((member) =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -36,8 +36,11 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
   const handleAdd = () => alert('La fonctionnalité d\'ajout d\'un nouveau membre du personnel sera bientôt implémentée.');
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification du membre du personnel ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
-    if(confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ?')) {
+    if(confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ? Cela supprimera également toutes ses entrées d\'emploi du temps.')) {
         setFaculty(faculty.filter(f => f.id !== id));
+        // Note: In a real app, this should be a call to an API that handles cascading deletes.
+        // For this demo, we can't easily modify another component's state from here.
+        // The logic for filtering schedule will be handled in the schedule component based on the updated faculty list.
     }
   };
 
@@ -64,17 +67,17 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
         </div>
       </CardHeader>
       <CardContent>
-          <div className="rounded-md border">
+          <div className="relative w-full overflow-auto rounded-md border">
             <Table>
             <TableHeader>
                 <TableRow>
-                <TableHead>Nom</TableHead>
-                <TableHead>Contact</TableHead>
-                <TableHead>Département</TableHead>
-                <TableHead>Poste</TableHead>
-                <TableHead>Spécialisation</TableHead>
+                <TableHead className="whitespace-nowrap">Nom</TableHead>
+                <TableHead className="whitespace-nowrap">Contact</TableHead>
+                <TableHead className="whitespace-nowrap">Département</TableHead>
+                <TableHead className="whitespace-nowrap">Poste</TableHead>
+                <TableHead className="whitespace-nowrap">Spécialisation</TableHead>
                 <TableHead className="whitespace-nowrap">Niveau d'enseignement</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>

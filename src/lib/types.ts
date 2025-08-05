@@ -62,7 +62,7 @@ export interface ScheduleEntry {
   teacherName: string;
   courseName: string;
   courseCode: string;
-  dayOfWeek: 'Lundi' | 'Mardi' | 'Mercredi' | 'Jeudi' | 'Vendredi';
+  dayOfWeek: 'Lundi' | 'Mardi' | 'Mercredi' | 'Jeudi' | 'Vendredi' | 'Samedi';
   startTime: string;
   endTime: string;
   location: string;
