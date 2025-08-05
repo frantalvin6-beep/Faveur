@@ -11,13 +11,14 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Edit, Trash2, Plus, Edit2, Trash } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Department } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -38,6 +39,10 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
         setDepartments(departments.filter(d => d.id !== id));
     }
   };
+  
+  const handleAddOption = (id: string) => alert(`La fonctionnalité d'ajout d'option pour ${id} sera bientôt implémentée.`);
+  const handleRenameOption = (id: string) => alert(`La fonctionnalité de renommage d'option pour ${id} sera bientôt implémentée.`);
+  const handleDeleteOption = (id: string) => alert(`La fonctionnalité de suppression d'option pour ${id} sera bientôt implémentée.`);
 
   return (
     <Card>
@@ -49,14 +54,14 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
             </div>
             <div className="flex items-center gap-2">
                 <Input
-                placeholder="Rechercher un département..."
+                placeholder="Rechercher..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
                 <Button onClick={handleAdd}>
                     <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter un département
+                    Ajouter
                 </Button>
             </div>
         </div>
@@ -91,7 +96,7 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
                         </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuLabel>Département</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEdit(dept.id)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Modifier
@@ -102,6 +107,23 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Supprimer
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuLabel>Options</DropdownMenuLabel>
+                        <DropdownMenuItem onClick={() => handleAddOption(dept.id)}>
+                            <Plus className="mr-2 h-4 w-4" />
+                            Créer une option
+                        </DropdownMenuItem>
+                         <DropdownMenuItem onClick={() => handleRenameOption(dept.id)}>
+                            <Edit2 className="mr-2 h-4 w-4" />
+                            Renommer une option
+                        </DropdownMenuItem>
+                         <DropdownMenuItem 
+                            onClick={() => handleDeleteOption(dept.id)}
+                            className="text-destructive focus:text-destructive"
+                         >
+                            <Trash className="mr-2 h-4 w-4" />
+                            Supprimer une option
                         </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
