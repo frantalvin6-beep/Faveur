@@ -42,6 +42,7 @@ export interface AcademicRecord {
 export interface CourseRecord {
   name: string;
   grade: number;
+  coefficient: number;
 }
 
 export interface CourseAssignment {

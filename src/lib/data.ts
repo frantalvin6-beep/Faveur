@@ -11,8 +11,8 @@ export const students: Student[] = [
     gpa: 3.8, 
     enrollmentDate: '2021-09-01',
     academicHistory: [
-      { semester: 'Semestre 1', year: 2021, courses: [{name: 'Algo 1', grade: 18}, {name: 'Maths 1', grade: 17}], gpa: 17.5, decision: 'Admis' },
-      { semester: 'Semestre 2', year: 2022, courses: [{name: 'Algo 2', grade: 16}, {name: 'Web 1', grade: 18}], gpa: 17, decision: 'Admis' },
+      { semester: 'Semestre 1', year: 2021, courses: [{name: 'Algo 1', grade: 18, coefficient: 3}, {name: 'Maths 1', grade: 17, coefficient: 2}], gpa: 17.6, decision: 'Admis' },
+      { semester: 'Semestre 2', year: 2022, courses: [{name: 'Algo 2', grade: 16, coefficient: 3}, {name: 'Web 1', grade: 18, coefficient: 2}], gpa: 16.8, decision: 'Admis' },
     ]
   },
   { 
@@ -25,7 +25,7 @@ export const students: Student[] = [
     gpa: 3.5, 
     enrollmentDate: '2022-09-01',
     academicHistory: [
-        { semester: 'Semestre 1', year: 2022, courses: [{name: 'Electronique 1', grade: 15}, {name: 'Automatique', grade: 14}], gpa: 14.5, decision: 'Admis' },
+        { semester: 'Semestre 1', year: 2022, courses: [{name: 'Electronique 1', grade: 15, coefficient: 4}, {name: 'Automatique', grade: 14, coefficient: 3}], gpa: 14.57, decision: 'Admis' },
     ]
   },
   { 

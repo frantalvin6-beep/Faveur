@@ -51,19 +51,19 @@ function getDecisionBadgeVariant(decision: string) {
 function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecord: (record: AcademicRecord) => void }) {
   const [semester, setSemester] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
-  const [courses, setCourses] = useState<Partial<CourseRecord>[]>([{ name: '', grade: undefined }])
+  const [courses, setCourses] = useState<Partial<CourseRecord>[]>([{ name: '', grade: undefined, coefficient: undefined }])
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddCourse = () => {
-    setCourses([...courses, { name: '', grade: undefined }])
+    setCourses([...courses, { name: '', grade: undefined, coefficient: undefined }])
   }
 
   const handleRemoveCourse = (index: number) => {
     setCourses(courses.filter((_, i) => i !== index))
   }
 
-  const handleCourseChange = (index: number, field: 'name' | 'grade', value: string | number) => {
+  const handleCourseChange = (index: number, field: 'name' | 'grade' | 'coefficient', value: string | number) => {
     const newCourses = [...courses]
     newCourses[index] = { ...newCourses[index], [field]: value }
     setCourses(newCourses)
@@ -71,9 +71,9 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalCourses = courses.filter(c => c.name && c.grade !== undefined) as CourseRecord[];
+    const finalCourses = courses.filter(c => c.name && c.grade !== undefined && c.coefficient !== undefined) as CourseRecord[];
     if (!semester || !year || finalCourses.length === 0) {
-      alert("Veuillez remplir tous les champs requis.");
+      alert("Veuillez remplir tous les champs requis, y compris les coefficients.");
       return;
     }
     
@@ -95,7 +95,7 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
         // Reset form
         setSemester('');
         setYear(new Date().getFullYear());
-        setCourses([{ name: '', grade: undefined }]);
+        setCourses([{ name: '', grade: undefined, coefficient: undefined }]);
     } catch (error) {
         console.error("Failed to calculate GPA with AI:", error);
         alert("Une erreur est survenue lors du calcul de la moyenne. Veuillez réessayer.");
@@ -109,7 +109,7 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
       <DialogTrigger asChild>
         <Button>Saisir les notes</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[625px]">
+      <DialogContent className="sm:max-w-[725px]">
         <DialogHeader>
           <DialogTitle>Saisie des notes pour {student.name}</DialogTitle>
         </DialogHeader>
@@ -126,12 +126,17 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
                   </div>
               </div>
               <div>
-                <Label>Matières et notes</Label>
-                <div className="space-y-2 mt-2">
+                <div className="grid grid-cols-[1fr_100px_100px_auto] gap-2 mb-2 px-2">
+                    <Label>Matière</Label>
+                    <Label>Note</Label>
+                    <Label>Coeff.</Label>
+                </div>
+                <div className="space-y-2">
                   {courses.map((course, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input placeholder="Nom de la matière" value={course.name ?? ''} onChange={e => handleCourseChange(index, 'name', e.target.value)} required />
                       <Input type="number" placeholder="Note" value={course.grade ?? ''} onChange={e => handleCourseChange(index, 'grade', parseFloat(e.target.value))} required min="0" max="20" step="0.5" />
+                      <Input type="number" placeholder="Coeff." value={course.coefficient ?? ''} onChange={e => handleCourseChange(index, 'coefficient', parseInt(e.target.value))} required min="1" />
                       <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveCourse(index)} disabled={courses.length === 1}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -223,6 +228,7 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
                         <TableRow>
                           <TableHead>Matière</TableHead>
                           <TableHead className="text-right">Note</TableHead>
+                          <TableHead className="text-right">Coefficient</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -230,6 +236,7 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
                           <TableRow key={course.name}>
                             <TableCell>{course.name}</TableCell>
                             <TableCell className="text-right font-medium">{course.grade}</TableCell>
+                            <TableCell className="text-right font-medium">{course.coefficient}</TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
