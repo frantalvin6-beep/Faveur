@@ -19,7 +19,7 @@ import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { generateReport } from '@/ai/flows/generate-ai-powered-reports';
 import { students, faculty } from '@/lib/data';
-import { Loader2 } from 'lucide-react';
+import { Download, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const reportSchema = z.object({
@@ -69,6 +69,23 @@ export function ReportGenerator() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleDownload = () => {
+    if (!report) return;
+    const blob = new Blob([report], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `rapport-ia-${new Date().toISOString().slice(0, 10)}.txt`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+     toast({
+        title: "Téléchargement lancé",
+        description: "Le rapport est en cours de téléchargement.",
+      });
   };
 
   return (
@@ -147,11 +164,19 @@ export function ReportGenerator() {
             <Textarea
               readOnly
               value={report}
-              className="min-h-[400px] bg-muted/50 text-sm"
+              className="min-h-[350px] bg-muted/50 text-sm"
               aria-label="Rapport généré"
             />
           )}
         </CardContent>
+         {report && !isLoading && (
+            <CardFooter>
+                <Button onClick={handleDownload} variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Télécharger le rapport
+                </Button>
+            </CardFooter>
+        )}
       </Card>
     </div>
   );
