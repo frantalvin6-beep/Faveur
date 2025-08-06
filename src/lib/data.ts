@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction } from './types';
 
 export const students: Student[] = [
   { 
@@ -316,5 +316,26 @@ export const adminFinances: AdminFinance[] = adminFinancesData.map(data => {
     return { ...data, ...calculated };
 });
 
+export const accountingTransactions: AccountingTransaction[] = [
+  { id: 'TRN001', date: '2025-08-05', type: 'Revenu', sourceBeneficiary: 'Étudiants', category: 'Frais scolarité', amount: 5000000, paymentMethod: 'Espèces', description: 'Paiement semestre impair', responsible: 'Caissier 1' },
+  { id: 'TRN002', date: '2025-08-05', type: 'Revenu', sourceBeneficiary: 'Subvention État', category: 'Subvention', amount: 2000000, paymentMethod: 'Virement bancaire', description: 'Aide financière', responsible: 'Comptable' },
+  { id: 'TRN003', date: '2025-08-06', type: 'Dépense', sourceBeneficiary: 'Enseignants', category: 'Salaires', amount: 3500000, paymentMethod: 'Chèque', description: 'Paiement enseignants', responsible: 'DRH' },
+  { id: 'TRN004', date: '2025-08-07', type: 'Dépense', sourceBeneficiary: 'Administrateurs', category: 'Salaires', amount: 1800000, paymentMethod: 'Virement bancaire', description: 'Paiement admin mensuel', responsible: 'Comptable' },
+  { id: 'TRN005', date: '2025-08-07', type: 'Dépense', sourceBeneficiary: 'Fournisseurs', category: 'Fournitures', amount: 500000, paymentMethod: 'Espèces', description: 'Achat matériels bureau', responsible: 'Caissier 2' },
+  { id: 'TRN006', date: '2025-08-08', type: 'Revenu', sourceBeneficiary: 'Donateur privé', category: 'Don', amount: 1000000, paymentMethod: 'Virement bancaire', description: 'Soutien infrastructures', responsible: 'Directeur' },
+];
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance };
+export function calculerComptabilite(transactions: AccountingTransaction[]) {
+  let revenus = 0;
+  let depenses = 0;
+
+  transactions.forEach(t => {
+    if (t.type === "Revenu") revenus += t.amount;
+    else if (t.type === "Dépense") depenses += t.amount;
+  });
+
+  return { revenus, depenses, solde: revenus - depenses };
+}
+
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction };

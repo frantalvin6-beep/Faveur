@@ -200,3 +200,15 @@ export interface AdminFinance {
   reste: number;
   statut: 'Finalisé' | 'Non finalisé';
 }
+
+export interface AccountingTransaction {
+  id: string;
+  date: string;
+  type: 'Revenu' | 'Dépense';
+  sourceBeneficiary: string;
+  category: string;
+  amount: number;
+  paymentMethod: 'Espèces' | 'Virement bancaire' | 'Chèque';
+  description: string;
+  responsible: string;
+}

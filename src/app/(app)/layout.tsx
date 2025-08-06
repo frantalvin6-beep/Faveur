@@ -24,6 +24,7 @@ import {
   CalendarPlus,
   Hourglass,
   CheckSquare,
+  BookCopy,
 } from 'lucide-react';
 
 import {
@@ -107,6 +108,7 @@ const navItems = [
         { href: '/finances/administration', label: 'Finances Administration', icon: Briefcase },
     ]
   },
+  { href: '/accounting', icon: BookCopy, label: 'Comptabilité' },
   { href: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
