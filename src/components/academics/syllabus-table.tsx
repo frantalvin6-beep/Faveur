@@ -37,9 +37,9 @@ export function SyllabusTable({ data }: { data: Course[] }) {
                   <ul className="space-y-4">
                     {item.chapters.map((chapter, index) => (
                       <li key={index} className="space-y-2">
-                        <span className="font-semibold">{index + 1}. {chapter.title}</span>
+                        <div className="font-semibold">{index + 1}. {chapter.title}</div>
                         {chapter.subChapters && chapter.subChapters.length > 0 && (
-                          <div className="flex flex-wrap gap-2 pl-6">
+                          <div className="flex flex-wrap gap-2 pl-4">
                             {chapter.subChapters.map((subChapter, subIndex) => (
                               <Badge variant="outline" key={subIndex} className="font-normal">{subChapter.title}</Badge>
                             ))}
