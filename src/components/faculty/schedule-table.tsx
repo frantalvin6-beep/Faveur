@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, Edit, Trash2, PlusCircle } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, PlusCircle, Check, X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,6 +25,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { faculty as allFaculty } from '@/lib/data';
+import { cn } from '@/lib/utils';
 
 function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntry) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -140,6 +141,8 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntr
 export function ScheduleTable({ data }: { data: ScheduleEntry[] }) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [schedule, setSchedule] = React.useState(data);
+  const [editingId, setEditingId] = React.useState<string | null>(null);
+  const [editingData, setEditingData] = React.useState<Partial<ScheduleEntry>>({});
 
   const currentFacultyIds = React.useMemo(() => allFaculty.map(f => f.id), []);
   const activeSchedule = React.useMemo(() => schedule.filter(entry => currentFacultyIds.includes(entry.teacherId)), [schedule, currentFacultyIds]);
@@ -154,13 +157,41 @@ export function ScheduleTable({ data }: { data: ScheduleEntry[] }) {
     setSchedule(prev => [...prev, newEntry].sort((a,b) => a.dayOfWeek.localeCompare(b.dayOfWeek) || a.startTime.localeCompare(b.startTime)));
   };
 
-  const handleEdit = (id: string) => alert(`La fonctionnalité de modification pour ${id} sera bientôt implémentée.`);
+  const handleEditClick = (entry: ScheduleEntry) => {
+    setEditingId(entry.id);
+    setEditingData(entry);
+  };
+
+  const handleCancel = () => {
+    setEditingId(null);
+    setEditingData({});
+  };
+
+  const handleSave = (id: string) => {
+    const updatedSchedule = schedule.map(entry => {
+      if (entry.id === id) {
+        // If teacher is changed, update teacher name as well
+        const teacher = allFaculty.find(f => f.id === editingData.teacherId);
+        return { ...entry, ...editingData, teacherName: teacher?.name || entry.teacherName };
+      }
+      return entry;
+    });
+    setSchedule(updatedSchedule);
+    setEditingId(null);
+    setEditingData({});
+  };
+
+  const handleInputChange = (field: keyof ScheduleEntry, value: string) => {
+    setEditingData(prev => ({ ...prev, [field]: value }));
+  };
+
   const handleDelete = (id: string) => {
     if(confirm("Êtes-vous sûr de vouloir supprimer cette entrée de l'emploi du temps ?")) {
         setSchedule(schedule.filter(s => s.id !== id));
     }
   };
 
+  const daysOfWeek: ScheduleEntry['dayOfWeek'][] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
 
   return (
     <Card>
@@ -197,36 +228,80 @@ export function ScheduleTable({ data }: { data: ScheduleEntry[] }) {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredSchedule.length > 0 ? filteredSchedule.map((entry) => (
-                <TableRow key={entry.id}>
-                  <TableCell className="font-medium">{entry.dayOfWeek}</TableCell>
-                  <TableCell>{entry.startTime} - {entry.endTime}</TableCell>
-                  <TableCell>{entry.courseName}</TableCell>
-                  <TableCell>{entry.teacherName}</TableCell>
-                  <TableCell>{entry.location}</TableCell>
-                  <TableCell>{entry.level}</TableCell>
-                  <TableCell>{entry.semester}</TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" className="h-8 w-8 p-0">
-                              <span className="sr-only">Ouvrir le menu</span>
-                              <MoreHorizontal className="h-4 w-4" />
-                          </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                          <DropdownMenuItem onClick={() => handleEdit(entry.id)}>
-                              <Edit className="mr-2 h-4 w-4" /> Modifier
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => handleDelete(entry.id)} className="text-destructive">
-                              <Trash2 className="mr-2 h-4 w-4" /> Supprimer
-                          </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
-                </TableRow>
-              )) : (
+              {filteredSchedule.length > 0 ? filteredSchedule.map((entry) => {
+                  const isEditing = editingId === entry.id;
+                  return (
+                    <TableRow key={entry.id} className={cn(isEditing && "bg-muted/50")}>
+                      <TableCell className="font-medium">
+                        {isEditing ? (
+                          <Select value={editingData.dayOfWeek} onValueChange={v => handleInputChange('dayOfWeek', v)}>
+                            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>{daysOfWeek.map(d => <SelectItem key={d} value={d}>{d}</SelectItem>)}</SelectContent>
+                          </Select>
+                        ) : entry.dayOfWeek}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                          <div className="flex items-center gap-1">
+                            <Input type="time" className="h-8" value={editingData.startTime} onChange={e => handleInputChange('startTime', e.target.value)} />
+                            <span>-</span>
+                            <Input type="time" className="h-8" value={editingData.endTime} onChange={e => handleInputChange('endTime', e.target.value)} />
+                          </div>
+                        ) : `${entry.startTime} - ${entry.endTime}`}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? <Input className="h-8" value={editingData.courseName} onChange={e => handleInputChange('courseName', e.target.value)} /> : entry.courseName}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? (
+                           <Select value={editingData.teacherId} onValueChange={v => handleInputChange('teacherId', v)}>
+                            <SelectTrigger className="h-8"><SelectValue /></SelectTrigger>
+                            <SelectContent>{allFaculty.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                          </Select>
+                        ) : entry.teacherName}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? <Input className="h-8 w-24" value={editingData.location} onChange={e => handleInputChange('location', e.target.value)} /> : entry.location}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? <Input className="h-8 w-24" value={editingData.level} onChange={e => handleInputChange('level', e.target.value)} /> : entry.level}
+                      </TableCell>
+                      <TableCell>
+                        {isEditing ? <Input className="h-8 w-20" value={editingData.semester} onChange={e => handleInputChange('semester', e.target.value)} /> : entry.semester}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {isEditing ? (
+                          <div className="flex items-center justify-end gap-2">
+                             <Button variant="ghost" size="icon" className="h-8 w-8 text-green-600 hover:text-green-700" onClick={() => handleSave(entry.id)}>
+                                <Check className="h-5 w-5" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:text-red-700" onClick={handleCancel}>
+                                <X className="h-5 w-5" />
+                              </Button>
+                          </div>
+                        ) : (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Ouvrir le menu</span>
+                                    <MoreHorizontal className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleEditClick(entry)}>
+                                    <Edit className="mr-2 h-4 w-4" /> Modifier
+                                </DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleDelete(entry.id)} className="text-destructive">
+                                    <Trash2 className="mr-2 h-4 w-4" /> Supprimer
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  );
+              }) : (
                 <TableRow>
                   <TableCell colSpan={8} className="h-24 text-center">
                     Aucune entrée trouvée.
