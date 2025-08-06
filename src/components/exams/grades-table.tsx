@@ -35,6 +35,7 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
   const [grades, setGrades] = React.useState(data);
   const [editingId, setEditingId] = React.useState<string | null>(null);
   const [currentGrade, setCurrentGrade] = React.useState<number>(0);
+  const [currentCoefficient, setCurrentCoefficient] = React.useState<number>(1);
 
   React.useEffect(() => {
     setGrades(data);
@@ -43,6 +44,7 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
   const handleEditClick = (grade: ExamGrade) => {
     setEditingId(grade.id);
     setCurrentGrade(grade.grade);
+    setCurrentCoefficient(grade.coefficient);
   };
   
   const handleCancelEdit = () => {
@@ -50,7 +52,7 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
   }
   
   const handleSaveEdit = (grade: ExamGrade) => {
-     onGradeUpdate({ ...grade, grade: currentGrade });
+     onGradeUpdate({ ...grade, grade: currentGrade, coefficient: currentCoefficient });
      setEditingId(null);
   }
 
@@ -98,7 +100,19 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
                     )}
                 </TableCell>
                 
-                <TableCell className="text-center">{item.coefficient}</TableCell>
+                <TableCell className="text-center">
+                   {editingId === item.id ? (
+                        <Input 
+                            type="number"
+                            value={currentCoefficient}
+                            onChange={(e) => setCurrentCoefficient(Number(e.target.value))}
+                            className="w-20 mx-auto h-8"
+                             onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(item)}
+                        />
+                    ) : (
+                       item.coefficient
+                    )}
+                </TableCell>
                 <TableCell className="text-center font-medium">{ (item.grade * item.coefficient).toFixed(2) }</TableCell>
                 
                 <TableCell className="text-right">

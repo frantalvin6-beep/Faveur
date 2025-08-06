@@ -1,3 +1,4 @@
+
 'use client'
 
 import { useState } from 'react'
@@ -51,29 +52,41 @@ function getDecisionBadgeVariant(decision: string) {
 function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecord: (record: AcademicRecord) => void }) {
   const [semester, setSemester] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
-  const [courses, setCourses] = useState<Partial<CourseRecord>[]>([{ name: '', grade: undefined, coefficient: undefined }])
+  const [courses, setCourses] = useState<Partial<CourseRecord>[]>([{ name: '', grade: undefined, coefficient: 1 }])
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleAddCourse = () => {
-    setCourses([...courses, { name: '', grade: undefined, coefficient: undefined }])
+    setCourses([...courses, { name: '', grade: undefined, coefficient: 1 }])
   }
 
   const handleRemoveCourse = (index: number) => {
     setCourses(courses.filter((_, i) => i !== index))
   }
 
-  const handleCourseChange = (index: number, field: 'name' | 'grade' | 'coefficient', value: string | number) => {
-    const newCourses = [...courses]
-    newCourses[index] = { ...newCourses[index], [field]: value }
-    setCourses(newCourses)
-  }
+  const handleCourseChange = (index: number, field: keyof CourseRecord, value: string | number) => {
+    const newCourses = [...courses];
+    const course = { ...newCourses[index] };
+    if (field === 'name') {
+        course.name = value as string;
+    } else {
+        const numValue = Number(value);
+        if (!isNaN(numValue)) {
+            if (field === 'grade') course.grade = numValue;
+            if (field === 'coefficient') course.coefficient = numValue;
+        }
+    }
+    newCourses[index] = course;
+    setCourses(newCourses);
+};
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const finalCourses = courses.filter(c => c.name && c.grade !== undefined && c.coefficient !== undefined) as CourseRecord[];
-    if (!semester || !year || finalCourses.length === 0) {
-      alert("Veuillez remplir tous les champs requis, y compris les coefficients.");
+    const finalCourses = courses.filter(c => c.name && c.grade !== undefined && c.coefficient !== undefined && c.coefficient > 0) as CourseRecord[];
+    
+    if (!semester || !year || finalCourses.length === 0 || finalCourses.length !== courses.length) {
+      alert("Veuillez remplir tous les champs requis, y compris les coefficients qui doivent être supérieurs à 0.");
       return;
     }
     
@@ -95,7 +108,7 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
         // Reset form
         setSemester('');
         setYear(new Date().getFullYear());
-        setCourses([{ name: '', grade: undefined, coefficient: undefined }]);
+        setCourses([{ name: '', grade: undefined, coefficient: 1 }]);
     } catch (error) {
         console.error("Failed to calculate GPA with AI:", error);
         alert("Une erreur est survenue lors du calcul de la moyenne. Veuillez réessayer.");
@@ -128,15 +141,16 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
               <div>
                 <div className="grid grid-cols-[1fr_100px_100px_auto] gap-2 mb-2 px-2">
                     <Label>Matière</Label>
-                    <Label>Note</Label>
+                    <Label>Note /20</Label>
                     <Label>Coeff.</Label>
+                    <span></span>
                 </div>
                 <div className="space-y-2">
                   {courses.map((course, index) => (
                     <div key={index} className="flex items-center gap-2">
                       <Input placeholder="Nom de la matière" value={course.name ?? ''} onChange={e => handleCourseChange(index, 'name', e.target.value)} required />
-                      <Input type="number" placeholder="Note" value={course.grade ?? ''} onChange={e => handleCourseChange(index, 'grade', parseFloat(e.target.value))} required min="0" max="20" step="0.5" />
-                      <Input type="number" placeholder="Coeff." value={course.coefficient ?? ''} onChange={e => handleCourseChange(index, 'coefficient', parseInt(e.target.value))} required min="1" />
+                      <Input type="number" placeholder="Note" value={course.grade ?? ''} onChange={e => handleCourseChange(index, 'grade', e.target.value)} required min="0" max="20" step="0.5" />
+                      <Input type="number" placeholder="Coeff." value={course.coefficient ?? ''} onChange={e => handleCourseChange(index, 'coefficient', e.target.value)} required min="1" />
                       <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveCourse(index)} disabled={courses.length === 1}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
