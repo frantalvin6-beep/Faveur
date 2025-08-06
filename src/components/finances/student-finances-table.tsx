@@ -119,7 +119,6 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
     setFinances(initialData);
   }, [initialData]);
 
-  const exportHeaders = [ "Matricule", "Nom & Prénom", "Niveau", "Option", "Total à Payer", "Avancé", "Reste", "Statut" ];
   const detailedExportHeaders = [
         "Matricule", "Nom & Prénom", "Niveau d’études", "Option", "Frais d'inscription", "Semestre",
         "Frais de fournitures", "Frais de support", "Type de Bourse", "% Réduction", "Scolarité calculée", "Frais de latrine",
@@ -129,14 +128,14 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
 
   const getDetailedExportData = () => finances.map(f => [
       f.matricule,
-      `"${f.fullName}"`,
+      f.fullName,
       f.level,
       f.option,
       f.inscription,
       f.semester,
       f.fournitures,
       f.support,
-      `"${f.bourseType}"`,
+      f.bourseType,
       f.reduction,
       f.scolariteCalculee,
       f.latrine,
@@ -155,7 +154,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
         toast({ variant: "destructive", title: "Exportation impossible", description: "Il n'y a aucune donnée à exporter." });
         return;
     }
-    const csvContent = [ detailedExportHeaders.join(','), ...getDetailedExportData().map(row => row.join(',')) ].join('\n');
+    const csvContent = [ detailedExportHeaders.join(','), ...getDetailedExportData().map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')) ].join('\n');
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     saveAs(blob, `export-finances-${getGroupName()}.csv`);
     toast({ title: "Exportation CSV réussie" });
@@ -172,7 +171,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
     autoTable(doc, {
       startY: 20,
       head: [detailedExportHeaders],
-      body: getDetailedExportData().map(row => row.map(cell => String(cell).replace(/"/g, ''))), // Remove quotes for PDF
+      body: getDetailedExportData().map(row => row.map(cell => String(cell))),
     });
     doc.save(`export-finances-${getGroupName()}.pdf`);
     toast({ title: "Exportation PDF réussie" });
@@ -197,7 +196,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
             }),
             ...getDetailedExportData().map(rowData => new DocxTableRow({
                 children: rowData.map(cellData => new DocxTableCell({
-                    children: [new Paragraph({ text: String(cellData).replace(/"/g, ''), size: 14 })],
+                    children: [new Paragraph({ text: String(cellData), size: 14 })],
                 })),
             })),
         ],
