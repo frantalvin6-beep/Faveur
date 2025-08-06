@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -23,6 +24,112 @@ import {
 import { Student } from '@/lib/types';
 import { CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { departments } from '@/lib/data';
+
+
+function AddStudentForm({ onAddStudent }: { onAddStudent: (student: Student) => void }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [gender, setGender] = React.useState<'Masculin' | 'Féminin'>('Masculin');
+  const [department, setDepartment] = React.useState('');
+  const [year, setYear] = React.useState(1);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !department) {
+      alert("Veuillez remplir tous les champs.");
+      return;
+    }
+
+    const newStudent: Student = {
+      id: `S${Date.now().toString().slice(-4)}`,
+      name,
+      email,
+      gender,
+      department,
+      year,
+      gpa: 0,
+      enrollmentDate: new Date().toISOString().split('T')[0],
+      academicHistory: [],
+    };
+
+    onAddStudent(newStudent);
+    setIsOpen(false);
+    // Reset form
+    setName('');
+    setEmail('');
+    setDepartment('');
+    setYear(1);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Ajouter un étudiant
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Ajouter un nouvel étudiant</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom complet</Label>
+              <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="gender">Sexe</Label>
+              <Select onValueChange={(v: 'Masculin' | 'Féminin') => setGender(v)} value={gender}>
+                <SelectTrigger id="gender"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Masculin">Masculin</SelectItem>
+                  <SelectItem value="Féminin">Féminin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Département/Option</Label>
+              <Select onValueChange={setDepartment} value={department}>
+                <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>
+                  {departments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="year">Année</Label>
+              <Input id="year" type="number" min="1" max="5" value={year} onChange={e => setYear(Number(e.target.value))} required />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+            <Button type="submit">Enregistrer</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
 
 export function StudentTable({ data }: { data: Student[] }) {
   const [students, setStudents] = React.useState(data);
@@ -32,7 +139,9 @@ export function StudentTable({ data }: { data: Student[] }) {
   }, [data]);
 
 
-  const handleAdd = () => alert('La fonctionnalité d\'ajout d\'un nouvel étudiant sera bientôt implémentée.');
+  const handleAddStudent = (newStudent: Student) => {
+      setStudents(prev => [...prev, newStudent]);
+  };
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
     if(confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
@@ -45,10 +154,7 @@ export function StudentTable({ data }: { data: Student[] }) {
     <>
         <div className="flex items-start justify-between mb-4">
             <CardDescription>Consulter et gérer les dossiers des étudiants.</CardDescription>
-            <Button onClick={handleAdd}>
-                <PlusCircle className="mr-2 h-4 w-4" />
-                Ajouter un étudiant
-            </Button>
+            <AddStudentForm onAddStudent={handleAddStudent} />
         </div>
       <div className="rounded-md border overflow-x-auto">
         <Table>

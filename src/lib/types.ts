@@ -1,3 +1,4 @@
+
 export interface Student {
   id: string;
   name: string;
@@ -29,6 +30,15 @@ export interface Department {
     facultyCount: number;
     studentCount: number;
     creationDate: string;
+}
+
+export interface Course {
+  code: string;
+  name: string;
+  department: string;
+  level: string;
+  semester: string;
+  credits: number;
 }
 
 export interface AcademicRecord {

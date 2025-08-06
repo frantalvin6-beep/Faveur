@@ -1,4 +1,5 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction } from './types';
+
+import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction } from './types';
 
 export const students: Student[] = [
   { 
@@ -115,6 +116,13 @@ export const departments: Department[] = [
 
     { id: 'DEP05', name: 'Filière Digital Business', head: 'Mme. Sheryl Sandberg', facultyCount: 25, studentCount: 250, creationDate: '2021-08-01' },
     { id: 'DEP05-OPT01', name: 'Ressources Humaines axées Digital', head: 'Mme. Sheryl Sandberg', facultyCount: 25, studentCount: 250, creationDate: '2021-08-01' },
+];
+
+export const courses: Course[] = [
+    { code: 'CS101', name: 'Introduction à la Programmation', department: 'Programmation', level: 'Licence 1', semester: 'Semestre 1', credits: 5 },
+    { code: 'AI201', name: 'Fondamentaux de l\'IA', department: 'Intelligence Artificielle (IA)', level: 'Licence 2', semester: 'Semestre 3', credits: 4 },
+    { code: 'EE301', name: 'Circuits Électroniques', department: 'Électronique', level: 'Licence 3', semester: 'Semestre 5', credits: 5 },
+    { code: 'BD401', name: 'Analyse de Données Massives', department: 'Big Data', level: 'Master 1', semester: 'Semestre 1', credits: 6 },
 ];
 
 export const courseAssignments: CourseAssignment[] = [
@@ -338,4 +346,4 @@ export function calculerComptabilite(transactions: AccountingTransaction[]) {
 }
 
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction };
+export type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction };

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,17 +12,96 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, MoreHorizontal, Edit, Trash2, Plus, Edit2, Trash } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuTrigger,
-  DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
 import { Department } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogClose,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+
+function AddDepartmentForm({ onAddDepartment, parentId }: { onAddDepartment: (dept: Department) => void, parentId?: string }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [name, setName] = React.useState('');
+  const [head, setHead] = React.useState('');
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !head) {
+      alert("Veuillez remplir tous les champs.");
+      return;
+    }
+
+    const newDept: Department = {
+      id: parentId ? `${parentId}-OPT${Date.now().toString().slice(-3)}` : `DEP${Date.now().toString().slice(-3)}`,
+      name,
+      head,
+      facultyCount: 0,
+      studentCount: 0,
+      creationDate: new Date().toISOString().split('T')[0],
+    };
+
+    onAddDepartment(newDept);
+    setIsOpen(false);
+    setName('');
+    setHead('');
+  };
+
+  const title = parentId ? "Ajouter une nouvelle option" : "Ajouter une faculté/département";
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        {parentId ? (
+             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Créer une option
+            </DropdownMenuItem>
+        ) : (
+            <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Ajouter
+            </Button>
+        )}
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>{title}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom</Label>
+              <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="head">Responsable</Label>
+              <Input id="head" value={head} onChange={e => setHead(e.target.value)} required />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+            <Button type="submit">Enregistrer</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export function DepartmentsTable({ data }: { data: Department[] }) {
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -31,18 +111,17 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
     dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (dept.head && dept.head.toLowerCase().includes(searchTerm.toLowerCase()))
   );
+  
+  const handleAddDepartment = (newDept: Department) => {
+      setDepartments(prev => [...prev, newDept]);
+  };
 
-  const handleAdd = () => alert('La fonctionnalité d\'ajout sera bientôt implémentée.');
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification pour ${id} sera bientôt implémentée.`);
   const handleDelete = (id: string) => {
     if(confirm('Êtes-vous sûr de vouloir supprimer ce département ?')) {
         setDepartments(departments.filter(d => d.id !== id));
     }
   };
-  
-  const handleAddOption = (id: string) => alert(`La fonctionnalité d'ajout d'option pour ${id} sera bientôt implémentée.`);
-  const handleRenameOption = (id: string) => alert(`La fonctionnalité de renommage d'option pour ${id} sera bientôt implémentée.`);
-  const handleDeleteOption = (id: string) => alert(`La fonctionnalité de suppression d'option pour ${id} sera bientôt implémentée.`);
 
   return (
     <Card>
@@ -59,10 +138,7 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <Button onClick={handleAdd}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter
-                </Button>
+                <AddDepartmentForm onAddDepartment={handleAddDepartment} />
             </div>
         </div>
       </CardHeader>
@@ -96,7 +172,7 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
                         </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Département</DropdownMenuLabel>
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
                         <DropdownMenuItem onClick={() => handleEdit(dept.id)}>
                             <Edit className="mr-2 h-4 w-4" />
                             Modifier
@@ -108,23 +184,7 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
                             <Trash2 className="mr-2 h-4 w-4" />
                             Supprimer
                         </DropdownMenuItem>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuLabel>Options</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleAddOption(dept.id)}>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Créer une option
-                        </DropdownMenuItem>
-                         <DropdownMenuItem onClick={() => handleRenameOption(dept.id)}>
-                            <Edit2 className="mr-2 h-4 w-4" />
-                            Renommer une option
-                        </DropdownMenuItem>
-                         <DropdownMenuItem 
-                            onClick={() => handleDeleteOption(dept.id)}
-                            className="text-destructive focus:text-destructive"
-                         >
-                            <Trash className="mr-2 h-4 w-4" />
-                            Supprimer une option
-                        </DropdownMenuItem>
+                         <AddDepartmentForm onAddDepartment={handleAddDepartment} parentId={dept.id} />
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>
