@@ -55,7 +55,7 @@ export function ScheduleGrid({ schedule }: { schedule: ScheduleEntry[] }) {
   
   return (
     <div className="rounded-md border relative w-full overflow-auto">
-      <table className="w-full caption-bottom text-sm border-collapse">
+      <table className="w-full caption-bottom text-sm border-collapse table-auto">
         <thead className="[&_tr]:border-b">
           <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
             <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[100px] border-r">Heure</th>
@@ -77,7 +77,7 @@ export function ScheduleGrid({ schedule }: { schedule: ScheduleEntry[] }) {
                   return (
                       <td key={day} className={cn("p-1 align-top border-r min-h-[6rem]", entry ? 'bg-primary/5' : '')} rowSpan={span > 0 ? span : 1}>
                           {entry && (
-                              <div className="flex flex-col p-2 bg-primary/10 rounded-lg">
+                              <div className="flex flex-col p-2 bg-primary/10 rounded-lg h-full">
                                   <span className="font-bold text-primary">{entry.courseName}</span>
                                   <span className="text-sm text-muted-foreground">{entry.teacherName}</span>
                                   <Badge variant="secondary" className="mt-2 self-start">{entry.location}</Badge>
