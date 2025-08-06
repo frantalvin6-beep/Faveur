@@ -123,90 +123,88 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
           <DialogTitle>Nouvelle Matière</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="flex-grow overflow-hidden flex flex-col">
-        <ScrollArea className="pr-6 -mr-6 flex-grow">
-        <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="code">Code Matière</Label>
-              <Input id="code" value={code} onChange={e => setCode(e.target.value)} placeholder="Ex: MATH101" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom de la matière</Label>
-              <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Algèbre Linéaire" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="department">Département/Option</Label>
-               <Select onValueChange={setDepartment} value={department} required>
-                <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                <SelectContent>
-                  {departments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="level">Niveau</Label>
-              <Select onValueChange={setLevel} value={level} required>
-                    <SelectTrigger><SelectValue placeholder="Sélectionner le niveau..." /></SelectTrigger>
+          <ScrollArea className="pr-6 -mr-6 flex-grow">
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+                <div className="space-y-2">
+                  <Label htmlFor="code">Code Matière</Label>
+                  <Input id="code" value={code} onChange={e => setCode(e.target.value)} placeholder="Ex: MATH101" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="name">Nom de la matière</Label>
+                  <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Algèbre Linéaire" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="department">Département/Option</Label>
+                  <Select onValueChange={setDepartment} value={department} required>
+                    <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                     <SelectContent>
-                        <SelectItem value="Licence 1">Licence 1</SelectItem>
-                        <SelectItem value="Licence 2">Licence 2</SelectItem>
-                        <SelectItem value="Licence 3">Licence 3</SelectItem>
-                        <SelectItem value="Master 1">Master 1</SelectItem>
-                        <SelectItem value="Master 2">Master 2</SelectItem>
+                      {departments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
                     </SelectContent>
-                </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="semester">Semestre</Label>
-              <Input id="semester" value={semester} onChange={e => setSemester(e.target.value)} placeholder="Ex: Semestre 1" required />
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="credits">Crédits (Coefficient)</Label>
-              <Input id="credits" type="number" min="0" value={credits} onChange={e => setCredits(Number(e.target.value))} required />
-            </div>
-
-            <div className="space-y-2">
-                <Label htmlFor="teachers">Enseignant(s)</Label>
-                <Popover open={openTeacherPopover} onOpenChange={setOpenTeacherPopover}>
-                    <PopoverTrigger asChild>
-                        <Button variant="outline" className="w-full justify-start font-normal">
-                            <User className="mr-2 h-4 w-4" />
-                            {selectedTeachers.length > 0 ? selectedTeachers.map(t => t.name).join(', ') : "Sélectionner un ou plusieurs enseignants"}
-                        </Button>
-                    </PopoverTrigger>
-                    <PopoverContent className="p-0" align="start">
-                        <Command>
-                            <CommandInput placeholder="Rechercher..." />
-                            <CommandList>
-                                <CommandEmpty>Aucun enseignant trouvé.</CommandEmpty>
-                                <CommandGroup>
-                                {faculty.map((teacher) => (
-                                    <CommandItem
-                                        key={teacher.id}
-                                        onSelect={() => {
-                                            const newIds = teacherIds.includes(teacher.id)
-                                                ? teacherIds.filter((id) => id !== teacher.id)
-                                                : [...teacherIds, teacher.id];
-                                            setTeacherIds(newIds);
-                                        }}
-                                    >
-                                        <Check className={cn("mr-2 h-4 w-4", teacherIds.includes(teacher.id) ? "opacity-100" : "opacity-0")} />
-                                        <span>{teacher.name}</span>
-                                    </CommandItem>
-                                ))}
-                                </CommandGroup>
-                            </CommandList>
-                        </Command>
-                    </PopoverContent>
-                </Popover>
-            </div>
-          </div>
-          
-            <div className="space-y-4 rounded-lg border p-4">
-                 <Label className="text-base font-medium">Chapitres et Leçons</Label>
-                 <div className="space-y-4">
-                     {chapters.map((chapter, index) => (
-                         <div key={chapter.id} className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 p-3 border rounded-md relative">
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="level">Niveau</Label>
+                  <Select onValueChange={setLevel} value={level} required>
+                        <SelectTrigger><SelectValue placeholder="Sélectionner le niveau..." /></SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="Licence 1">Licence 1</SelectItem>
+                            <SelectItem value="Licence 2">Licence 2</SelectItem>
+                            <SelectItem value="Licence 3">Licence 3</SelectItem>
+                            <SelectItem value="Master 1">Master 1</SelectItem>
+                            <SelectItem value="Master 2">Master 2</SelectItem>
+                        </SelectContent>
+                    </Select>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="semester">Semestre</Label>
+                  <Input id="semester" value={semester} onChange={e => setSemester(e.target.value)} placeholder="Ex: Semestre 1" required />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="credits">Crédits (Coefficient)</Label>
+                  <Input id="credits" type="number" min="0" value={credits} onChange={e => setCredits(Number(e.target.value))} required />
+                </div>
+                <div className="space-y-2">
+                    <Label htmlFor="teachers">Enseignant(s)</Label>
+                    <Popover open={openTeacherPopover} onOpenChange={setOpenTeacherPopover}>
+                        <PopoverTrigger asChild>
+                            <Button variant="outline" className="w-full justify-start font-normal">
+                                <User className="mr-2 h-4 w-4" />
+                                {selectedTeachers.length > 0 ? selectedTeachers.map(t => t.name).join(', ') : "Sélectionner un ou plusieurs enseignants"}
+                            </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="p-0" align="start">
+                            <Command>
+                                <CommandInput placeholder="Rechercher..." />
+                                <CommandList>
+                                    <CommandEmpty>Aucun enseignant trouvé.</CommandEmpty>
+                                    <CommandGroup>
+                                    {faculty.map((teacher) => (
+                                        <CommandItem
+                                            key={teacher.id}
+                                            onSelect={() => {
+                                                const newIds = teacherIds.includes(teacher.id)
+                                                    ? teacherIds.filter((id) => id !== teacher.id)
+                                                    : [...teacherIds, teacher.id];
+                                                setTeacherIds(newIds);
+                                            }}
+                                        >
+                                            <Check className={cn("mr-2 h-4 w-4", teacherIds.includes(teacher.id) ? "opacity-100" : "opacity-0")} />
+                                            <span>{teacher.name}</span>
+                                        </CommandItem>
+                                    ))}
+                                    </CommandGroup>
+                                </CommandList>
+                            </Command>
+                        </PopoverContent>
+                    </Popover>
+                </div>
+              </div>
+              <div className="space-y-4 rounded-lg border p-4">
+                  <Label className="text-base font-medium">Chapitres et Leçons</Label>
+                  <div className="space-y-4">
+                      {chapters.map((chapter, index) => (
+                          <div key={chapter.id} className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 p-3 border rounded-md relative">
                             <div className="space-y-2">
                                 <Label htmlFor={`chapter-title-${index}`}>Titre du chapitre {index + 1}</Label>
                                 <Input 
@@ -226,25 +224,25 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                                     rows={3}
                                 />
                             </div>
-                             {chapters.length > 1 && (
+                              {chapters.length > 1 && (
                                 <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveChapter(chapter.id)}>
                                     <X className="h-4 w-4" />
                                 </Button>
-                             )}
-                         </div>
-                     ))}
-                 </div>
-                 <Button type="button" variant="outline" size="sm" onClick={handleAddChapter}>
+                              )}
+                          </div>
+                      ))}
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={handleAddChapter}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Ajouter un chapitre
-                 </Button>
+                  </Button>
+              </div>
             </div>
-        </div>
-        </ScrollArea>
-        <DialogFooter className="pt-4 flex-shrink-0">
-            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
-            <Button type="submit">Enregistrer</Button>
-        </DialogFooter>
+          </ScrollArea>
+          <DialogFooter className="pt-4 flex-shrink-0">
+              <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+              <Button type="submit">Enregistrer</Button>
+          </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
