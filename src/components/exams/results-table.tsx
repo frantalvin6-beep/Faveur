@@ -28,20 +28,11 @@ export function ResultsTable({ students }: { students: ProcessedStudent[] }) {
                 <AccordionItem value={student.id} className="border rounded-lg">
                      <AccordionTrigger className="px-4 py-3 hover:no-underline data-[state=open]:bg-muted/50">
                          <div className='flex justify-between w-full items-center pr-2'>
-                             <div className="flex flex-col items-start">
+                             <div className="flex flex-col items-start text-left">
                                 <span className="font-semibold text-lg">{student.name}</span>
                                 <span className="font-mono text-sm text-muted-foreground">{student.id}</span>
                             </div>
-                            <div className="flex items-center gap-4 text-sm">
-                                <div className="flex flex-col items-end">
-                                    <span className="text-muted-foreground">Moyenne Générale</span>
-                                    <span className="font-bold text-xl">{student.gpa.toFixed(2)}</span>
-                                </div>
-                                <div className="flex flex-col items-end">
-                                    <span className="text-muted-foreground">Décision</span>
-                                    <span className="font-semibold text-lg">{student.finalDecision.icon} {student.finalDecision.text}</span>
-                                </div>
-                            </div>
+                            {/* The detailed summary has been moved inside the accordion content */}
                          </div>
                     </AccordionTrigger>
                     <AccordionContent>
@@ -72,6 +63,18 @@ export function ResultsTable({ students }: { students: ProcessedStudent[] }) {
                                             <TableCell className="text-right">{getResultBadge(course.result)}</TableCell>
                                         </TableRow>
                                     ))}
+                                    <TableRow className="bg-muted/50 font-bold">
+                                        <TableCell colSpan={2}>Résumé</TableCell>
+                                        <TableCell className="text-center" colSpan={3}>Total Crédits</TableCell>
+                                        <TableCell className="text-center">Moyenne Générale</TableCell>
+                                        <TableCell className="text-right">Décision Finale</TableCell>
+                                    </TableRow>
+                                     <TableRow className="bg-muted/50 font-semibold text-lg">
+                                        <TableCell colSpan={2}></TableCell>
+                                        <TableCell className="text-center" colSpan={3}>{student.totalCredits}</TableCell>
+                                        <TableCell className="text-center">{student.gpa.toFixed(2)}</TableCell>
+                                        <TableCell className="text-right">{student.finalDecision.icon} {student.finalDecision.text}</TableCell>
+                                    </TableRow>
                                 </TableBody>
                             </Table>
                         </div>

@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useMemo } from 'react';
-import { departments as allDepartments, examGrades as allGrades, students as allStudents, courses as allCourses, initialCourses } from '@/lib/data';
+import { departments as allDepartments, examGrades as allGrades, students as allStudents, courses as allCourses, initialCourses, examGrades } from '@/lib/data';
 import { GradesTable } from '@/components/exams/grades-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { courseAssignments } from '@/lib/data';
 import { students } from '@/lib/data';
+import { toast } from '@/hooks/use-toast';
 
 interface ExamSession {
     courseName: string;
@@ -50,7 +51,7 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
         e.preventDefault();
         const student = allStudents.find(s => s.id === studentId);
         if (!student || grade === '') {
-            alert("Veuillez sélectionner un étudiant et saisir une note.");
+            toast({ variant: 'destructive', title: "Erreur", description: "Veuillez sélectionner un étudiant et saisir une note." });
             return;
         }
 
@@ -66,24 +67,12 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
             department: department,
             examType: examSession.examType,
             grade: Number(grade),
-            coefficient: course?.credits || 1, // Use course credits as coefficient
+            coefficient: course?.credits || 1, 
             date: new Date().toISOString().split('T')[0],
         };
         onAddGrade(newGrade);
-
-        // This is a simulation, in a real app this would be a DB update
-        const studentToUpdate = initialStudents.find(s => s.id === studentId);
-        const record = studentToUpdate?.academicHistory.find(r => r.courses.some(c => c.name === newGrade.courseName));
-        if (studentToUpdate && !record) {
-             const newRecord = {
-                 semester: 'N/A',
-                 year: new Date().getFullYear(),
-                 courses: [{ name: newGrade.courseName, grade: newGrade.grade, coefficient: newGrade.coefficient }],
-                 gpa: 0, // Should be recalculated
-                 decision: 'En cours' as any,
-             };
-             studentToUpdate.academicHistory.push(newRecord);
-        }
+        
+        toast({ title: "Note ajoutée", description: `La note de ${newGrade.studentName} a été enregistrée.` });
 
         setIsOpen(false);
         setStudentId('');
@@ -133,75 +122,85 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
     )
 }
 
-function processAllGrades() {
-    const grades: ExamGrade[] = [];
-    
+function processAndGetAllGrades() {
+    const allStudentGrades = allGrades.map(g => g); // Create a mutable copy
+
     students.forEach(student => {
         student.academicHistory.forEach(record => {
             record.courses.forEach(course => {
                 const assignedCourse = courseAssignments.find(ca => ca.courseName === course.name && allDepartments.find(d => d.name === ca.department)?.id === allDepartments.find(d=>d.name === student.department)?.id.split('-')[0]);
+                const gradeId = `G-${student.id}-${record.year}-${record.semester}-${course.name}`;
 
-                grades.push({
-                    id: `G-${student.id}-${record.year}-${record.semester}-${course.name}`,
-                    studentId: student.id,
-                    studentName: student.name,
-                    courseCode: assignedCourse?.courseCode || 'N/A',
-                    courseName: course.name,
-                    teacherName: assignedCourse?.teacherName || 'N/A',
-                    department: student.department,
-                    examType: 'Final', 
-                    grade: course.grade,
-                    coefficient: course.coefficient,
-                    date: `${record.year}-01-01`, 
-                });
+                // Avoid adding duplicate grades if they already exist from academic history
+                if (!allStudentGrades.some(g => g.id === gradeId)) {
+                    allStudentGrades.push({
+                        id: gradeId,
+                        studentId: student.id,
+                        studentName: student.name,
+                        courseCode: assignedCourse?.courseCode || 'N/A',
+                        courseName: course.name,
+                        teacherName: assignedCourse?.teacherName || 'N/A',
+                        department: student.department,
+                        examType: 'Final', 
+                        grade: course.grade,
+                        coefficient: course.coefficient,
+                        date: `${record.year}-01-01`, 
+                    });
+                }
             });
         });
     });
 
-    return grades;
+    return allStudentGrades;
 }
 
 
 export default function GradesPage() {
-  const [grades, setGrades] = useState<ExamGrade[]>(processAllGrades());
+  const [grades, setGrades] = useState<ExamGrade[]>(processAndGetAllGrades());
   const [searchTerm, setSearchTerm] = useState('');
   
   const handleAddGrade = (newGrade: ExamGrade) => {
+    // Add to the shared data source
+    allGrades.push(newGrade);
+    // Update local state to re-render
     setGrades(prev => [...prev, newGrade]);
   };
   
   const handleGradeUpdate = (updatedGrade: ExamGrade) => {
-    setGrades(prev => prev.map(g => g.id === updatedGrade.id ? updatedGrade : g));
-    const student = initialStudents.find(s => s.id === updatedGrade.studentId);
-    if (student) {
-        const history = student.academicHistory.find(h => h.courses.some(c => c.name === updatedGrade.courseName));
-        if(history){
-            const course = history.courses.find(c => c.name === updatedGrade.courseName);
-            if (course) {
-                course.grade = updatedGrade.grade;
-                course.coefficient = updatedGrade.coefficient;
-            }
-        }
+    // Update the shared data source
+    const index = allGrades.findIndex(g => g.id === updatedGrade.id);
+    if (index > -1) {
+        allGrades[index] = updatedGrade;
     }
+    // Update local state to re-render
+    setGrades(prev => prev.map(g => g.id === updatedGrade.id ? updatedGrade : g));
   };
   
   const handleGradeDelete = (gradeId: string) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
+      // Remove from the shared data source
+      const index = allGrades.findIndex(g => g.id === gradeId);
+      if (index > -1) {
+          allGrades.splice(index, 1);
+      }
+      // Remove from local state to re-render
       setGrades(prev => prev.filter(g => g.id !== gradeId));
+      toast({ variant: 'destructive', title: 'Note supprimée' });
     }
   };
 
   const groupedGrades = useMemo(() => {
     const groups: GroupedGrades = {};
 
+    // Use the component's state for rendering
     grades.forEach(grade => {
       const department = grade.department;
       if (!groups[department]) {
         groups[department] = [];
       }
       
-      const sessionKey = `${grade.courseCode}-${grade.examType}-${grade.teacherName}`;
-      let session = groups[department].find(s => `${s.courseCode}-${s.examType}-${s.teacherName}` === sessionKey);
+      const sessionKey = `${grade.courseCode}-${grade.examType}`;
+      let session = groups[department].find(s => `${s.courseCode}-${s.examType}` === sessionKey);
       
       if (!session) {
         session = {
@@ -215,6 +214,12 @@ export default function GradesPage() {
       }
       session.grades.push(grade);
     });
+    
+    // Sort sessions within each department
+    for (const dept in groups) {
+      groups[dept].sort((a,b) => a.courseName.localeCompare(b.courseName));
+    }
+
 
     if (!searchTerm) return groups;
 
@@ -258,6 +263,8 @@ export default function GradesPage() {
     return filteredGroups;
   }, [grades, searchTerm]);
 
+  const sortedDepartmentKeys = Object.keys(groupedGrades).sort();
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -275,11 +282,11 @@ export default function GradesPage() {
         </div>
       </div>
 
-      {Object.keys(groupedGrades).length > 0 ? Object.entries(groupedGrades).map(([departmentName, sessions]) => (
+      {sortedDepartmentKeys.length > 0 ? sortedDepartmentKeys.map((departmentName) => (
         <div key={departmentName} className="space-y-4">
           <h2 className="text-2xl font-semibold tracking-tight">{departmentName}</h2>
-          {sessions.map((session, index) => (
-            <Card key={`${session.courseCode}-${session.examType}-${session.teacherName}-${index}`}>
+          {groupedGrades[departmentName].map((session, index) => (
+            <Card key={`${session.courseCode}-${session.examType}-${index}`}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
@@ -305,7 +312,7 @@ export default function GradesPage() {
         <Card>
             <CardContent>
                 <p className="text-muted-foreground text-center py-8">
-                    {searchTerm ? "Aucune session d'examen ou note ne correspond à votre recherche." : "Aucune note à afficher. Saisissez des notes sur la page d'un étudiant pour commencer."}
+                    {searchTerm ? "Aucune session d'examen ou note ne correspond à votre recherche." : "Aucune note à afficher. Saisissez des notes pour commencer."}
                 </p>
             </CardContent>
         </Card>
@@ -313,5 +320,3 @@ export default function GradesPage() {
     </div>
   )
 }
-
-    

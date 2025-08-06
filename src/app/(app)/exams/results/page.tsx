@@ -9,11 +9,21 @@ import { Student } from '@/lib/types';
 import { processStudentResults, ProcessedStudent, GroupedResults } from '@/lib/results-processor';
 import { ResultsTable } from '@/components/exams/results-table';
 import { SummaryTable } from '@/components/exams/summary-table';
+import { useIsMobile } from '@/hooks/use-mobile'; // Hook to trigger re-render on navigation
 
 export default function ResultsPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
+  // This state will be used to trigger re-renders when data changes.
+  const [processedResults, setProcessedResults] = React.useState<ProcessedStudent[]>([]);
 
-  const processedResults = React.useMemo(() => processStudentResults(initialStudents, allGrades, initialCourses), []);
+  // The isMobile hook changes value on navigation, forcing a re-render of the component
+  const isMobile = useIsMobile(); 
+  
+  // Recalculate results whenever the page is rendered (e.g., after navigation)
+  React.useEffect(() => {
+    setProcessedResults(processStudentResults(initialStudents, allGrades, initialCourses));
+  }, [isMobile]); // Re-run effect when the route changes or window resizes past breakpoint
+
 
   const groupedResults = React.useMemo(() => {
     const groups: GroupedResults = {};
