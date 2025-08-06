@@ -1,6 +1,7 @@
 import { config } from 'dotenv';
 config();
 
-import '@/ai/flows/generate-ai-powered-reports.ts';
-import '@/ai/flows/calculate-student-gpa.ts';
-import '@/ai/flows/ai-assistant.ts';
+// Assurez-vous que tous les flux sont importés ici
+import '@/ai/flows/generate-ai-powered-reports';
+import '@/ai/flows/calculate-student-gpa';
+import '@/ai/flows/ai-assistant';
