@@ -8,7 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 
 function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'XOF' }).format(amount);
+  return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 }
 
 export default function AccountingPage() {

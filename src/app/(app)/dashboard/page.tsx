@@ -3,6 +3,10 @@ import { DollarSign, Users, UserSquare, BookOpen } from "lucide-react";
 import { DashboardCharts } from "@/components/dashboard/charts";
 import { students, faculty, departments } from "@/lib/data";
 
+function formatCurrency(amount: number) {
+  return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
+}
+
 export default function DashboardPage() {
 
   const totalStudents = students.length;
@@ -49,7 +53,7 @@ export default function DashboardPage() {
             <DollarSign className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">$45,231,890</div>
+            <div className="text-2xl font-bold">{formatCurrency(4523189000)}</div>
             <p className="text-xs text-muted-foreground">+12% depuis l'année dernière</p>
           </CardContent>
         </Card>
