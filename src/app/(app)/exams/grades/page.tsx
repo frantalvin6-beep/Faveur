@@ -22,6 +22,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { courseAssignments } from '@/lib/data';
+import { students } from '@/lib/data';
 
 interface ExamSession {
     courseName: string;
@@ -115,35 +116,76 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
     )
 }
 
+function processAllGrades() {
+    const grades: ExamGrade[] = [];
+    
+    students.forEach(student => {
+        student.academicHistory.forEach(record => {
+            record.courses.forEach(course => {
+                // This creates a simplified ExamGrade object. 
+                // We're missing some specific details like examType and teacherName from this data structure.
+                // We'll have to make some assumptions or find a way to link this data.
+                grades.push({
+                    id: `G-${student.id}-${record.year}-${record.semester}-${course.name}`,
+                    studentId: student.id,
+                    studentName: student.name,
+                    // Assumption: we don't have a specific course code in academicHistory.
+                    // We can try to find it from assignments.
+                    courseCode: courseAssignments.find(ca => ca.courseName === course.name && ca.department === student.department)?.courseCode || 'N/A',
+                    courseName: course.name,
+                    // Assumption: find teacher from assignments.
+                    teacherName: courseAssignments.find(ca => ca.courseName === course.name)?.teacherName || 'N/A',
+                    department: student.department,
+                    // Assumption: examType is not stored, so we'll default it.
+                    examType: 'Final', 
+                    grade: course.grade,
+                    coefficient: course.coefficient,
+                    date: `${record.year}-01-01`, // Placeholder date
+                });
+            });
+        });
+    });
+
+    return grades;
+}
+
+
 export default function GradesPage() {
-  const [grades, setGrades] = useState<ExamGrade[]>(allGrades);
+  const [grades, setGrades] = useState<ExamGrade[]>(processAllGrades());
   const [searchTerm, setSearchTerm] = useState('');
   
   const handleAddGrade = (newGrade: ExamGrade) => {
+    // This function might need to be rethought. Adding a single grade here
+    // doesn't fit the new model of adding a full academic record for a student.
+    // However, we can add it to the 'grades' state for immediate UI update.
     setGrades(prev => [...prev, newGrade]);
   };
   
   const handleGradeUpdate = (updatedGrade: ExamGrade) => {
     setGrades(prev => prev.map(g => g.id === updatedGrade.id ? updatedGrade : g));
+    // Here you would also update the original data source (students array in data.ts)
   };
   
   const handleGradeDelete = (gradeId: string) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
       setGrades(prev => prev.filter(g => g.id !== gradeId));
+      // Here you would also delete from the original data source
     }
   };
 
   const groupedGrades = useMemo(() => {
     const groups: GroupedGrades = {};
+    const allGrades = processAllGrades(); // Re-process grades to get the latest data
 
-    grades.forEach(grade => {
+    allGrades.forEach(grade => {
       const department = grade.department;
       if (!groups[department]) {
         groups[department] = [];
       }
 
-      const sessionKey = `${grade.courseCode}-${grade.examType}-${grade.teacherName}`;
-      let session = groups[department].find(s => `${s.courseCode}-${s.examType}-${s.teacherName}` === sessionKey);
+      // Group by a key that represents a unique exam session
+      const sessionKey = `${grade.courseName}-${grade.examType}-${grade.teacherName}`;
+      let session = groups[department].find(s => `${s.courseName}-${s.examType}-${s.teacherName}` === sessionKey);
       
       if (!session) {
         session = {
@@ -183,8 +225,7 @@ export default function GradesPage() {
       });
 
       if (matchingSessions.length > 0) {
-          // If a session matches, we might need to filter the grades within it
-           const sessionsWithFilteredGrades = matchingSessions.map(session => {
+          const sessionsWithFilteredGrades = matchingSessions.map(session => {
                const filteredGrades = session.grades.filter(grade => 
                     session.courseName.toLowerCase().includes(lowercasedFilter) ||
                     session.teacherName.toLowerCase().includes(lowercasedFilter) ||
@@ -200,9 +241,7 @@ export default function GradesPage() {
       }
     }
     return filteredGroups;
-  }, [grades, searchTerm]);
-
-  const departmentList = allDepartments.filter(dept => !dept.id.includes('OPT'));
+  }, [searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -218,14 +257,13 @@ export default function GradesPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
-            {/* Future: Add button to create a new exam session */}
         </div>
       </div>
 
-      {Object.keys(groupedGrades).length > 0 ? Object.keys(groupedGrades).map(departmentName => (
+      {Object.keys(groupedGrades).length > 0 ? Object.entries(groupedGrades).map(([departmentName, sessions]) => (
         <div key={departmentName} className="space-y-4">
           <h2 className="text-2xl font-semibold tracking-tight">{departmentName}</h2>
-          {groupedGrades[departmentName].map(session => (
+          {sessions.map(session => (
             <Card key={`${session.courseCode}-${session.examType}-${session.teacherName}`}>
               <CardHeader>
                 <div className="flex items-center justify-between">
@@ -252,7 +290,7 @@ export default function GradesPage() {
         <Card>
             <CardContent>
                 <p className="text-muted-foreground text-center py-8">
-                    {searchTerm ? "Aucune session d'examen ou note ne correspond à votre recherche." : "Aucune note à afficher."}
+                    {searchTerm ? "Aucune session d'examen ou note ne correspond à votre recherche." : "Aucune note à afficher. Saisissez des notes sur la page d'un étudiant pour commencer."}
                 </p>
             </CardContent>
         </Card>

@@ -199,6 +199,14 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
       return s;
     });
     setStudents(updatedStudents);
+    // Also update the global data source to reflect changes across the app
+    const studentIndex = initialStudents.findIndex(s => s.id === student.id);
+    if(studentIndex !== -1) {
+        const studentToUpdate = initialStudents[studentIndex];
+        const newHistory = [...studentToUpdate.academicHistory, record];
+        newHistory.sort((a, b) => a.year - b.year || a.semester.localeCompare(b.semester));
+        initialStudents[studentIndex] = { ...studentToUpdate, academicHistory: newHistory };
+    }
   };
 
 

@@ -134,7 +134,7 @@ export const scheduleData: ScheduleEntry[] = [
     { id: 'SCH006', teacherId: 'F002', teacherName: 'Dr. Ellie Sattler', courseName: 'Systèmes Embarqués (TP)', courseCode: 'EE402', dayOfWeek: 'Vendredi', startTime: '08:00', endTime: '10:00', location: 'Salle B102', level: 'Licence 3', semester: 'S2' },
 ];
 
-export const examGrades: ExamGrade[] = [
+export let examGrades: ExamGrade[] = [
     { id: 'G001', studentId: 'S001', studentName: 'Alice Johnson', courseName: 'Introduction au Machine Learning', courseCode: 'CS501', teacherName: 'Dr. Alan Grant', department: 'Intelligence Artificielle (IA)', examType: 'Partiel', grade: 16, coefficient: 2, date: '2024-10-15' },
     { id: 'G002', studentId: 'S002', studentName: 'Bob Smith', courseName: 'Conception de Systèmes Embarqués', courseCode: 'EE402', teacherName: 'Dr. Ellie Sattler', department: 'Électronique', examType: 'Final', grade: 14, coefficient: 3, date: '2024-12-10' },
     { id: 'G003', studentId: 'S001', studentName: 'Alice Johnson', courseName: 'Introduction au Machine Learning', courseCode: 'CS501', teacherName: 'Dr. Alan Grant', department: 'Intelligence Artificielle (IA)', examType: 'Final', grade: 17, coefficient: 3, date: '2024-12-12' },
