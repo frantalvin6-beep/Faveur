@@ -45,7 +45,21 @@ function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 }
 
-const transactionCategories = ['Frais scolarité', 'Subvention', 'Salaires', 'Fournitures', 'Maintenance', 'Construction', 'Don', 'Autres'];
+const transactionCategories = [
+    'Frais scolarité', 
+    'Subvention', 
+    'Salaires', 
+    'Fournitures', 
+    'Maintenance', 
+    'Construction', 
+    'Don', 
+    'Frais de surveillance',
+    'Services professionnels',
+    'Marketing et communication',
+    'Événements',
+    'Déplacements',
+    'Autres'
+];
 const paymentMethods = ['Espèces', 'Virement bancaire', 'Chèque'];
 
 function AddTransactionForm({ onAddTransaction }: { onAddTransaction: (entry: AccountingTransaction) => void }) {
