@@ -25,8 +25,10 @@ export default function SyllabusPage() {
     const [courses, setCourses] = React.useState<Course[]>(initialCourses);
     const [searchTerm, setSearchTerm] = React.useState('');
 
+    // This useMemo hook now serves as the single source of truth for generating the chapter list.
     const groupedChapters = React.useMemo(() => {
         const allChapters: ChapterRowData[] = [];
+        // We iterate through a dynamically updated 'courses' state
         courses.forEach(course => {
             if (course.chapters) {
                 course.chapters.forEach(chapter => {
