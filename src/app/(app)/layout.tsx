@@ -103,6 +103,7 @@ const navItems = [
     label: 'Finances',
     subItems: [
         { href: '/finances/students', label: 'Finances Étudiants', icon: Users },
+        { href: '/finances/faculty', label: 'Finances Enseignants', icon: UserSquare },
     ]
   },
   { href: '/settings', icon: Settings, label: 'Paramètres' },

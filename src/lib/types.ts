@@ -161,3 +161,22 @@ export interface StudentFinance {
   reste: number;
   statut: 'Finalisé' | 'Non finalisé';
 }
+
+export interface FacultyFinance {
+    matricule: string;
+    fullName: string;
+    departement: string;
+    option: string;
+    heuresL1: number;
+    tauxL1: number;
+    heuresL2: number;
+    tauxL2: number;
+    heuresL3: number;
+    tauxL3: number;
+    heuresMaster: number;
+    tauxMaster: number;
+    totalAPayer: number;
+    montantPaye: number;
+    reste: number;
+    statut: 'Finalisé' | 'Non finalisé';
+}

@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance } from './types';
 
 export const students: Student[] = [
   { 
@@ -239,5 +239,37 @@ export const studentFinances: StudentFinance[] = studentFinancesData.map(data =>
     return { ...data, ...calculated };
 });
 
+export function calculerSalaireComplet(
+  heuresL1: number, tauxL1: number, heuresL2: number, tauxL2: number, heuresL3: number, tauxL3: number,
+  heuresMaster: number, tauxMaster: number, montantPaye: number
+) {
+  const totalAPayer =
+    (heuresL1 * tauxL1) +
+    (heuresL2 * tauxL2) +
+    (heuresL3 * tauxL3) +
+    (heuresMaster * tauxMaster);
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance };
+  const reste = totalAPayer - montantPaye;
+  const statut: FacultyFinance['statut'] = reste <= 0 ? "Finalisé" : "Non finalisé";
+
+  return { totalAPayer, reste, statut };
+}
+
+const facultyFinancesData: Omit<FacultyFinance, 'totalAPayer' | 'reste' | 'statut'>[] = [
+  { matricule: 'ENS-001', fullName: 'Prof. Mbemba', departement: 'Informatique', option: 'Programmation', heuresL1: 20, tauxL1: 8000, heuresL2: 15, tauxL2: 9000, heuresL3: 10, tauxL3: 10000, heuresMaster: 5, tauxMaster: 12000, montantPaye: 400000 },
+  { matricule: 'ENS-002', fullName: 'Mme. Kodia', departement: 'Gestion', option: 'Comptabilité', heuresL1: 30, tauxL1: 7000, heuresL2: 20, tauxL2: 8000, heuresL3: 0, tauxL3: 0, heuresMaster: 0, tauxMaster: 0, montantPaye: 370000 },
+  { matricule: 'ENS-003', fullName: 'Dr. Iloki', departement: 'Réseaux', option: 'Sécurité', heuresL1: 10, tauxL1: 8000, heuresL2: 15, tauxL2: 9000, heuresL3: 20, tauxL3: 10000, heuresMaster: 10, tauxMaster: 13000, montantPaye: 500000 },
+  { matricule: 'ENS-004', fullName: 'M. Ngoma', departement: 'Maths', option: 'Statistiques', heuresL1: 25, tauxL1: 6000, heuresL2: 10, tauxL2: 7000, heuresL3: 0, tauxL3: 0, heuresMaster: 0, tauxMaster: 0, montantPaye: 200000 },
+  { matricule: 'ENS-005', fullName: 'Mme. Tchibota', departement: 'Informatique', option: 'Big Data', heuresL1: 15, tauxL1: 8000, heuresL2: 10, tauxL2: 9000, heuresL3: 5, tauxL3: 10000, heuresMaster: 0, tauxMaster: 0, montantPaye: 295000 },
+];
+
+export const facultyFinances: FacultyFinance[] = facultyFinancesData.map(data => {
+    const calculated = calculerSalaireComplet(
+        data.heuresL1, data.tauxL1, data.heuresL2, data.tauxL2, data.heuresL3, data.tauxL3,
+        data.heuresMaster, data.tauxMaster, data.montantPaye
+    );
+    return { ...data, ...calculated };
+});
+
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance };
