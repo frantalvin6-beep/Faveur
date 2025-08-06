@@ -126,7 +126,8 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
           <DialogTitle>Nouvelle Matière</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} id="add-course-form" className="flex-grow overflow-hidden flex flex-col gap-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1">
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1 flex-shrink-0">
             <div className="space-y-2">
               <Label htmlFor="code">Code Matière</Label>
               <Input id="code" value={code} onChange={e => setCode(e.target.value)} placeholder="Ex: MATH101" required />
@@ -203,8 +204,8 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
           </div>
           
           <div className="flex-grow overflow-hidden flex flex-col mt-4">
-               <Label className="text-base font-medium px-1">Chapitres et Leçons</Label>
-              <ScrollArea className="flex-grow border rounded-lg p-4 mt-2">
+               <Label className="text-base font-medium px-1 mb-2">Chapitres et Leçons</Label>
+              <ScrollArea className="flex-grow border rounded-lg p-4">
                   <div className="space-y-4">
                       {chapters.map((chapter, index) => (
                           <div key={chapter.id} className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 p-3 border rounded-md relative bg-background">
