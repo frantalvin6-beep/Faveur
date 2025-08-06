@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { courses as initialCourses } from '@/lib/data';
+import { initialCourses } from '@/lib/data';
 import { SyllabusTable } from '@/components/academics/syllabus-table';
 import { Course, Chapter } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -24,6 +24,31 @@ interface GroupedChapters {
 export default function SyllabusPage() {
     const [courses, setCourses] = React.useState<Course[]>(initialCourses);
     const [searchTerm, setSearchTerm] = React.useState('');
+
+    const handleCourseUpdate = (updatedCourse: Course) => {
+        const newCourses = courses.map(c => c.code === updatedCourse.code ? updatedCourse : c);
+        setCourses(newCourses);
+        const index = initialCourses.findIndex(c => c.code === updatedCourse.code);
+        if (index !== -1) {
+            initialCourses[index] = updatedCourse;
+        }
+    };
+    
+    const handleChapterDelete = (courseCode: string, chapterId: string) => {
+        const course = courses.find(c => c.code === courseCode);
+        if (!course) return;
+
+        const updatedChapters = course.chapters.filter(c => c.id !== chapterId);
+        handleCourseUpdate({ ...course, chapters: updatedChapters });
+    };
+
+    const handleChapterUpdate = (courseCode: string, chapterId: string, updatedData: Partial<Chapter>) => {
+        const course = courses.find(c => c.code === courseCode);
+        if (!course) return;
+        
+        const updatedChapters = course.chapters.map(c => c.id === chapterId ? { ...c, ...updatedData } : c);
+        handleCourseUpdate({ ...course, chapters: updatedChapters });
+    };
 
     // This useMemo hook now serves as the single source of truth for generating the chapter list.
     const groupedChapters = React.useMemo(() => {
@@ -99,7 +124,11 @@ export default function SyllabusPage() {
                                 <CardTitle>{level}</CardTitle>
                             </CardHeader>
                             <CardContent>
-                                <SyllabusTable data={groupedChapters[department][level]} />
+                                <SyllabusTable 
+                                    data={groupedChapters[department][level]} 
+                                    onChapterUpdate={handleChapterUpdate}
+                                    onChapterDelete={handleChapterDelete}
+                                />
                             </CardContent>
                         </Card>
                     ))}

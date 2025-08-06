@@ -40,15 +40,15 @@ export interface Course {
   level: string;
   semester: string;
   credits: number;
-  chapters?: Chapter[];
+  chapters: Chapter[];
   teacherIds?: string[];
 }
 
 export interface Chapter {
     id: string;
     title: string;
-    subChapters?: { title: string }[];
-    estimatedDuration?: string;
+    subChapters: { title: string }[];
+    estimatedDuration: string;
 }
 
 export interface AcademicRecord {

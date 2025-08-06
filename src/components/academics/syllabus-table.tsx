@@ -10,16 +10,15 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Chapter, Course } from '@/lib/types';
+import { Chapter } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
 import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { courses as allCourses } from '@/lib/data';
 
 interface ChapterRowData extends Chapter {
   courseCode: string;
@@ -27,7 +26,7 @@ interface ChapterRowData extends Chapter {
   level: string;
 }
 
-function EditChapterForm({ chapter, course, onChapterUpdate }: { chapter: ChapterRowData, course: Course | undefined, onChapterUpdate: (courseCode: string, chapterId: string, updatedChapter: Partial<Chapter>) => void }) {
+function EditChapterForm({ chapter, onChapterUpdate, children }: { chapter: ChapterRowData, onChapterUpdate: (courseCode: string, chapterId: string, updatedChapter: Partial<Chapter>) => void, children: React.ReactNode }) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [title, setTitle] = React.useState(chapter.title);
     const [subChapters, setSubChapters] = React.useState(chapter.subChapters?.map(sc => sc.title).join('\n') || '');
@@ -49,9 +48,7 @@ function EditChapterForm({ chapter, course, onChapterUpdate }: { chapter: Chapte
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DropdownMenuTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Edit className="mr-2 h-4 w-4" /> Modifier
-                </DropdownMenuItem>
+                {children}
             </DropdownMenuTrigger>
             <DialogContent>
                 <DialogHeader>
@@ -82,68 +79,30 @@ function EditChapterForm({ chapter, course, onChapterUpdate }: { chapter: Chapte
     );
 }
 
-export function SyllabusTable({ data }: { data: ChapterRowData[] }) {
-    const [chaptersData, setChaptersData] = React.useState(data);
-
-    React.useEffect(() => {
-        setChaptersData(data);
-    }, [data]);
-    
-    const handleChapterUpdate = (courseCode: string, chapterId: string, updatedChapterData: Partial<Chapter>) => {
-        // Update local state for immediate feedback
-        setChaptersData(prev => prev.map(ch => 
-            (ch.id === chapterId && ch.courseCode === courseCode) ? { ...ch, ...updatedChapterData } : ch
-        ));
-
-        // Update the central data source
-        const courseToUpdate = allCourses.find(c => c.code === courseCode);
-        if (courseToUpdate && courseToUpdate.chapters) {
-            const chapterIndex = courseToUpdate.chapters.findIndex(c => c.id === chapterId);
-            if (chapterIndex !== -1) {
-                courseToUpdate.chapters[chapterIndex] = { 
-                    ...courseToUpdate.chapters[chapterIndex], 
-                    ...updatedChapterData
-                };
-            }
-        }
-    };
-    
-  const handleDelete = (courseCode: string, chapterId: string) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce chapitre ?")) return;
-
-    // Update local state
-    setChaptersData(prev => prev.filter(ch => !(ch.id === chapterId && ch.courseCode === courseCode)));
-    
-    // Update central data source
-    const courseToUpdate = allCourses.find(c => c.code === courseCode);
-    if (courseToUpdate && courseToUpdate.chapters) {
-        courseToUpdate.chapters = courseToUpdate.chapters.filter(c => c.id !== chapterId);
-    }
-  };
-
+export function SyllabusTable({ data, onChapterUpdate, onChapterDelete }: { data: ChapterRowData[], onChapterUpdate: (courseCode: string, chapterId: string, updatedData: Partial<Chapter>) => void, onChapterDelete: (courseCode: string, chapterId: string) => void }) {
+  
   return (
     <div className="rounded-md border">
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>ID Chapitre</TableHead>
+            <TableHead className="w-[120px]">ID Chapitre</TableHead>
             <TableHead>Matière</TableHead>
-            <TableHead>Nom du Chapitre</TableHead>
+            <TableHead>Titre du Chapitre</TableHead>
             <TableHead>Sous-chapitres</TableHead>
-            <TableHead>Durée estimée</TableHead>
-            <TableHead className="text-right">Actions</TableHead>
+            <TableHead className="w-[120px]">Durée</TableHead>
+            <TableHead className="text-right w-[80px]">Actions</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
-          {chaptersData.length > 0 ? chaptersData.map((item) => {
-            const course = allCourses.find(c => c.code === item.courseCode);
+          {data.length > 0 ? data.map((item) => {
             return (
                 <TableRow key={item.id}>
                 <TableCell className="font-mono">{item.id}</TableCell>
                 <TableCell>
-                    <div>{item.courseCode}</div>
-                    <div className="text-xs text-muted-foreground">{item.courseName}</div>
-                    </TableCell>
+                    <div className="font-medium">{item.courseName}</div>
+                    <div className="text-xs text-muted-foreground">{item.courseCode} | {item.level}</div>
+                </TableCell>
                 <TableCell className="font-medium">{item.title}</TableCell>
                 <TableCell>
                     {item.subChapters && item.subChapters.length > 0 ? (
@@ -167,8 +126,13 @@ export function SyllabusTable({ data }: { data: ChapterRowData[] }) {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <EditChapterForm chapter={item} course={course} onChapterUpdate={handleChapterUpdate} />
-                            <DropdownMenuItem onClick={() => handleDelete(item.courseCode, item.id)} className="text-destructive">
+                             <EditChapterForm chapter={item} onChapterUpdate={onChapterUpdate}>
+                                <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                    <Edit className="mr-2 h-4 w-4" />
+                                    <span>Modifier</span>
+                                </div>
+                            </EditChapterForm>
+                            <DropdownMenuItem onClick={() => onChapterDelete(item.courseCode, item.id)} className="text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4" /> Supprimer
                             </DropdownMenuItem>
                         </DropdownMenuContent>
