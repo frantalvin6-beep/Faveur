@@ -30,6 +30,7 @@ import {
   UserCircle,
   LifeBuoy,
   Bot,
+  Trophy,
 } from 'lucide-react';
 
 import {
@@ -100,6 +101,7 @@ const navItems = [
     subItems: [
         { href: '/exams/grades', label: 'Saisie des notes', icon: ClipboardCheck },
         { href: '/exams/planning', label: 'Planification', icon: CalendarPlus },
+        { href: '/exams/results', label: 'Résultats Globaux', icon: Trophy },
     ]
   },
   { 
