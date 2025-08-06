@@ -33,6 +33,7 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { calculerSalaireComplet, faculty } from '@/lib/data';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
