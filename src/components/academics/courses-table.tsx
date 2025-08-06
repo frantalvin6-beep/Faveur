@@ -125,9 +125,9 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
         <DialogHeader>
           <DialogTitle>Nouvelle Matière</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="flex-grow overflow-hidden flex flex-col">
-          <ScrollArea className="pr-6 -mr-6 flex-grow">
-            <div className="space-y-4">
+        <div className="flex-grow overflow-hidden">
+          <ScrollArea className="h-full pr-6 -mr-6">
+            <form onSubmit={handleSubmit} id="add-course-form" className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                 <div className="space-y-2">
                   <Label htmlFor="code">Code Matière</Label>
@@ -217,7 +217,16 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                                     placeholder="Ex: Introduction aux Concepts"
                                 />
                             </div>
-                            <div className="space-y-2">
+                             <div className="space-y-2">
+                                <Label htmlFor={`duration-${index}`}>Durée estimée</Label>
+                                <Input 
+                                    id={`duration-${index}`} 
+                                    value={chapter.estimatedDuration} 
+                                    onChange={e => handleChapterChange(chapter.id, 'estimatedDuration', e.target.value)}
+                                    placeholder="Ex: 2h"
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
                                 <Label htmlFor={`subchapters-${index}`}>Sous-chapitres (un par ligne)</Label>
                                 <Textarea 
                                     id={`subchapters-${index}`} 
@@ -225,15 +234,6 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                                     onChange={e => handleChapterChange(chapter.id, 'subChapters', e.target.value)}
                                     placeholder="Leçon 1.1&#10;Leçon 1.2"
                                     rows={3}
-                                />
-                            </div>
-                            <div className="space-y-2 md:col-span-2">
-                                <Label htmlFor={`duration-${index}`}>Durée estimée</Label>
-                                <Input 
-                                    id={`duration-${index}`} 
-                                    value={chapter.estimatedDuration} 
-                                    onChange={e => handleChapterChange(chapter.id, 'estimatedDuration', e.target.value)}
-                                    placeholder="Ex: 2h"
                                 />
                             </div>
                               {chapters.length > 1 && (
@@ -249,13 +249,13 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                     Ajouter un chapitre
                   </Button>
               </div>
-            </div>
+            </form>
           </ScrollArea>
+        </div>
           <DialogFooter className="pt-4 flex-shrink-0">
               <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
-              <Button type="submit">Enregistrer</Button>
+              <Button type="submit" form="add-course-form">Enregistrer</Button>
           </DialogFooter>
-        </form>
       </DialogContent>
     </Dialog>
   );
@@ -271,7 +271,8 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
         <TableHeader>
           <TableRow>
             <TableHead>Code</TableHead>
-            <TableHead>Nom de la matière & Chapitres</TableHead>
+            <TableHead>Nom de la matière</TableHead>
+            <TableHead>Chapitres</TableHead>
             <TableHead>Enseignants</TableHead>
             <TableHead>Semestre</TableHead>
             <TableHead>Crédits</TableHead>
@@ -282,21 +283,18 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
           {data.length > 0 ? data.map((item) => (
             <TableRow key={item.code}>
               <TableCell className="font-mono align-top">{item.code}</TableCell>
-              <TableCell className="font-medium align-top">
-                {item.name}
-                {item.chapters && item.chapters.length > 0 && (
-                  <ul className="mt-2 space-y-1">
+              <TableCell className="font-medium align-top">{item.name}</TableCell>
+               <TableCell className="align-top">
+                {item.chapters && item.chapters.length > 0 ? (
+                  <ul className="space-y-1">
                     {item.chapters.map((chapter, index) => (
-                      <li key={index}>
-                        <span className="text-xs font-semibold">{chapter.title}</span>
-                         {chapter.subChapters && chapter.subChapters.length > 0 && (
-                          <ul className="list-disc pl-5 text-xs text-muted-foreground">
-                            {chapter.subChapters.map((sub, subIndex) => <li key={subIndex}>{sub.title}</li>)}
-                          </ul>
-                        )}
+                      <li key={index} className="text-xs text-muted-foreground">
+                        {chapter.title}
                       </li>
                      ))}
                   </ul>
+                ) : (
+                    <span className="text-xs text-muted-foreground">N/A</span>
                 )}
               </TableCell>
                <TableCell className="align-top">
@@ -335,7 +333,7 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
             </TableRow>
           )) : (
             <TableRow>
-              <TableCell colSpan={6} className="h-24 text-center">
+              <TableCell colSpan={7} className="h-24 text-center">
                 Aucune matière trouvée pour ce groupe.
               </TableCell>
             </TableRow>
