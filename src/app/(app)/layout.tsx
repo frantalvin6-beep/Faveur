@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -217,7 +218,9 @@ function UserMenu() {
         <Link href="/settings">
             <DropdownMenuItem>Paramètres</DropdownMenuItem>
         </Link>
-        <DropdownMenuItem>Support</DropdownMenuItem>
+        <Link href="mailto:support@campuscentral.com">
+          <DropdownMenuItem>Support</DropdownMenuItem>
+        </Link>
         <DropdownMenuSeparator />
         <Link href="/login" passHref>
           <DropdownMenuItem>Déconnexion</DropdownMenuItem>
