@@ -126,137 +126,135 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
           <DialogTitle>Nouvelle Matière</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} id="add-course-form" className="flex-grow overflow-hidden flex flex-col gap-4">
-            {/* Form top part */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1">
-              <div className="space-y-2">
-                <Label htmlFor="code">Code Matière</Label>
-                <Input id="code" value={code} onChange={e => setCode(e.target.value)} placeholder="Ex: MATH101" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="name">Nom de la matière</Label>
-                <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Algèbre Linéaire" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="department">Département/Option</Label>
-                <Select onValueChange={setDepartment} value={department} required>
-                  <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                  <SelectContent>
-                    {departments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
-                  </SelectContent>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1">
+            <div className="space-y-2">
+              <Label htmlFor="code">Code Matière</Label>
+              <Input id="code" value={code} onChange={e => setCode(e.target.value)} placeholder="Ex: MATH101" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom de la matière</Label>
+              <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Algèbre Linéaire" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Département/Option</Label>
+              <Select onValueChange={setDepartment} value={department} required>
+                <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>
+                  {departments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="level">Niveau</Label>
+              <Select onValueChange={setLevel} value={level} required>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner le niveau..." /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Licence 1">Licence 1</SelectItem>
+                        <SelectItem value="Licence 2">Licence 2</SelectItem>
+                        <SelectItem value="Licence 3">Licence 3</SelectItem>
+                        <SelectItem value="Master 1">Master 1</SelectItem>
+                        <SelectItem value="Master 2">Master 2</SelectItem>
+                    </SelectContent>
                 </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="level">Niveau</Label>
-                <Select onValueChange={setLevel} value={level} required>
-                      <SelectTrigger><SelectValue placeholder="Sélectionner le niveau..." /></SelectTrigger>
-                      <SelectContent>
-                          <SelectItem value="Licence 1">Licence 1</SelectItem>
-                          <SelectItem value="Licence 2">Licence 2</SelectItem>
-                          <SelectItem value="Licence 3">Licence 3</SelectItem>
-                          <SelectItem value="Master 1">Master 1</SelectItem>
-                          <SelectItem value="Master 2">Master 2</SelectItem>
-                      </SelectContent>
-                  </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="semester">Semestre</Label>
-                <Input id="semester" value={semester} onChange={e => setSemester(e.target.value)} placeholder="Ex: Semestre 1" required />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="credits">Crédits (Coefficient)</Label>
-                <Input id="credits" type="number" min="0" value={credits} onChange={e => setCredits(Number(e.target.value))} required />
-              </div>
-              <div className="space-y-2">
-                  <Label htmlFor="teachers">Enseignant(s)</Label>
-                  <Popover open={openTeacherPopover} onOpenChange={setOpenTeacherPopover}>
-                      <PopoverTrigger asChild>
-                          <Button variant="outline" className="w-full justify-start font-normal">
-                              <User className="mr-2 h-4 w-4" />
-                              {selectedTeachers.length > 0 ? selectedTeachers.map(t => t.name).join(', ') : "Sélectionner un ou plusieurs enseignants"}
-                          </Button>
-                      </PopoverTrigger>
-                      <PopoverContent className="p-0" align="start">
-                          <Command>
-                              <CommandInput placeholder="Rechercher..." />
-                              <CommandList>
-                                  <CommandEmpty>Aucun enseignant trouvé.</CommandEmpty>
-                                  <CommandGroup>
-                                  {faculty.map((teacher) => (
-                                      <CommandItem
-                                          key={teacher.id}
-                                          onSelect={() => {
-                                              const newIds = teacherIds.includes(teacher.id)
-                                                  ? teacherIds.filter((id) => id !== teacher.id)
-                                                  : [...teacherIds, teacher.id];
-                                              setTeacherIds(newIds);
-                                          }}
-                                      >
-                                          <Check className={cn("mr-2 h-4 w-4", teacherIds.includes(teacher.id) ? "opacity-100" : "opacity-0")} />
-                                          <span>{teacher.name}</span>
-                                      </CommandItem>
-                                  ))}
-                                  </CommandGroup>
-                              </CommandList>
-                          </Command>
-                      </PopoverContent>
-                  </Popover>
-              </div>
             </div>
-            
-            {/* Chapters section */}
-            <div className="flex-grow overflow-hidden flex flex-col">
-                 <Label className="text-base font-medium px-1">Chapitres et Leçons</Label>
-                <ScrollArea className="flex-grow border rounded-lg p-4 mt-2">
-                    <div className="space-y-4">
-                        {chapters.map((chapter, index) => (
-                            <div key={chapter.id} className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 p-3 border rounded-md relative bg-background">
-                              <div className="space-y-2">
-                                  <Label htmlFor={`chapter-title-${index}`}>Titre du chapitre {index + 1}</Label>
-                                  <Input 
-                                      id={`chapter-title-${index}`} 
-                                      value={chapter.title} 
-                                      onChange={e => handleChapterChange(chapter.id, 'title', e.target.value)}
-                                      placeholder="Ex: Introduction aux Concepts"
-                                  />
-                              </div>
-                               <div className="space-y-2">
-                                  <Label htmlFor={`duration-${index}`}>Durée estimée</Label>
-                                  <Input 
-                                      id={`duration-${index}`} 
-                                      value={chapter.estimatedDuration} 
-                                      onChange={e => handleChapterChange(chapter.id, 'estimatedDuration', e.target.value)}
-                                      placeholder="Ex: 2h"
-                                  />
-                              </div>
-                              <div className="space-y-2 md:col-span-2">
-                                  <Label htmlFor={`subchapters-${index}`}>Sous-chapitres (un par ligne)</Label>
-                                  <Textarea 
-                                      id={`subchapters-${index}`} 
-                                      value={chapter.subChapters} 
-                                      onChange={e => handleChapterChange(chapter.id, 'subChapters', e.target.value)}
-                                      placeholder="Leçon 1.1&#10;Leçon 1.2"
-                                      rows={3}
-                                  />
-                              </div>
-                                {chapters.length > 1 && (
-                                  <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveChapter(chapter.id)}>
-                                      <X className="h-4 w-4" />
-                                  </Button>
-                                )}
+            <div className="space-y-2">
+              <Label htmlFor="semester">Semestre</Label>
+              <Input id="semester" value={semester} onChange={e => setSemester(e.target.value)} placeholder="Ex: Semestre 1" required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="credits">Crédits (Coefficient)</Label>
+              <Input id="credits" type="number" min="0" value={credits} onChange={e => setCredits(Number(e.target.value))} required />
+            </div>
+            <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="teachers">Enseignant(s)</Label>
+                <Popover open={openTeacherPopover} onOpenChange={setOpenTeacherPopover}>
+                    <PopoverTrigger asChild>
+                        <Button variant="outline" className="w-full justify-start font-normal">
+                            <User className="mr-2 h-4 w-4" />
+                            {selectedTeachers.length > 0 ? selectedTeachers.map(t => t.name).join(', ') : "Sélectionner un ou plusieurs enseignants"}
+                        </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="p-0" align="start">
+                        <Command>
+                            <CommandInput placeholder="Rechercher..." />
+                            <CommandList>
+                                <CommandEmpty>Aucun enseignant trouvé.</CommandEmpty>
+                                <CommandGroup>
+                                {faculty.map((teacher) => (
+                                    <CommandItem
+                                        key={teacher.id}
+                                        onSelect={() => {
+                                            const newIds = teacherIds.includes(teacher.id)
+                                                ? teacherIds.filter((id) => id !== teacher.id)
+                                                : [...teacherIds, teacher.id];
+                                            setTeacherIds(newIds);
+                                        }}
+                                    >
+                                        <Check className={cn("mr-2 h-4 w-4", teacherIds.includes(teacher.id) ? "opacity-100" : "opacity-0")} />
+                                        <span>{teacher.name}</span>
+                                    </CommandItem>
+                                ))}
+                                </CommandGroup>
+                            </CommandList>
+                        </Command>
+                    </PopoverContent>
+                </Popover>
+            </div>
+          </div>
+          
+          <div className="flex-grow overflow-hidden flex flex-col mt-4">
+               <Label className="text-base font-medium px-1">Chapitres et Leçons</Label>
+              <ScrollArea className="flex-grow border rounded-lg p-4 mt-2">
+                  <div className="space-y-4">
+                      {chapters.map((chapter, index) => (
+                          <div key={chapter.id} className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 p-3 border rounded-md relative bg-background">
+                            <div className="space-y-2">
+                                <Label htmlFor={`chapter-title-${index}`}>Titre du chapitre {index + 1}</Label>
+                                <Input 
+                                    id={`chapter-title-${index}`} 
+                                    value={chapter.title} 
+                                    onChange={e => handleChapterChange(chapter.id, 'title', e.target.value)}
+                                    placeholder="Ex: Introduction aux Concepts"
+                                />
                             </div>
-                        ))}
-                    </div>
-                    <Button type="button" variant="outline" size="sm" onClick={handleAddChapter} className="mt-4">
-                      <PlusCircle className="mr-2 h-4 w-4" />
-                      Ajouter un chapitre
-                    </Button>
-                </ScrollArea>
-            </div>
-          </form>
-          <DialogFooter className="pt-4 flex-shrink-0">
-              <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
-              <Button type="submit" form="add-course-form">Enregistrer</Button>
-          </DialogFooter>
+                             <div className="space-y-2">
+                                <Label htmlFor={`duration-${index}`}>Durée estimée</Label>
+                                <Input 
+                                    id={`duration-${index}`} 
+                                    value={chapter.estimatedDuration} 
+                                    onChange={e => handleChapterChange(chapter.id, 'estimatedDuration', e.target.value)}
+                                    placeholder="Ex: 2h"
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor={`subchapters-${index}`}>Sous-chapitres (un par ligne)</Label>
+                                <Textarea 
+                                    id={`subchapters-${index}`} 
+                                    value={chapter.subChapters} 
+                                    onChange={e => handleChapterChange(chapter.id, 'subChapters', e.target.value)}
+                                    placeholder="Leçon 1.1&#10;Leçon 1.2"
+                                    rows={3}
+                                />
+                            </div>
+                              {chapters.length > 1 && (
+                                <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveChapter(chapter.id)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                              )}
+                          </div>
+                      ))}
+                  </div>
+                  <Button type="button" variant="outline" size="sm" onClick={handleAddChapter} className="mt-4">
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Ajouter un chapitre
+                  </Button>
+              </ScrollArea>
+          </div>
+        </form>
+        <DialogFooter className="pt-4 flex-shrink-0">
+            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+            <Button type="submit" form="add-course-form">Enregistrer</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
