@@ -64,8 +64,12 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: FacultyFinance, onU
         
         const updatedFinanceData = { ...finance, montantPaye };
         const calculated = calculerSalaireComplet(
-            updatedFinanceData.teacherId, // Pass teacherId
-            montantPaye
+            updatedFinanceData.teacherId,
+            montantPaye,
+            updatedFinanceData.tauxL1,
+            updatedFinanceData.tauxL2,
+            updatedFinanceData.tauxL3,
+            updatedFinanceData.tauxMaster
         );
         onUpdate({ ...updatedFinanceData, ...calculated });
         
@@ -127,7 +131,7 @@ function AddFacultyFinanceForm({ onAdd }: { onAdd: (finance: FacultyFinance) => 
             return;
         }
 
-        const calculated = calculerSalaireComplet(teacherId, montantPaye);
+        const calculated = calculerSalaireComplet(teacherId, montantPaye, tauxL1, tauxL2, tauxL3, tauxMaster);
         
         const newFinance: FacultyFinance = {
             teacherId,

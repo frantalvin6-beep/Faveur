@@ -10,8 +10,15 @@ export default function FacultyFinancesPage() {
   // Recalculate all finances based on current workload whenever the component mounts
   // This simulates data being fresh from a database.
   React.useEffect(() => {
-    const updatedFinances = facultyFinances.map(finance => {
-      const calculated = calculerSalaireComplet(finance.teacherId, finance.montantPaye);
+    const updatedFinances = initialFacultyFinances.map(finance => {
+      const calculated = calculerSalaireComplet(
+        finance.teacherId,
+        finance.montantPaye,
+        finance.tauxL1,
+        finance.tauxL2,
+        finance.tauxL3,
+        finance.tauxMaster
+      );
       return { ...finance, ...calculated };
     });
     setFacultyFinances(updatedFinances);

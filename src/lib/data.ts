@@ -239,12 +239,14 @@ export const studentFinances: StudentFinance[] = studentFinancesData.map(data =>
     return { ...data, ...calculated };
 });
 
-export function calculerSalaireComplet(teacherId: string, montantPaye: number) {
-    const financeData = facultyFinances.find(f => f.teacherId === teacherId);
-    if (!financeData) {
-        throw new Error('Finance data not found for teacher');
-    }
-
+export function calculerSalaireComplet(
+    teacherId: string,
+    montantPaye: number,
+    tauxL1: number,
+    tauxL2: number,
+    tauxL3: number,
+    tauxMaster: number
+) {
     const teacherWorkloads = teacherWorkload.filter(w => w.teacherId === teacherId);
 
     const getHoursForLevel = (levelPrefix: string) => 
@@ -256,10 +258,10 @@ export function calculerSalaireComplet(teacherId: string, montantPaye: number) {
     const heuresMaster = getHoursForLevel('Master');
 
     const totalAPayer =
-        (heuresL1 * financeData.tauxL1) +
-        (heuresL2 * financeData.tauxL2) +
-        (heuresL3 * financeData.tauxL3) +
-        (heuresMaster * financeData.tauxMaster);
+        (heuresL1 * tauxL1) +
+        (heuresL2 * tauxL2) +
+        (heuresL3 * tauxL3) +
+        (heuresMaster * tauxMaster);
 
     const reste = totalAPayer - montantPaye;
     const statut: FacultyFinance['statut'] = reste <= 0 ? "Finalisé" : "Non finalisé";
@@ -274,7 +276,14 @@ const facultyFinancesData: Omit<FacultyFinance, 'totalAPayer' | 'reste' | 'statu
 ];
 
 export const facultyFinances: FacultyFinance[] = facultyFinancesData.map(data => {
-    const calculated = calculerSalaireComplet(data.teacherId, data.montantPaye);
+    const calculated = calculerSalaireComplet(
+        data.teacherId,
+        data.montantPaye,
+        data.tauxL1,
+        data.tauxL2,
+        data.tauxL3,
+        data.tauxMaster
+    );
     return { ...data, ...calculated };
 });
 
