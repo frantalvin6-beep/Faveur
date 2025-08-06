@@ -34,16 +34,16 @@ export function SyllabusTable({ data }: { data: Course[] }) {
               </TableCell>
               <TableCell>
                 {item.chapters && item.chapters.length > 0 ? (
-                  <ul className="space-y-2">
+                  <ul className="space-y-4">
                     {item.chapters.map((chapter, index) => (
-                      <li key={index}>
+                      <li key={index} className="space-y-2">
                         <span className="font-semibold">{index + 1}. {chapter.title}</span>
                         {chapter.subChapters && chapter.subChapters.length > 0 && (
-                          <ul className="list-disc pl-6 mt-1 space-y-1 text-muted-foreground">
+                          <div className="flex flex-wrap gap-2 pl-6">
                             {chapter.subChapters.map((subChapter, subIndex) => (
-                              <li key={subIndex}>{subChapter.title}</li>
+                              <Badge variant="outline" key={subIndex} className="font-normal">{subChapter.title}</Badge>
                             ))}
-                          </ul>
+                          </div>
                         )}
                       </li>
                     ))}

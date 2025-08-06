@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -11,14 +12,14 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Edit, Trash2, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { TeacherAttendance } from '@/lib/types';
+import { TeacherAttendance, ProgramStatus } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -33,7 +34,11 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { faculty as allFaculty, courseAssignments as allAssignments } from '@/lib/data';
+import { faculty as allFaculty, courseAssignments as allAssignments, courses as allCourses } from '@/lib/data';
+import { cn } from '@/lib/utils';
+import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
+import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '../ui/command';
+import { ScrollArea } from '../ui/scroll-area';
 
 function getStatusBadgeVariant(status: TeacherAttendance['status']) {
   switch (status) {
@@ -56,7 +61,19 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
   const [status, setStatus] = React.useState<TeacherAttendance['status']>('Présent');
   const [remarks, setRemarks] = React.useState('');
   
+  // Program Status
+  const [selectedChapter, setSelectedChapter] = React.useState('');
+  const [selectedLessons, setSelectedLessons] = React.useState<string[]>([]);
+  const [isLessonsPopoverOpen, setIsLessonsPopoverOpen] = React.useState(false);
+  
   const teacherCourses = allAssignments.filter(a => a.teacherId === teacherId);
+  const courseDetails = allCourses.find(c => c.code === courseCode);
+  const courseChapters = courseDetails?.chapters || [];
+
+  const handleChapterChange = (chapterTitle: string) => {
+    setSelectedChapter(chapterTitle);
+    setSelectedLessons([]); // Reset lessons when chapter changes
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +85,15 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
       return;
     }
 
+    let programStatus: ProgramStatus | undefined = undefined;
+    if (status === 'Présent' && selectedChapter) {
+        if (selectedLessons.length === 0) {
+            alert("Veuillez sélectionner au moins une leçon pour le chapitre enseigné.");
+            return;
+        }
+        programStatus = { chapter: selectedChapter, lessons: selectedLessons };
+    }
+
     const newEntry: TeacherAttendance = {
       id: `ATT${Date.now()}`,
       teacherId,
@@ -77,6 +103,7 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
       date,
       status,
       remarks,
+      programStatus,
     };
 
     onAddEntry(newEntry);
@@ -87,6 +114,8 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
     setDate('');
     setStatus('Présent');
     setRemarks('');
+    setSelectedChapter('');
+    setSelectedLessons([]);
   };
 
   return (
@@ -97,12 +126,12 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
           Marquer une présence
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Marquer une présence</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
+        <ScrollArea className="max-h-[70vh] pr-6 -mr-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="teacher">Enseignant</Label>
               <Select onValueChange={setTeacherId} value={teacherId}>
@@ -112,38 +141,92 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
             </div>
             <div className="space-y-2">
               <Label htmlFor="course">Cours</Label>
-              <Select onValueChange={setCourseCode} value={courseCode} disabled={!teacherId}>
+              <Select onValueChange={(code) => { setCourseCode(code); setSelectedChapter(''); setSelectedLessons([]); }} value={courseCode} disabled={!teacherId}>
                 <SelectTrigger id="course"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                 <SelectContent>
                   {teacherCourses.map(c => <SelectItem key={c.courseCode} value={c.courseCode}>{c.courseName}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="date">Date</Label>
-              <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="status">Statut</Label>
+                <Select onValueChange={(val: TeacherAttendance['status']) => setStatus(val)} value={status}>
+                  <SelectTrigger id="status"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Présent">Présent</SelectItem>
+                    <SelectItem value="Absent">Absent</SelectItem>
+                    <SelectItem value="Justifié">Justifié</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
-            <div className="space-y-2">
-              <Label htmlFor="status">Statut</Label>
-              <Select onValueChange={(val: TeacherAttendance['status']) => setStatus(val)} value={status}>
-                <SelectTrigger id="status"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Présent">Présent</SelectItem>
-                  <SelectItem value="Absent">Absent</SelectItem>
-                  <SelectItem value="Justifié">Justifié</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
+            
+            {status === 'Présent' && courseDetails && (
+              <Card className="bg-muted/50">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base">Suivi du programme</CardTitle>
+                  <CardDescription className="text-xs">Qu'est-ce qui a été enseigné pendant ce cours ?</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                        <Label>Chapitre</Label>
+                        <Select onValueChange={handleChapterChange} value={selectedChapter}>
+                            <SelectTrigger><SelectValue placeholder="Sélectionner un chapitre..." /></SelectTrigger>
+                            <SelectContent>
+                                {courseChapters.map(c => <SelectItem key={c.title} value={c.title}>{c.title}</SelectItem>)}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                     <div className="space-y-2">
+                        <Label>Leçons</Label>
+                        <Popover open={isLessonsPopoverOpen} onOpenChange={setIsLessonsPopoverOpen}>
+                            <PopoverTrigger asChild>
+                                <Button variant="outline" className="w-full justify-start font-normal" disabled={!selectedChapter}>
+                                    {selectedLessons.length > 0 ? selectedLessons.join(', ') : "Sélectionner les leçons..."}
+                                </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="p-0" align="start">
+                                <Command>
+                                    <CommandInput placeholder="Rechercher..." />
+                                    <CommandList>
+                                        <CommandEmpty>Aucune leçon trouvée.</CommandEmpty>
+                                        <CommandGroup>
+                                            {courseChapters.find(c => c.title === selectedChapter)?.subChapters?.map(lesson => (
+                                                <CommandItem key={lesson.title} onSelect={() => {
+                                                    const newSelection = selectedLessons.includes(lesson.title)
+                                                        ? selectedLessons.filter(l => l !== lesson.title)
+                                                        : [...selectedLessons, lesson.title];
+                                                    setSelectedLessons(newSelection);
+                                                }}>
+                                                    <Check className={cn("mr-2 h-4 w-4", selectedLessons.includes(lesson.title) ? "opacity-100" : "opacity-0")} />
+                                                    {lesson.title}
+                                                </CommandItem>
+                                            ))}
+                                        </CommandGroup>
+                                    </CommandList>
+                                </Command>
+                            </PopoverContent>
+                        </Popover>
+                    </div>
+                </CardContent>
+              </Card>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="remarks">Remarques</Label>
-              <Textarea id="remarks" value={remarks} onChange={e => setRemarks(e.target.value)} placeholder="Optionnel" />
+              <Textarea id="remarks" value={remarks} onChange={e => setRemarks(e.target.value)} placeholder={status === 'Justifié' ? "Motif de l'absence..." : 'Optionnel'} />
             </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
-            <Button type="submit">Enregistrer</Button>
-          </DialogFooter>
-        </form>
+          </form>
+        </ScrollArea>
+        <DialogFooter className="mt-4">
+          <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+          <Button type="submit" onClick={handleSubmit}>Enregistrer</Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
@@ -186,6 +269,7 @@ export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: Tea
                 <TableHead>Enseignant</TableHead>
                 <TableHead>Matière</TableHead>
                 <TableHead>Statut</TableHead>
+                <TableHead>Programme Effectué</TableHead>
                 <TableHead>Remarques</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
               </TableRow>
@@ -200,6 +284,18 @@ export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: Tea
                       <div className="text-xs text-muted-foreground">{item.courseCode}</div>
                   </TableCell>
                   <TableCell><Badge variant={getStatusBadgeVariant(item.status)}>{item.status}</Badge></TableCell>
+                  <TableCell>
+                      {item.programStatus ? (
+                          <div className='max-w-xs'>
+                            <p className="font-semibold text-xs truncate">{item.programStatus.chapter}</p>
+                            <div className="flex flex-wrap gap-1 mt-1">
+                                {item.programStatus.lessons.map(lesson => <Badge key={lesson} variant="secondary" className="font-normal">{lesson}</Badge>)}
+                            </div>
+                          </div>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">N/A</span>
+                      )}
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">{item.remarks}</TableCell>
                   <TableCell className="text-right">
                     <DropdownMenu>
@@ -222,7 +318,7 @@ export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: Tea
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={6} className="h-24 text-center">
+                  <TableCell colSpan={7} className="h-24 text-center">
                     Aucune entrée trouvée.
                   </TableCell>
                 </TableRow>

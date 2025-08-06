@@ -125,6 +125,11 @@ export interface TeacherWorkload {
     completedHours: number;
 }
 
+export interface ProgramStatus {
+    chapter: string;
+    lessons: string[];
+}
+
 export interface TeacherAttendance {
   id: string;
   teacherId: string;
@@ -133,6 +138,7 @@ export interface TeacherAttendance {
   courseCode: string;
   date: string;
   status: 'Présent' | 'Absent' | 'Justifié';
+  programStatus?: ProgramStatus;
   remarks?: string;
 }
 
