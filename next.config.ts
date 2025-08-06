@@ -22,8 +22,12 @@ const nextConfig: NextConfig = {
   webpack: (config, { isServer }) => {
     if (!isServer) {
       config.resolve.fallback = {
-        ...config.resolve.fallback,
+        ...(config.resolve.fallback || {}),
         "async_hooks": false,
+      };
+       config.resolve.alias = {
+        ...(config.resolve.alias || {}),
+        "@opentelemetry/context-async-hooks": false,
       };
     }
 
