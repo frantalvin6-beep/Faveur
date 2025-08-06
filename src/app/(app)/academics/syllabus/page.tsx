@@ -12,13 +12,18 @@ interface ChapterRowData extends Chapter {
   courseCode: string;
   courseName: string;
   level: string;
+  department: string;
+}
+
+interface GroupedChapters {
+    [department: string]: ChapterRowData[];
 }
 
 export default function SyllabusPage() {
     const [courses, setCourses] = React.useState<Course[]>(initialCourses);
     const [searchTerm, setSearchTerm] = React.useState('');
 
-    const chapterData = React.useMemo(() => {
+    const groupedChapters = React.useMemo(() => {
         const allChapters: ChapterRowData[] = [];
         courses.forEach(course => {
             if (course.chapters) {
@@ -28,24 +33,36 @@ export default function SyllabusPage() {
                         courseCode: course.code,
                         courseName: course.name,
                         level: course.level,
+                        department: course.department,
                     });
                 });
             }
         });
 
-        if (!searchTerm) return allChapters;
+        const filteredChapters = !searchTerm 
+            ? allChapters
+            : allChapters.filter(chapter => 
+                chapter.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                chapter.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                chapter.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                chapter.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                chapter.level.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                chapter.department.toLowerCase().includes(searchTerm.toLowerCase())
+            );
+        
+        return filteredChapters.reduce((acc, chapter) => {
+            const { department } = chapter;
+            if (!acc[department]) {
+                acc[department] = [];
+            }
+            acc[department].push(chapter);
+            return acc;
+        }, {} as GroupedChapters);
 
-        const lowercasedFilter = searchTerm.toLowerCase();
-        return allChapters.filter(chapter => 
-            chapter.id.toLowerCase().includes(lowercasedFilter) ||
-            chapter.title.toLowerCase().includes(lowercasedFilter) ||
-            chapter.courseCode.toLowerCase().includes(lowercasedFilter) ||
-            chapter.courseName.toLowerCase().includes(lowercasedFilter) ||
-            chapter.level.toLowerCase().includes(lowercasedFilter)
-        );
 
     }, [courses, searchTerm]);
 
+    const departmentOrder = Object.keys(groupedChapters).sort();
 
   return (
     <div className="space-y-6">
@@ -58,18 +75,34 @@ export default function SyllabusPage() {
          </div>
          <div className="flex items-center gap-2">
             <Input
-                placeholder="Rechercher (ID, matière, chapitre...)"
+                placeholder="Rechercher (option, matière, chapitre...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
          </div>
        </div>
-        <Card>
-            <CardContent className="pt-6">
-                <SyllabusTable data={chapterData} />
-            </CardContent>
-        </Card>
+
+        {departmentOrder.length > 0 ? (
+            departmentOrder.map(department => (
+                 <Card key={department}>
+                    <CardHeader>
+                        <CardTitle>{department}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <SyllabusTable data={groupedChapters[department]} />
+                    </CardContent>
+                </Card>
+            ))
+        ) : (
+             <Card>
+                <CardContent>
+                    <p className="text-muted-foreground text-center py-8">
+                        {searchTerm ? "Aucun chapitre ne correspond à votre recherche." : "Aucun chapitre à afficher."}
+                    </p>
+                </CardContent>
+            </Card>
+        )}
     </div>
   );
 }
