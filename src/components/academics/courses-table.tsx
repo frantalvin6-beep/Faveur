@@ -122,8 +122,9 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
         <DialogHeader>
           <DialogTitle>Nouvelle Matière</DialogTitle>
         </DialogHeader>
-        <ScrollArea className="pr-6 -mr-6">
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="flex-grow overflow-hidden flex flex-col">
+        <ScrollArea className="pr-6 -mr-6 flex-grow">
+        <div className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="code">Code Matière</Label>
@@ -238,14 +239,13 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                     Ajouter un chapitre
                  </Button>
             </div>
-
-
-          <DialogFooter className="pt-4">
+        </div>
+        </ScrollArea>
+        <DialogFooter className="pt-4 flex-shrink-0">
             <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
             <Button type="submit">Enregistrer</Button>
-          </DialogFooter>
+        </DialogFooter>
         </form>
-        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
