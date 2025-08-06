@@ -125,9 +125,9 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
     }
 
     const headers = [
-        "Matricule", "Nom & Prénom", "Niveau d’études", "Option", "Inscription", "Semestre",
-        "Fournitures", "Support", "Type de Bourse", "% Réduction", "Scolarité", "Latrine",
-        "Session", "Rattrapage", "Total à Payer", "Avancé", "Reste", "Statut"
+        "Matricule", "Nom & Prénom", "Niveau d’études", "Option", "Frais d'inscription", "Semestre",
+        "Frais de fournitures", "Frais de support", "Type de Bourse", "% Réduction", "Scolarité calculée", "Frais de latrine",
+        "Frais de session", "Frais de rattrapage", "Total à Payer", "Avancé", "Reste", "Statut"
     ];
 
     const csvContent = [
@@ -201,17 +201,17 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
                 <TableHead>Nom & Prénom</TableHead>
                 <TableHead>Niveau d’études</TableHead>
                 <TableHead>Option</TableHead>
-                <TableHead className="text-right">Inscription</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Frais d'inscription</TableHead>
                 <TableHead>Semestre</TableHead>
-                <TableHead className="text-right">Fournitures</TableHead>
-                <TableHead className="text-right">Support</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Frais de fournitures</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Frais de support</TableHead>
                 <TableHead>Type de Bourse</TableHead>
                 <TableHead>% Réduction</TableHead>
-                <TableHead className="text-right">Scolarité</TableHead>
-                <TableHead className="text-right">Latrine</TableHead>
-                <TableHead className="text-right">Session</TableHead>
-                <TableHead className="text-right">Rattrapage</TableHead>
-                <TableHead className="text-right">Total à Payer</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Frais de Scolarité</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Frais de Latrine</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Frais de Session</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Frais de Rattrapage</TableHead>
+                <TableHead className="text-right whitespace-nowrap">Total à Payer</TableHead>
                 <TableHead className="text-right">Avancé</TableHead>
                 <TableHead className="text-right">Reste</TableHead>
                 <TableHead className="text-center">Statut</TableHead>
