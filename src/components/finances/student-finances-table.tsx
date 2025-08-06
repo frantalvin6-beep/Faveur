@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, Edit, PlusCircle, FileSpreadsheet, Loader2 } from 'lucide-react';
+import { MoreHorizontal, Edit, FileSpreadsheet, FileText, FileType, ChevronDown } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -34,6 +34,11 @@ import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { calculerFinance } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { Packer, Document, Paragraph, TextRun, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, WidthType, AlignmentType } from 'docx';
+import { saveAs } from 'file-saver';
+
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
@@ -113,66 +118,108 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
   React.useEffect(() => {
     setFinances(initialData);
   }, [initialData]);
-  
-  const handleExport = () => {
-    if (finances.length === 0) {
-        toast({
-            variant: "destructive",
-            title: "Exportation impossible",
-            description: "Il n'y a aucune donnée à exporter dans ce groupe.",
-        });
-        return;
-    }
 
-    const headers = [
+  const exportHeaders = [ "Matricule", "Nom & Prénom", "Niveau", "Option", "Total à Payer", "Avancé", "Reste", "Statut" ];
+  const detailedExportHeaders = [
         "Matricule", "Nom & Prénom", "Niveau d’études", "Option", "Frais d'inscription", "Semestre",
         "Frais de fournitures", "Frais de support", "Type de Bourse", "% Réduction", "Scolarité calculée", "Frais de latrine",
         "Frais de session", "Frais de rattrapage", "Total à Payer", "Avancé", "Reste", "Statut"
     ];
 
-    const csvContent = [
-        headers.join(','),
-        ...finances.map(f => [
-            f.matricule,
-            `"${f.fullName}"`,
-            f.level,
-            f.option,
-            f.inscription,
-            f.semester,
-            f.fournitures,
-            f.support,
-            `"${f.bourseType}"`,
-            f.reduction,
-            f.scolariteCalculee,
-            f.latrine,
-            f.session,
-            f.rattrapage,
-            f.totalAPayer,
-            f.avance,
-            f.reste,
-            f.statut
-        ].join(','))
-    ].join('\n');
 
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    if (link.download !== undefined) {
-        const url = URL.createObjectURL(blob);
-        const groupName = finances[0]?.option.replace(/ /g, '_') || 'export';
-        link.setAttribute("href", url);
-        link.setAttribute("download", `export-finances-${groupName}.csv`);
-        link.style.visibility = 'hidden';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
+  const getDetailedExportData = () => finances.map(f => [
+      f.matricule,
+      `"${f.fullName}"`,
+      f.level,
+      f.option,
+      f.inscription,
+      f.semester,
+      f.fournitures,
+      f.support,
+      `"${f.bourseType}"`,
+      f.reduction,
+      f.scolariteCalculee,
+      f.latrine,
+      f.session,
+      f.rattrapage,
+      f.totalAPayer,
+      f.avance,
+      f.reste,
+      f.statut
+  ]);
+
+  const getGroupName = () => finances[0] ? `${finances[0].option.replace(/ /g, '_')}-${finances[0].level.replace(/ /g, '_')}` : 'export_sans_nom';
+  
+  const handleExportCsv = () => {
+    if (finances.length === 0) {
+        toast({ variant: "destructive", title: "Exportation impossible", description: "Il n'y a aucune donnée à exporter." });
+        return;
     }
-    
-    toast({
-        title: "Exportation réussie",
-        description: "Le fichier CSV a été téléchargé.",
+    const csvContent = [ detailedExportHeaders.join(','), ...getDetailedExportData().map(row => row.join(',')) ].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    saveAs(blob, `export-finances-${getGroupName()}.csv`);
+    toast({ title: "Exportation CSV réussie" });
+  };
+
+  const handleExportPdf = () => {
+    if (finances.length === 0) {
+        toast({ variant: "destructive", title: "Exportation impossible", description: "Il n'y a aucune donnée à exporter." });
+        return;
+    }
+    const doc = new jsPDF({ orientation: 'landscape' });
+    const groupName = finances[0] ? `${finances[0].option} - ${finances[0].level}` : "Export de finances";
+    doc.text(groupName, 14, 15);
+    autoTable(doc, {
+      startY: 20,
+      head: [detailedExportHeaders],
+      body: getDetailedExportData().map(row => row.map(cell => String(cell).replace(/"/g, ''))), // Remove quotes for PDF
+    });
+    doc.save(`export-finances-${getGroupName()}.pdf`);
+    toast({ title: "Exportation PDF réussie" });
+  };
+
+  const handleExportWord = () => {
+     if (finances.length === 0) {
+        toast({ variant: "destructive", title: "Exportation impossible", description: "Il n'y a aucune donnée à exporter." });
+        return;
+    }
+
+    const groupName = finances[0] ? `${finances[0].option} - ${finances[0].level}` : "Export de finances";
+
+    const table = new DocxTable({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+            new DocxTableRow({
+                tableHeader: true,
+                children: detailedExportHeaders.map(header => new DocxTableCell({
+                    children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, size: 14 })], alignment: AlignmentType.CENTER })],
+                })),
+            }),
+            ...getDetailedExportData().map(rowData => new DocxTableRow({
+                children: rowData.map(cellData => new DocxTableCell({
+                    children: [new Paragraph({ text: String(cellData).replace(/"/g, ''), size: 14 })],
+                })),
+            })),
+        ],
+    });
+
+    const doc = new Document({
+        sections: [{
+            properties: {},
+            children: [
+                new Paragraph({ children: [new TextRun({ text: groupName, bold: true, size: 28 })], alignment: AlignmentType.CENTER }),
+                new Paragraph(""), // spacing
+                table,
+            ],
+        }],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+        saveAs(blob, `export-finances-${getGroupName()}.docx`);
+        toast({ title: "Exportation Word réussie" });
     });
   };
+
   
   const handleUpdateAdvance = (updatedStudent: StudentFinance) => {
     onUpdateStudent(updatedStudent);
@@ -186,10 +233,28 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
             <CardTitle>Suivi des Paiements</CardTitle>
             <CardDescription>Détails financiers pour chaque étudiant de ce groupe.</CardDescription>
           </div>
-          <Button onClick={handleExport} variant="outline">
-            <FileSpreadsheet className="mr-2 h-4 w-4" />
-            Exporter ce groupe
-          </Button>
+          
+           <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="outline">
+                    Exporter <ChevronDown className="ml-2 h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={handleExportCsv}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Exporter en CSV
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportPdf}>
+                  <FileText className="mr-2 h-4 w-4" />
+                  Exporter en PDF
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={handleExportWord}>
+                  <FileType className="mr-2 h-4 w-4" />
+                  Exporter en Word
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
         </div>
       </CardHeader>
       <CardContent>
@@ -201,16 +266,6 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
                 <TableHead>Nom & Prénom</TableHead>
                 <TableHead>Niveau d’études</TableHead>
                 <TableHead>Option</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Frais d'inscription</TableHead>
-                <TableHead>Semestre</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Frais de fournitures</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Frais de support</TableHead>
-                <TableHead>Type de Bourse</TableHead>
-                <TableHead>% Réduction</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Frais de Scolarité</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Frais de Latrine</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Frais de Session</TableHead>
-                <TableHead className="text-right whitespace-nowrap">Frais de Rattrapage</TableHead>
                 <TableHead className="text-right whitespace-nowrap">Total à Payer</TableHead>
                 <TableHead className="text-right">Avancé</TableHead>
                 <TableHead className="text-right">Reste</TableHead>
@@ -225,16 +280,6 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
                   <TableCell className="font-medium">{f.fullName}</TableCell>
                   <TableCell>{f.level}</TableCell>
                   <TableCell><Badge variant="secondary">{f.option}</Badge></TableCell>
-                  <TableCell className="text-right">{formatCurrency(f.inscription)}</TableCell>
-                  <TableCell>{f.semester}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(f.fournitures)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(f.support)}</TableCell>
-                  <TableCell>{f.bourseType}</TableCell>
-                  <TableCell>{f.bourseType === 'Partiellement boursier' ? `${f.reduction}%` : 'N/A'}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(f.scolariteCalculee)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(f.latrine)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(f.session)}</TableCell>
-                  <TableCell className="text-right">{formatCurrency(f.rattrapage)}</TableCell>
                   <TableCell className="text-right font-semibold">{formatCurrency(f.totalAPayer)}</TableCell>
                   <TableCell className="text-right text-green-600 font-semibold">{formatCurrency(f.avance)}</TableCell>
                   <TableCell className={cn("text-right font-bold", f.reste > 0 ? "text-red-600" : "text-gray-500")}>{formatCurrency(f.reste)}</TableCell>
@@ -256,7 +301,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={19} className="h-24 text-center">Aucun étudiant dans ce groupe.</TableCell>
+                  <TableCell colSpan={9} className="h-24 text-center">Aucun étudiant dans ce groupe.</TableCell>
                 </TableRow>
               )}
             </TableBody>
