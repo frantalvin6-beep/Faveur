@@ -28,6 +28,8 @@ import {
   BookCopy,
   Wallet,
   UserCircle,
+  LifeBuoy,
+  Bot,
 } from 'lucide-react';
 
 import {
@@ -99,7 +101,15 @@ const navItems = [
         { href: '/exams/planning', label: 'Planification', icon: CalendarPlus },
     ]
   },
-  { href: '/communication', icon: MessageSquare, label: 'Communication' },
+  { 
+    id: 'support',
+    icon: LifeBuoy, 
+    label: 'Support & Assistance',
+    subItems: [
+        { href: '/communication', label: 'Chat en direct', icon: MessageSquare },
+        { href: '/ai-assistant', label: 'Assistant IA', icon: Bot },
+    ]
+  },
   { href: '/reports', icon: FileText, label: 'Rapports' },
   { 
     id: 'finances',
