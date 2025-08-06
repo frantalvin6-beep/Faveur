@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -39,6 +40,7 @@ function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) 
   const [isOpen, setIsOpen] = React.useState(false);
   const [teacherId, setTeacherId] = React.useState('');
   const [assignmentId, setAssignmentId] = React.useState('');
+  const [plannedHours, setPlannedHours] = React.useState(0);
 
   const teacherAssignments = allAssignments.filter(a => a.teacherId === teacherId);
 
@@ -46,8 +48,8 @@ function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) 
     e.preventDefault();
     const assignment = allAssignments.find(a => a.id === assignmentId);
     
-    if (!assignment) {
-      alert("Veuillez sélectionner un enseignant et un cours valide.");
+    if (!assignment || plannedHours <= 0) {
+      alert("Veuillez sélectionner un enseignant, un cours valide, et entrer un nombre d'heures planifiées supérieur à 0.");
       return;
     }
 
@@ -58,7 +60,7 @@ function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) 
       courseName: assignment.courseName,
       level: assignment.level,
       semester: assignment.semester,
-      plannedHours: assignment.hourlyVolume,
+      plannedHours: plannedHours,
       completedHours: 0,
     };
 
@@ -67,6 +69,7 @@ function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) 
     // Reset form
     setTeacherId('');
     setAssignmentId('');
+    setPlannedHours(0);
   };
   
   return (
@@ -99,9 +102,17 @@ function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) 
                 </SelectContent>
               </Select>
             </div>
-            <p className="text-sm text-muted-foreground">
-              Les heures prévues, le niveau et le semestre seront automatiquement remplis en fonction de l'attribution du cours.
-            </p>
+            <div className="space-y-2">
+                <Label htmlFor="planned-hours">Heures Planifiées</Label>
+                <Input 
+                    id="planned-hours"
+                    type="number"
+                    value={plannedHours}
+                    onChange={(e) => setPlannedHours(Number(e.target.value))}
+                    placeholder="ex: 40"
+                    required
+                />
+            </div>
           </div>
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
