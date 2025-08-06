@@ -3,3 +3,4 @@ config();
 
 import '@/ai/flows/generate-ai-powered-reports.ts';
 import '@/ai/flows/calculate-student-gpa.ts';
+import '@/ai/flows/ai-assistant.ts';
