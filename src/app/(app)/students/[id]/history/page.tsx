@@ -3,7 +3,7 @@
 
 import { useState } from 'react'
 import { notFound } from 'next/navigation'
-import { students as initialStudents, Student, AcademicRecord, CourseRecord } from '@/lib/data'
+import { students as initialStudents, Student, AcademicRecord, CourseRecord, courses as allCourses, initialCourses } from '@/lib/data'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -34,6 +34,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PlusCircle, Trash2, Loader2 } from 'lucide-react'
 import { calculateGpa } from '@/ai/flows/calculate-student-gpa'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
 
 function getDecisionBadgeVariant(decision: string) {
@@ -49,37 +50,39 @@ function getDecisionBadgeVariant(decision: string) {
   }
 }
 
+type CourseEntry = { id: string; name: string; grade: number; coefficient: number };
+
+
 function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecord: (record: AcademicRecord) => void }) {
   const [semester, setSemester] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
-  const [courses, setCourses] = useState<Partial<CourseRecord>[]>([{ name: '', grade: undefined, coefficient: 1 }])
+  const [courses, setCourses] = useState<Partial<CourseEntry>[]>([{ id: `C${Date.now()}`, name: '', grade: undefined, coefficient: undefined }])
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  const availableCourses = allCourses.filter(c => c.department === student.department);
+
   const handleAddCourse = () => {
-    setCourses([...courses, { name: '', grade: undefined, coefficient: 1 }])
+    setCourses([...courses, { id: `C${Date.now()}`, name: '', grade: undefined, coefficient: undefined }])
   }
 
-  const handleRemoveCourse = (index: number) => {
-    setCourses(courses.filter((_, i) => i !== index))
+  const handleRemoveCourse = (id: string) => {
+    setCourses(courses.filter((c) => c.id !== id))
   }
 
-  const handleCourseChange = (index: number, field: keyof CourseRecord, value: string | number) => {
-    const newCourses = [...courses];
-    const course = { ...newCourses[index] };
-    if (field === 'name') {
-        course.name = value as string;
-    } else {
-        const numValue = Number(value);
-        if (!isNaN(numValue)) {
-            if (field === 'grade') course.grade = numValue;
-            if (field === 'coefficient') course.coefficient = numValue;
+  const handleCourseChange = (id: string, field: keyof CourseEntry, value: string | number) => {
+    setCourses(courses.map(c => {
+        if (c.id === id) {
+            if (field === 'name') {
+                 const selectedCourse = availableCourses.find(ac => ac.name === value);
+                 return { ...c, name: value as string, coefficient: selectedCourse?.credits };
+            }
+            if (field === 'grade') return { ...c, grade: Number(value) };
+            if (field === 'coefficient') return { ...c, coefficient: Number(value) };
         }
-    }
-    newCourses[index] = course;
-    setCourses(newCourses);
-};
-
+        return c;
+    }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -108,7 +111,7 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
         // Reset form
         setSemester('');
         setYear(new Date().getFullYear());
-        setCourses([{ name: '', grade: undefined, coefficient: 1 }]);
+        setCourses([{ id: `C${Date.now()}`, name: '', grade: undefined, coefficient: undefined }]);
     } catch (error) {
         console.error("Failed to calculate GPA with AI:", error);
         alert("Une erreur est survenue lors du calcul de la moyenne. Veuillez réessayer.");
@@ -147,11 +150,16 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
                 </div>
                 <div className="space-y-2">
                   {courses.map((course, index) => (
-                    <div key={index} className="flex items-center gap-2">
-                      <Input placeholder="Nom de la matière" value={course.name ?? ''} onChange={e => handleCourseChange(index, 'name', e.target.value)} required />
-                      <Input type="number" placeholder="Note" value={course.grade ?? ''} onChange={e => handleCourseChange(index, 'grade', e.target.value)} required min="0" max="20" step="0.5" />
-                      <Input type="number" placeholder="Coeff." value={course.coefficient ?? ''} onChange={e => handleCourseChange(index, 'coefficient', e.target.value)} required min="1" />
-                      <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveCourse(index)} disabled={courses.length === 1}>
+                    <div key={course.id} className="flex items-center gap-2">
+                      <Select value={course.name ?? ''} onValueChange={v => handleCourseChange(course.id!, 'name', v)}>
+                        <SelectTrigger><SelectValue placeholder="Sélectionner une matière..." /></SelectTrigger>
+                        <SelectContent>
+                            {availableCourses.map(c => <SelectItem key={c.code} value={c.name}>{c.name}</SelectItem>)}
+                        </SelectContent>
+                      </Select>
+                      <Input type="number" placeholder="Note" value={course.grade ?? ''} onChange={e => handleCourseChange(course.id!, 'grade', e.target.value)} required min="0" max="20" step="0.5" />
+                      <Input type="number" placeholder="Coeff." value={course.coefficient ?? ''} onChange={e => handleCourseChange(course.id!, 'coefficient', e.target.value)} required min="1" />
+                      <Button type="button" variant="destructive" size="icon" onClick={() => handleRemoveCourse(course.id!)} disabled={courses.length === 1}>
                         <Trash2 className="h-4 w-4" />
                       </Button>
                     </div>
@@ -280,3 +288,5 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
     </div>
   )
 }
+
+    

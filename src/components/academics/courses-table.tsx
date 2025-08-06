@@ -105,14 +105,23 @@ function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) => void 
             </div>
              <div className="space-y-2">
               <Label htmlFor="level">Niveau</Label>
-              <Input id="level" value={level} onChange={e => setLevel(e.target.value)} placeholder="Ex: Licence 1" required />
+              <Select onValueChange={setLevel} value={level} required>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner le niveau..." /></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Licence 1">Licence 1</SelectItem>
+                        <SelectItem value="Licence 2">Licence 2</SelectItem>
+                        <SelectItem value="Licence 3">Licence 3</SelectItem>
+                        <SelectItem value="Master 1">Master 1</SelectItem>
+                        <SelectItem value="Master 2">Master 2</SelectItem>
+                    </SelectContent>
+                </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="semester">Semestre</Label>
               <Input id="semester" value={semester} onChange={e => setSemester(e.target.value)} placeholder="Ex: Semestre 1" required />
             </div>
              <div className="space-y-2">
-              <Label htmlFor="credits">Crédits</Label>
+              <Label htmlFor="credits">Crédits (Coefficient)</Label>
               <Input id="credits" type="number" min="0" value={credits} onChange={e => setCredits(Number(e.target.value))} required />
             </div>
           </div>
@@ -214,3 +223,5 @@ export function CoursesTable({ data, onAddCourse, onDeleteCourse }: { data: Cour
     </Card>
   );
 }
+
+    

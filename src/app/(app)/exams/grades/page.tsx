@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useMemo } from 'react';
-import { departments as allDepartments, examGrades as allGrades, students as allStudents } from '@/lib/data';
+import { departments as allDepartments, examGrades as allGrades, students as allStudents, courses as allCourses, initialCourses } from '@/lib/data';
 import { GradesTable } from '@/components/exams/grades-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -54,6 +54,8 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
             return;
         }
 
+        const course = allCourses.find(c => c.code === examSession.courseCode);
+        
         const newGrade: ExamGrade = {
             id: `G${Date.now()}`,
             studentId,
@@ -64,10 +66,25 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
             department: department,
             examType: examSession.examType,
             grade: Number(grade),
-            coefficient: examSession.grades[0]?.coefficient || 1, // Use coefficient from existing grade or default
+            coefficient: course?.credits || 1, // Use course credits as coefficient
             date: new Date().toISOString().split('T')[0],
         };
         onAddGrade(newGrade);
+
+        // This is a simulation, in a real app this would be a DB update
+        const studentToUpdate = initialStudents.find(s => s.id === studentId);
+        const record = studentToUpdate?.academicHistory.find(r => r.courses.some(c => c.name === newGrade.courseName));
+        if (studentToUpdate && !record) {
+             const newRecord = {
+                 semester: 'N/A',
+                 year: new Date().getFullYear(),
+                 courses: [{ name: newGrade.courseName, grade: newGrade.grade, coefficient: newGrade.coefficient }],
+                 gpa: 0, // Should be recalculated
+                 decision: 'En cours' as any,
+             };
+             studentToUpdate.academicHistory.push(newRecord);
+        }
+
         setIsOpen(false);
         setStudentId('');
         setGrade('');
@@ -122,25 +139,20 @@ function processAllGrades() {
     students.forEach(student => {
         student.academicHistory.forEach(record => {
             record.courses.forEach(course => {
-                // This creates a simplified ExamGrade object. 
-                // We're missing some specific details like examType and teacherName from this data structure.
-                // We'll have to make some assumptions or find a way to link this data.
+                const assignedCourse = courseAssignments.find(ca => ca.courseName === course.name && allDepartments.find(d => d.name === ca.department)?.id === allDepartments.find(d=>d.name === student.department)?.id.split('-')[0]);
+
                 grades.push({
                     id: `G-${student.id}-${record.year}-${record.semester}-${course.name}`,
                     studentId: student.id,
                     studentName: student.name,
-                    // Assumption: we don't have a specific course code in academicHistory.
-                    // We can try to find it from assignments.
-                    courseCode: courseAssignments.find(ca => ca.courseName === course.name && ca.department === student.department)?.courseCode || 'N/A',
+                    courseCode: assignedCourse?.courseCode || 'N/A',
                     courseName: course.name,
-                    // Assumption: find teacher from assignments.
-                    teacherName: courseAssignments.find(ca => ca.courseName === course.name)?.teacherName || 'N/A',
+                    teacherName: assignedCourse?.teacherName || 'N/A',
                     department: student.department,
-                    // Assumption: examType is not stored, so we'll default it.
                     examType: 'Final', 
                     grade: course.grade,
                     coefficient: course.coefficient,
-                    date: `${record.year}-01-01`, // Placeholder date
+                    date: `${record.year}-01-01`, 
                 });
             });
         });
@@ -155,37 +167,41 @@ export default function GradesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   
   const handleAddGrade = (newGrade: ExamGrade) => {
-    // This function might need to be rethought. Adding a single grade here
-    // doesn't fit the new model of adding a full academic record for a student.
-    // However, we can add it to the 'grades' state for immediate UI update.
     setGrades(prev => [...prev, newGrade]);
   };
   
   const handleGradeUpdate = (updatedGrade: ExamGrade) => {
     setGrades(prev => prev.map(g => g.id === updatedGrade.id ? updatedGrade : g));
-    // Here you would also update the original data source (students array in data.ts)
+    const student = initialStudents.find(s => s.id === updatedGrade.studentId);
+    if (student) {
+        const history = student.academicHistory.find(h => h.courses.some(c => c.name === updatedGrade.courseName));
+        if(history){
+            const course = history.courses.find(c => c.name === updatedGrade.courseName);
+            if (course) {
+                course.grade = updatedGrade.grade;
+                course.coefficient = updatedGrade.coefficient;
+            }
+        }
+    }
   };
   
   const handleGradeDelete = (gradeId: string) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
       setGrades(prev => prev.filter(g => g.id !== gradeId));
-      // Here you would also delete from the original data source
     }
   };
 
   const groupedGrades = useMemo(() => {
     const groups: GroupedGrades = {};
-    const allGrades = processAllGrades(); // Re-process grades to get the latest data
 
-    allGrades.forEach(grade => {
+    grades.forEach(grade => {
       const department = grade.department;
       if (!groups[department]) {
         groups[department] = [];
       }
-
-      // Group by a key that represents a unique exam session
-      const sessionKey = `${grade.courseName}-${grade.examType}-${grade.teacherName}`;
-      let session = groups[department].find(s => `${s.courseName}-${s.examType}-${s.teacherName}` === sessionKey);
+      
+      const sessionKey = `${grade.courseCode}-${grade.examType}-${grade.teacherName}`;
+      let session = groups[department].find(s => `${s.courseCode}-${s.examType}-${s.teacherName}` === sessionKey);
       
       if (!session) {
         session = {
@@ -200,7 +216,6 @@ export default function GradesPage() {
       session.grades.push(grade);
     });
 
-     // Filter based on search term
     if (!searchTerm) return groups;
 
     const lowercasedFilter = searchTerm.toLowerCase();
@@ -241,7 +256,7 @@ export default function GradesPage() {
       }
     }
     return filteredGroups;
-  }, [searchTerm]);
+  }, [grades, searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -298,3 +313,5 @@ export default function GradesPage() {
     </div>
   )
 }
+
+    
