@@ -163,10 +163,9 @@ export interface StudentFinance {
 }
 
 export interface FacultyFinance {
-    matricule: string;
+    teacherId: string;
     fullName: string;
     departement: string;
-    option: string;
     heuresL1: number;
     tauxL1: number;
     heuresL2: number;

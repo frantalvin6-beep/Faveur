@@ -1,20 +1,34 @@
 'use client';
 
 import * as React from 'react';
-import { facultyFinances as initialFacultyFinances, FacultyFinance } from '@/lib/data';
+import { facultyFinances as initialFacultyFinances, FacultyFinance, calculerSalaireComplet, teacherWorkload } from '@/lib/data';
 import { FacultyFinancesTable } from '@/components/finances/faculty-finances-table';
 
 export default function FacultyFinancesPage() {
   const [facultyFinances, setFacultyFinances] = React.useState(initialFacultyFinances);
 
+  // Recalculate all finances based on current workload whenever the component mounts
+  // This simulates data being fresh from a database.
+  React.useEffect(() => {
+    const updatedFinances = facultyFinances.map(finance => {
+      const calculated = calculerSalaireComplet(finance.teacherId, finance.montantPaye);
+      return { ...finance, ...calculated };
+    });
+    setFacultyFinances(updatedFinances);
+  }, []);
+
   const handleUpdateFinance = (updatedFinance: FacultyFinance) => {
-    setFacultyFinances(prev => prev.map(f => f.matricule === updatedFinance.matricule ? updatedFinance : f));
+    setFacultyFinances(prev => prev.map(f => f.teacherId === updatedFinance.teacherId ? updatedFinance : f));
   };
   
   const handleAddFinance = (newFinance: FacultyFinance) => {
+     // Prevent duplicates
+    if (facultyFinances.some(f => f.teacherId === newFinance.teacherId)) {
+        alert('Une fiche de paie pour cet enseignant existe déjà.');
+        return;
+    }
     setFacultyFinances(prev => [...prev, newFinance]);
   };
-
 
   return (
     <div className="space-y-6">

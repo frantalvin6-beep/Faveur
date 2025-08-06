@@ -239,35 +239,42 @@ export const studentFinances: StudentFinance[] = studentFinancesData.map(data =>
     return { ...data, ...calculated };
 });
 
-export function calculerSalaireComplet(
-  heuresL1: number, tauxL1: number, heuresL2: number, tauxL2: number, heuresL3: number, tauxL3: number,
-  heuresMaster: number, tauxMaster: number, montantPaye: number
-) {
-  const totalAPayer =
-    (heuresL1 * tauxL1) +
-    (heuresL2 * tauxL2) +
-    (heuresL3 * tauxL3) +
-    (heuresMaster * tauxMaster);
+export function calculerSalaireComplet(teacherId: string, montantPaye: number) {
+    const financeData = facultyFinances.find(f => f.teacherId === teacherId);
+    if (!financeData) {
+        throw new Error('Finance data not found for teacher');
+    }
 
-  const reste = totalAPayer - montantPaye;
-  const statut: FacultyFinance['statut'] = reste <= 0 ? "Finalisé" : "Non finalisé";
+    const teacherWorkloads = teacherWorkload.filter(w => w.teacherId === teacherId);
 
-  return { totalAPayer, reste, statut };
+    const getHoursForLevel = (levelPrefix: string) => 
+        teacherWorkloads.filter(w => w.level.startsWith(levelPrefix)).reduce((sum, w) => sum + w.completedHours, 0);
+
+    const heuresL1 = getHoursForLevel('Licence 1');
+    const heuresL2 = getHoursForLevel('Licence 2');
+    const heuresL3 = getHoursForLevel('Licence 3');
+    const heuresMaster = getHoursForLevel('Master');
+
+    const totalAPayer =
+        (heuresL1 * financeData.tauxL1) +
+        (heuresL2 * financeData.tauxL2) +
+        (heuresL3 * financeData.tauxL3) +
+        (heuresMaster * financeData.tauxMaster);
+
+    const reste = totalAPayer - montantPaye;
+    const statut: FacultyFinance['statut'] = reste <= 0 ? "Finalisé" : "Non finalisé";
+
+    return { heuresL1, heuresL2, heuresL3, heuresMaster, totalAPayer, reste, statut };
 }
 
-const facultyFinancesData: Omit<FacultyFinance, 'totalAPayer' | 'reste' | 'statut'>[] = [
-  { matricule: 'ENS-001', fullName: 'Prof. Mbemba', departement: 'Informatique', option: 'Programmation', heuresL1: 20, tauxL1: 8000, heuresL2: 15, tauxL2: 9000, heuresL3: 10, tauxL3: 10000, heuresMaster: 5, tauxMaster: 12000, montantPaye: 400000 },
-  { matricule: 'ENS-002', fullName: 'Mme. Kodia', departement: 'Gestion', option: 'Comptabilité', heuresL1: 30, tauxL1: 7000, heuresL2: 20, tauxL2: 8000, heuresL3: 0, tauxL3: 0, heuresMaster: 0, tauxMaster: 0, montantPaye: 370000 },
-  { matricule: 'ENS-003', fullName: 'Dr. Iloki', departement: 'Réseaux', option: 'Sécurité', heuresL1: 10, tauxL1: 8000, heuresL2: 15, tauxL2: 9000, heuresL3: 20, tauxL3: 10000, heuresMaster: 10, tauxMaster: 13000, montantPaye: 500000 },
-  { matricule: 'ENS-004', fullName: 'M. Ngoma', departement: 'Maths', option: 'Statistiques', heuresL1: 25, tauxL1: 6000, heuresL2: 10, tauxL2: 7000, heuresL3: 0, tauxL3: 0, heuresMaster: 0, tauxMaster: 0, montantPaye: 200000 },
-  { matricule: 'ENS-005', fullName: 'Mme. Tchibota', departement: 'Informatique', option: 'Big Data', heuresL1: 15, tauxL1: 8000, heuresL2: 10, tauxL2: 9000, heuresL3: 5, tauxL3: 10000, heuresMaster: 0, tauxMaster: 0, montantPaye: 295000 },
+const facultyFinancesData: Omit<FacultyFinance, 'totalAPayer' | 'reste' | 'statut' | 'heuresL1' | 'heuresL2' | 'heuresL3' | 'heuresMaster'>[] = [
+  { teacherId: 'F001', fullName: 'Dr. Alan Grant', departement: 'Intelligence Artificielle (IA)', tauxL1: 8000, tauxL2: 9000, tauxL3: 10000, tauxMaster: 12000, montantPaye: 400000 },
+  { teacherId: 'F002', fullName: 'Dr. Ellie Sattler', departement: 'Électronique', tauxL1: 7000, tauxL2: 8000, tauxL3: 9500, tauxMaster: 11000, montantPaye: 370000 },
+  { teacherId: 'F003', fullName: 'Dr. Ian Malcolm', departement: 'Big Data', tauxL1: 8000, tauxL2: 9000, tauxL3: 10000, tauxMaster: 13000, montantPaye: 500000 },
 ];
 
 export const facultyFinances: FacultyFinance[] = facultyFinancesData.map(data => {
-    const calculated = calculerSalaireComplet(
-        data.heuresL1, data.tauxL1, data.heuresL2, data.tauxL2, data.heuresL3, data.tauxL3,
-        data.heuresMaster, data.tauxMaster, data.montantPaye
-    );
+    const calculated = calculerSalaireComplet(data.teacherId, data.montantPaye);
     return { ...data, ...calculated };
 });
 
