@@ -16,7 +16,9 @@ interface ChapterRowData extends Chapter {
 }
 
 interface GroupedChapters {
-    [department: string]: ChapterRowData[];
+    [department: string]: {
+        [level: string]: ChapterRowData[];
+    };
 }
 
 export default function SyllabusPage() {
@@ -51,14 +53,16 @@ export default function SyllabusPage() {
             );
         
         return filteredChapters.reduce((acc, chapter) => {
-            const { department } = chapter;
+            const { department, level } = chapter;
             if (!acc[department]) {
-                acc[department] = [];
+                acc[department] = {};
             }
-            acc[department].push(chapter);
+            if (!acc[department][level]) {
+                acc[department][level] = [];
+            }
+            acc[department][level].push(chapter);
             return acc;
         }, {} as GroupedChapters);
-
 
     }, [courses, searchTerm]);
 
@@ -85,14 +89,19 @@ export default function SyllabusPage() {
 
         {departmentOrder.length > 0 ? (
             departmentOrder.map(department => (
-                 <Card key={department}>
-                    <CardHeader>
-                        <CardTitle>{department}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <SyllabusTable data={groupedChapters[department]} />
-                    </CardContent>
-                </Card>
+                <div key={department} className="space-y-4">
+                    <h2 className="text-2xl font-semibold tracking-tight">{department}</h2>
+                    {Object.keys(groupedChapters[department]).sort().map(level => (
+                         <Card key={`${department}-${level}`}>
+                            <CardHeader>
+                                <CardTitle>{level}</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <SyllabusTable data={groupedChapters[department][level]} />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
             ))
         ) : (
              <Card>
