@@ -33,6 +33,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { calculerFinance } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
@@ -107,12 +108,71 @@ function UpdateAdvanceForm({ student, onUpdate }: { student: StudentFinance, onU
 
 export function StudentFinancesTable({ initialData, onUpdateStudent }: { initialData: StudentFinance[], onUpdateStudent: (student: StudentFinance) => void }) {
   const [finances, setFinances] = React.useState(initialData);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     setFinances(initialData);
   }, [initialData]);
   
-  const handleExport = () => alert("L'exportation des données sera bientôt disponible.");
+  const handleExport = () => {
+    if (finances.length === 0) {
+        toast({
+            variant: "destructive",
+            title: "Exportation impossible",
+            description: "Il n'y a aucune donnée à exporter dans ce groupe.",
+        });
+        return;
+    }
+
+    const headers = [
+        "Matricule", "Nom & Prénom", "Niveau d’études", "Option", "Inscription", "Semestre",
+        "Fournitures", "Support", "Type de Bourse", "% Réduction", "Scolarité", "Latrine",
+        "Session", "Rattrapage", "Total à Payer", "Avancé", "Reste", "Statut"
+    ];
+
+    const csvContent = [
+        headers.join(','),
+        ...finances.map(f => [
+            f.matricule,
+            `"${f.fullName}"`,
+            f.level,
+            f.option,
+            f.inscription,
+            f.semester,
+            f.fournitures,
+            f.support,
+            `"${f.bourseType}"`,
+            f.reduction,
+            f.scolariteCalculee,
+            f.latrine,
+            f.session,
+            f.rattrapage,
+            f.totalAPayer,
+            f.avance,
+            f.reste,
+            f.statut
+        ].join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob);
+        const groupName = finances[0]?.option.replace(/ /g, '_') || 'export';
+        link.setAttribute("href", url);
+        link.setAttribute("download", `export-finances-${groupName}.csv`);
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+    }
+    
+    toast({
+        title: "Exportation réussie",
+        description: "Le fichier CSV a été téléchargé.",
+    });
+  };
   
   const handleUpdateAdvance = (updatedStudent: StudentFinance) => {
     onUpdateStudent(updatedStudent);
