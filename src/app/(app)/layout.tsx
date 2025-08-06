@@ -25,6 +25,7 @@ import {
   Hourglass,
   CheckSquare,
   BookCopy,
+  Wallet,
 } from 'lucide-react';
 
 import {
@@ -106,6 +107,7 @@ const navItems = [
         { href: '/finances/students', label: 'Finances Étudiants', icon: Users },
         { href: '/finances/faculty', label: 'Finances Enseignants', icon: UserSquare },
         { href: '/finances/administration', label: 'Finances Administration', icon: Briefcase },
+        { href: '/finances/expenses', label: 'Dépenses Administratives', icon: Wallet },
     ]
   },
   { href: '/accounting', icon: BookCopy, label: 'Comptabilité' },
