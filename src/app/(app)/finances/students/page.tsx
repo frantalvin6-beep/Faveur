@@ -1,7 +1,7 @@
 'use client';
 
 import * as React from 'react';
-import { studentFinances as initialStudentFinances, StudentFinance } from '@/lib/data';
+import { studentFinances as initialStudentFinances, StudentFinance, accountingTransactions } from '@/lib/data';
 import { StudentFinancesTable } from '@/components/finances/student-finances-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { calculerFinance, departments } from '@/lib/data';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 interface GroupedFinances {
   [key: string]: StudentFinance[];
@@ -123,13 +124,52 @@ function AddStudentFinanceForm({ onAddStudent }: { onAddStudent: (student: Stude
 export default function StudentFinancesPage() {
   const [studentFinances, setStudentFinances] = React.useState(initialStudentFinances);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const { toast } = useToast();
 
   const handleAddStudent = (newStudent: StudentFinance) => {
     setStudentFinances(prev => [...prev, newStudent]);
+     if (newStudent.avance > 0) {
+        accountingTransactions.unshift({
+            id: `TRN-STU-${Date.now()}`,
+            date: new Date().toISOString().split('T')[0],
+            type: 'Revenu',
+            sourceBeneficiary: newStudent.fullName,
+            category: 'Frais scolarité',
+            amount: newStudent.avance,
+            paymentMethod: 'Espèces',
+            description: `Paiement initial frais de scolarité`,
+            responsible: 'Caissier'
+        });
+        toast({
+            title: "Transaction enregistrée",
+            description: `Un revenu de ${newStudent.avance.toLocaleString()} FCFA pour ${newStudent.fullName} a été ajouté à la comptabilité.`,
+        });
+    }
   };
   
   const handleUpdateStudent = (updatedStudent: StudentFinance) => {
+    const originalStudent = studentFinances.find(s => s.matricule === updatedStudent.matricule);
+    const paymentAmount = updatedStudent.avance - (originalStudent?.avance || 0);
+
     setStudentFinances(prev => prev.map(s => s.matricule === updatedStudent.matricule ? updatedStudent : s));
+    
+    if (paymentAmount > 0) {
+        accountingTransactions.unshift({
+            id: `TRN-STU-${Date.now()}`,
+            date: new Date().toISOString().split('T')[0],
+            type: 'Revenu',
+            sourceBeneficiary: updatedStudent.fullName,
+            category: 'Frais scolarité',
+            amount: paymentAmount,
+            paymentMethod: 'Espèces', // Default method
+            description: `Paiement frais de scolarité`,
+            responsible: 'Caissier'
+        });
+        toast({
+            title: "Transaction enregistrée",
+            description: `Un revenu de ${paymentAmount.toLocaleString()} FCFA pour ${updatedStudent.fullName} a été ajouté à la comptabilité.`,
+        });
+    }
   };
 
 

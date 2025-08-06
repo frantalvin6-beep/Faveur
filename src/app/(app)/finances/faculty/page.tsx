@@ -1,11 +1,13 @@
 'use client';
 
 import * as React from 'react';
-import { facultyFinances as initialFacultyFinances, FacultyFinance, calculerSalaireComplet, teacherWorkload } from '@/lib/data';
+import { facultyFinances as initialFacultyFinances, FacultyFinance, calculerSalaireComplet, teacherWorkload, accountingTransactions } from '@/lib/data';
 import { FacultyFinancesTable } from '@/components/finances/faculty-finances-table';
+import { useToast } from '@/hooks/use-toast';
 
 export default function FacultyFinancesPage() {
   const [facultyFinances, setFacultyFinances] = React.useState(initialFacultyFinances);
+  const { toast } = useToast();
 
   // Recalculate all finances based on current workload whenever the component mounts
   // This simulates data being fresh from a database.
@@ -25,7 +27,28 @@ export default function FacultyFinancesPage() {
   }, []);
 
   const handleUpdateFinance = (updatedFinance: FacultyFinance) => {
+    const originalFinance = facultyFinances.find(f => f.teacherId === updatedFinance.teacherId);
+    const paymentAmount = updatedFinance.montantPaye - (originalFinance?.montantPaye || 0);
+
     setFacultyFinances(prev => prev.map(f => f.teacherId === updatedFinance.teacherId ? updatedFinance : f));
+    
+    if (paymentAmount > 0) {
+        accountingTransactions.unshift({
+            id: `TRN-FAC-${Date.now()}`,
+            date: new Date().toISOString().split('T')[0],
+            type: 'Dépense',
+            sourceBeneficiary: updatedFinance.fullName,
+            category: 'Salaires',
+            amount: paymentAmount,
+            paymentMethod: 'Virement bancaire', // Default method
+            description: `Paiement salaire enseignant`,
+            responsible: 'DRH'
+        });
+        toast({
+            title: "Transaction enregistrée",
+            description: `Une dépense de ${paymentAmount.toLocaleString()} FCFA pour ${updatedFinance.fullName} a été ajoutée à la comptabilité.`,
+        });
+    }
   };
   
   const handleAddFinance = (newFinance: FacultyFinance) => {
@@ -35,6 +58,24 @@ export default function FacultyFinancesPage() {
         return;
     }
     setFacultyFinances(prev => [...prev, newFinance]);
+    
+    if (newFinance.montantPaye > 0) {
+        accountingTransactions.unshift({
+            id: `TRN-FAC-${Date.now()}`,
+            date: new Date().toISOString().split('T')[0],
+            type: 'Dépense',
+            sourceBeneficiary: newFinance.fullName,
+            category: 'Salaires',
+            amount: newFinance.montantPaye,
+            paymentMethod: 'Virement bancaire',
+            description: `Avance sur salaire enseignant`,
+            responsible: 'DRH'
+        });
+        toast({
+            title: "Transaction enregistrée",
+            description: `Une dépense de ${newFinance.montantPaye.toLocaleString()} FCFA pour ${newFinance.fullName} a été ajoutée à la comptabilité.`,
+        });
+    }
   };
 
   return (
