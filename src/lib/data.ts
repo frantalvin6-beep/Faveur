@@ -119,10 +119,54 @@ export const departments: Department[] = [
 ];
 
 export const courses: Course[] = [
-    { code: 'CS101', name: 'Introduction à la Programmation', department: 'Programmation', level: 'Licence 1', semester: 'Semestre 1', credits: 5 },
-    { code: 'AI201', name: 'Fondamentaux de l\'IA', department: 'Intelligence Artificielle (IA)', level: 'Licence 2', semester: 'Semestre 3', credits: 4 },
-    { code: 'EE301', name: 'Circuits Électroniques', department: 'Électronique', level: 'Licence 3', semester: 'Semestre 5', credits: 5 },
-    { code: 'BD401', name: 'Analyse de Données Massives', department: 'Big Data', level: 'Master 1', semester: 'Semestre 1', credits: 6 },
+    { 
+        code: 'CS101', 
+        name: 'Introduction à la Programmation', 
+        department: 'Programmation', 
+        level: 'Licence 1', 
+        semester: 'Semestre 1', 
+        credits: 5,
+        lessons: [
+            'Variables et Types de données',
+            'Structures de contrôle (if, for, while)',
+            'Fonctions et procédures',
+            'Tableaux et listes'
+        ],
+        teacherIds: ['F003']
+    },
+    { 
+        code: 'AI201', 
+        name: 'Fondamentaux de l\'IA', 
+        department: 'Intelligence Artificielle (IA)', 
+        level: 'Licence 2', 
+        semester: 'Semestre 3', 
+        credits: 4,
+        lessons: [
+            'Introduction à l\'IA',
+            'Agents intelligents',
+            'Résolution de problèmes par la recherche',
+            'Logique propositionnelle et du premier ordre'
+        ],
+        teacherIds: ['F001']
+    },
+    { 
+        code: 'EE301', 
+        name: 'Circuits Électroniques', 
+        department: 'Électronique', 
+        level: 'Licence 3', 
+        semester: 'Semestre 5', 
+        credits: 5,
+        teacherIds: ['F002']
+    },
+    { 
+        code: 'BD401', 
+        name: 'Analyse de Données Massives', 
+        department: 'Big Data', 
+        level: 'Master 1', 
+        semester: 'Semestre 1', 
+        credits: 6,
+        teacherIds: ['F003']
+    },
 ];
 
 export const courseAssignments: CourseAssignment[] = [
@@ -344,6 +388,10 @@ export function calculerComptabilite(transactions: AccountingTransaction[]) {
 
   return { revenus, depenses, solde: revenus - depenses };
 }
+
+// In a real app, initial data would be fetched, but here we modify it in-memory
+export const initialCourses = courses;
+export const initialStudents = students;
 
 
 export type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction };

@@ -39,6 +39,8 @@ export interface Course {
   level: string;
   semester: string;
   credits: number;
+  lessons?: string[];
+  teacherIds?: string[];
 }
 
 export interface AcademicRecord {
