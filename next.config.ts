@@ -19,7 +19,6 @@ const nextConfig: NextConfig = {
     ],
   },
   webpack: (config, { isServer }) => {
-    // Exclure les modules spécifiques au serveur du bundle client
     if (!isServer) {
       config.resolve.fallback = {
         ...config.resolve.fallback,
