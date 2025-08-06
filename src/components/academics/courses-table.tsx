@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Edit, Trash2, User, BookOpen } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Edit, Trash2, User, BookOpen, X } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -39,7 +39,13 @@ import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ScrollArea } from '../ui/scroll-area';
 
+interface ChapterInput {
+  id: string;
+  title: string;
+  subChapters: string;
+}
 
 export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -49,9 +55,21 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
   const [level, setLevel] = React.useState('');
   const [semester, setSemester] = React.useState('');
   const [credits, setCredits] = React.useState(0);
-  const [chaptersText, setChaptersText] = React.useState('');
+  const [chapters, setChapters] = React.useState<ChapterInput[]>([{ id: `ch${Date.now()}`, title: '', subChapters: '' }]);
   const [teacherIds, setTeacherIds] = React.useState<string[]>([]);
   const [openTeacherPopover, setOpenTeacherPopover] = React.useState(false);
+
+  const handleAddChapter = () => {
+    setChapters(prev => [...prev, { id: `ch${Date.now()}`, title: '', subChapters: '' }]);
+  };
+
+  const handleRemoveChapter = (id: string) => {
+    setChapters(prev => prev.filter(c => c.id !== id));
+  };
+  
+  const handleChapterChange = (id: string, field: 'title' | 'subChapters', value: string) => {
+      setChapters(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
+  }
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,10 +78,12 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
       return;
     }
 
-    const chapters: Chapter[] = chaptersText
-      .split('\n')
-      .filter(l => l.trim() !== '')
-      .map(line => ({ title: line }));
+    const finalChapters: Chapter[] = chapters
+      .filter(c => c.title.trim() !== '')
+      .map(c => ({
+        title: c.title,
+        subChapters: c.subChapters.split('\n').filter(sc => sc.trim() !== '').map(sc => ({ title: sc }))
+      }));
 
     const newCourse: Course = {
       code,
@@ -72,7 +92,7 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
       level,
       semester,
       credits,
-      chapters,
+      chapters: finalChapters,
       teacherIds: teacherIds,
     };
     onAddCourse(newCourse);
@@ -84,7 +104,7 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
     setLevel('');
     setSemester('');
     setCredits(0);
-    setChaptersText('');
+    setChapters([{ id: `ch${Date.now()}`, title: '', subChapters: '' }]);
     setTeacherIds([]);
   };
 
@@ -98,11 +118,12 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
           Ajouter une matière
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
         <DialogHeader>
           <DialogTitle>Nouvelle Matière</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit}>
+        <ScrollArea className="pr-6 -mr-6">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="code">Code Matière</Label>
@@ -178,17 +199,53 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                     </PopoverContent>
                 </Popover>
             </div>
-            <div className="space-y-2">
-                <Label htmlFor="chapters">Chapitres (un par ligne)</Label>
-                <Textarea id="chapters" value={chaptersText} onChange={e => setChaptersText(e.target.value)} placeholder="Chapitre 1: Introduction&#10;Chapitre 2: Concepts clés" />
+          </div>
+          
+            <div className="space-y-4 rounded-lg border p-4">
+                 <Label className="text-base font-medium">Chapitres et Leçons</Label>
+                 <div className="space-y-4">
+                     {chapters.map((chapter, index) => (
+                         <div key={chapter.id} className="grid grid-cols-1 gap-2 md:grid-cols-2 md:gap-4 p-3 border rounded-md relative">
+                            <div className="space-y-2">
+                                <Label htmlFor={`chapter-title-${index}`}>Titre du chapitre {index + 1}</Label>
+                                <Input 
+                                    id={`chapter-title-${index}`} 
+                                    value={chapter.title} 
+                                    onChange={e => handleChapterChange(chapter.id, 'title', e.target.value)}
+                                    placeholder="Ex: Introduction aux Concepts"
+                                />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor={`subchapters-${index}`}>Sous-chapitres (un par ligne)</Label>
+                                <Textarea 
+                                    id={`subchapters-${index}`} 
+                                    value={chapter.subChapters} 
+                                    onChange={e => handleChapterChange(chapter.id, 'subChapters', e.target.value)}
+                                    placeholder="Leçon 1.1&#10;Leçon 1.2"
+                                    rows={3}
+                                />
+                            </div>
+                             {chapters.length > 1 && (
+                                <Button type="button" variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-muted-foreground hover:text-destructive" onClick={() => handleRemoveChapter(chapter.id)}>
+                                    <X className="h-4 w-4" />
+                                </Button>
+                             )}
+                         </div>
+                     ))}
+                 </div>
+                 <Button type="button" variant="outline" size="sm" onClick={handleAddChapter}>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Ajouter un chapitre
+                 </Button>
             </div>
 
-          </div>
-          <DialogFooter>
+
+          <DialogFooter className="pt-4">
             <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
             <Button type="submit">Enregistrer</Button>
           </DialogFooter>
         </form>
+        </ScrollArea>
       </DialogContent>
     </Dialog>
   );
@@ -218,8 +275,17 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
               <TableCell className="font-medium align-top">
                 {item.name}
                 {item.chapters && item.chapters.length > 0 && (
-                  <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground">
-                    {item.chapters.map(chapter => <li key={chapter.title}>{chapter.title}</li>)}
+                  <ul className="mt-2 space-y-1">
+                    {item.chapters.map((chapter, index) => (
+                      <li key={index}>
+                        <span className="text-xs font-semibold">{chapter.title}</span>
+                         {chapter.subChapters && chapter.subChapters.length > 0 && (
+                          <ul className="list-disc pl-5 text-xs text-muted-foreground">
+                            {chapter.subChapters.map((sub, subIndex) => <li key={subIndex}>{sub.title}</li>)}
+                          </ul>
+                        )}
+                      </li>
+                     ))}
                   </ul>
                 )}
               </TableCell>
