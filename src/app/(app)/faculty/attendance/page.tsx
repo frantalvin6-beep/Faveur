@@ -1,13 +1,22 @@
+
 'use client';
 
 import * as React from 'react';
 import { teacherAttendance as initialAttendance, teacherWorkload as initialWorkload, scheduleData } from '@/lib/data';
 import { AttendanceTable } from '@/components/faculty/attendance-table';
 import { TeacherAttendance, TeacherWorkload } from '@/lib/types';
+import { useIsMobile } from '@/hooks/use-mobile'; // This is a bit of a hack to force re-rendering on navigation
 
 export default function AttendancePage() {
   const [attendance, setAttendance] = React.useState(initialAttendance);
   const [workload, setWorkload] = React.useState(initialWorkload);
+  const isMobile = useIsMobile(); // unused, but its change on route change can trigger a re-render
+
+  React.useEffect(() => {
+    // This simulates fetching the latest data when the page is viewed
+    setWorkload([...initialWorkload]);
+  }, [isMobile]); // Re-run when route changes
+
 
   const handleAddEntry = (newEntry: TeacherAttendance) => {
     // Add to attendance list
@@ -26,7 +35,7 @@ export default function AttendancePage() {
 
         setWorkload(prevWorkload => {
           const workloadIndex = prevWorkload.findIndex(
-            w => w.teacherId === newEntry.teacherId && w.courseName === scheduleEntry.courseName // Assuming course name is unique enough for this demo
+            w => w.teacherId === newEntry.teacherId && w.courseName === scheduleEntry.courseName
           );
 
           if (workloadIndex > -1) {
