@@ -45,6 +45,7 @@ interface ChapterInput {
   id: string;
   title: string;
   subChapters: string;
+  estimatedDuration: string;
 }
 
 export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) => void }) {
@@ -55,19 +56,19 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
   const [level, setLevel] = React.useState('');
   const [semester, setSemester] = React.useState('');
   const [credits, setCredits] = React.useState(0);
-  const [chapters, setChapters] = React.useState<ChapterInput[]>([{ id: `ch${Date.now()}`, title: '', subChapters: '' }]);
+  const [chapters, setChapters] = React.useState<ChapterInput[]>([{ id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
   const [teacherIds, setTeacherIds] = React.useState<string[]>([]);
   const [openTeacherPopover, setOpenTeacherPopover] = React.useState(false);
 
   const handleAddChapter = () => {
-    setChapters(prev => [...prev, { id: `ch${Date.now()}`, title: '', subChapters: '' }]);
+    setChapters(prev => [...prev, { id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
   };
 
   const handleRemoveChapter = (id: string) => {
     setChapters(prev => prev.filter(c => c.id !== id));
   };
   
-  const handleChapterChange = (id: string, field: 'title' | 'subChapters', value: string) => {
+  const handleChapterChange = (id: string, field: 'title' | 'subChapters' | 'estimatedDuration', value: string) => {
       setChapters(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   }
 
@@ -80,8 +81,10 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
 
     const finalChapters: Chapter[] = chapters
       .filter(c => c.title.trim() !== '')
-      .map(c => ({
+      .map((c, index) => ({
+        id: `CH-${code}-${index + 1}`,
         title: c.title,
+        estimatedDuration: c.estimatedDuration,
         subChapters: c.subChapters.split('\n').filter(sc => sc.trim() !== '').map(sc => ({ title: sc }))
       }));
 
@@ -104,7 +107,7 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
     setLevel('');
     setSemester('');
     setCredits(0);
-    setChapters([{ id: `ch${Date.now()}`, title: '', subChapters: '' }]);
+    setChapters([{ id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
     setTeacherIds([]);
   };
 
@@ -222,6 +225,15 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                                     onChange={e => handleChapterChange(chapter.id, 'subChapters', e.target.value)}
                                     placeholder="Leçon 1.1&#10;Leçon 1.2"
                                     rows={3}
+                                />
+                            </div>
+                            <div className="space-y-2 md:col-span-2">
+                                <Label htmlFor={`duration-${index}`}>Durée estimée</Label>
+                                <Input 
+                                    id={`duration-${index}`} 
+                                    value={chapter.estimatedDuration} 
+                                    onChange={e => handleChapterChange(chapter.id, 'estimatedDuration', e.target.value)}
+                                    placeholder="Ex: 2h"
                                 />
                             </div>
                               {chapters.length > 1 && (

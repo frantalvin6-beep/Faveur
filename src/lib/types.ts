@@ -45,8 +45,10 @@ export interface Course {
 }
 
 export interface Chapter {
+    id: string;
     title: string;
     subChapters?: { title: string }[];
+    estimatedDuration?: string;
 }
 
 export interface AcademicRecord {

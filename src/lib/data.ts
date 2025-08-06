@@ -127,16 +127,18 @@ export const courses: Course[] = [
         semester: 'Semestre 1', 
         credits: 5,
         chapters: [
-            { title: 'Variables et Types de données' },
+            { id: 'CH-001', title: 'Variables et Types de données', estimatedDuration: '2h' },
             { 
+                id: 'CH-002',
                 title: 'Structures de contrôle',
+                estimatedDuration: '4h',
                 subChapters: [
                     { title: 'Conditions (if/else)' },
                     { title: 'Boucles (for, while)' }
                 ]
             },
-            { title: 'Fonctions et procédures' },
-            { title: 'Tableaux et listes' }
+            { id: 'CH-003', title: 'Fonctions et procédures', estimatedDuration: '3h' },
+            { id: 'CH-004', title: 'Tableaux et listes', estimatedDuration: '3h' }
         ],
         teacherIds: ['F003']
     },
@@ -148,10 +150,10 @@ export const courses: Course[] = [
         semester: 'Semestre 3', 
         credits: 4,
         chapters: [
-            { title: 'Introduction à l\'IA' },
-            { title: 'Agents intelligents' },
-            { title: 'Résolution de problèmes par la recherche' },
-            { title: 'Logique propositionnelle et du premier ordre' }
+            { id: 'CH-005', title: 'Introduction à l\'IA', estimatedDuration: '2h' },
+            { id: 'CH-006', title: 'Agents intelligents', estimatedDuration: '4h' },
+            { id: 'CH-007', title: 'Résolution de problèmes par la recherche', estimatedDuration: '5h' },
+            { id: 'CH-008', title: 'Logique propositionnelle et du premier ordre', estimatedDuration: '5h' }
         ],
         teacherIds: ['F001']
     },
@@ -162,6 +164,7 @@ export const courses: Course[] = [
         level: 'Licence 3', 
         semester: 'Semestre 5', 
         credits: 5,
+        chapters: [],
         teacherIds: ['F002']
     },
     { 
@@ -171,6 +174,7 @@ export const courses: Course[] = [
         level: 'Master 1', 
         semester: 'Semestre 1', 
         credits: 6,
+        chapters: [],
         teacherIds: ['F003']
     },
 ];
