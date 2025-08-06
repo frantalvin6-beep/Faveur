@@ -7,9 +7,36 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 
 const roles = [
-  { name: 'Administrateur', permissions: ['Accès complet', 'Gestion des utilisateurs', 'Paramètres système', 'Rapports IA'] },
-  { name: 'Doyen', permissions: ['Gestion du personnel', 'Rapports académiques', 'Planification des programmes'] },
-  { name: 'Registraire', permissions: ['Dossiers étudiants', 'Inscription', 'Traitement des diplômes'] },
+  { 
+    name: 'Promoteur',
+    meaning: 'Fondateur / Directeur général',
+    responsibilities: 'Vision stratégique, décisions globales',
+    access: ['Accès complet (super admin)'] 
+  },
+  { 
+    name: 'DAC',
+    meaning: 'Directeur Académique',
+    responsibilities: 'Supervise l’enseignement, valide programmes, gère enseignants',
+    access: ['Gestion académique', 'Examens', 'Rapports']
+  },
+  { 
+    name: 'DAF',
+    meaning: 'Directeur Administratif & Financier',
+    responsibilities: 'Supervise finances, salaires, budget',
+    access: ['Comptabilité', 'Finance Étudiants', 'Finance Enseignants', 'Finance Admin']
+  },
+  {
+    name: 'Secrétaire',
+    meaning: 'Secrétaire Général / Bureau',
+    responsibilities: 'Gestion dossiers étudiants, inscriptions, communication',
+    access: ['Étudiants', 'Communication', 'Archivage']
+  },
+  {
+    name: 'Surveillant',
+    meaning: 'Surveillant académique',
+    responsibilities: 'Contrôle discipline, présence, suivi examens',
+    access: ['Pointage enseignants', 'Présence étudiants']
+  }
 ];
 
 export default function SettingsPage() {
@@ -33,7 +60,7 @@ export default function SettingsPage() {
       </Card>
       <Card>
         <CardHeader>
-          <CardTitle>Gestion des rôles</CardTitle>
+          <CardTitle>Gestion des Rôles & Accès</CardTitle>
           <CardDescription>Définir les rôles et les autorisations pour le personnel de l'université.</CardDescription>
         </CardHeader>
         <CardContent>
@@ -41,16 +68,20 @@ export default function SettingsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>Rôle</TableHead>
-                  <TableHead>Autorisations</TableHead>
+                  <TableHead>Poste / Rôle</TableHead>
+                  <TableHead>Signification</TableHead>
+                  <TableHead>Responsabilités principales</TableHead>
+                  <TableHead>Accès recommandé</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {roles.map((role) => (
                   <TableRow key={role.name}>
                     <TableCell className="font-medium">{role.name}</TableCell>
+                    <TableCell>{role.meaning}</TableCell>
+                    <TableCell>{role.responsibilities}</TableCell>
                     <TableCell className="flex flex-wrap gap-1 py-4">
-                      {role.permissions.map((permission) => (
+                      {role.access.map((permission) => (
                         <Badge key={permission} variant="secondary">{permission}</Badge>
                       ))}
                     </TableCell>
