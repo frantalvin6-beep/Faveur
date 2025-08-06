@@ -263,8 +263,8 @@ export default function GradesPage() {
       {Object.keys(groupedGrades).length > 0 ? Object.entries(groupedGrades).map(([departmentName, sessions]) => (
         <div key={departmentName} className="space-y-4">
           <h2 className="text-2xl font-semibold tracking-tight">{departmentName}</h2>
-          {sessions.map(session => (
-            <Card key={`${session.courseCode}-${session.examType}-${session.teacherName}`}>
+          {sessions.map((session, index) => (
+            <Card key={`${session.courseCode}-${session.examType}-${session.teacherName}-${index}`}>
               <CardHeader>
                 <div className="flex items-center justify-between">
                     <div>
