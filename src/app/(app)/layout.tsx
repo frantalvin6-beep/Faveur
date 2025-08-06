@@ -26,6 +26,7 @@ import {
   CheckSquare,
   BookCopy,
   Wallet,
+  UserCircle,
 } from 'lucide-react';
 
 import {
@@ -206,14 +207,12 @@ function UserMenu() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" size="icon" className="rounded-full">
-          <Avatar className='h-8 w-8'>
-            <AvatarImage src="https://placehold.co/40x40.png" alt="Admin" data-ai-hint="person user" />
-            <AvatarFallback>AD</AvatarFallback>
-          </Avatar>
+            <UserCircle className="h-8 w-8" />
+            <span className="sr-only">Ouvrir le menu utilisateur</span>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>Compte Administrateur</DropdownMenuLabel>
+        <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
         <DropdownMenuSeparator />
         <Link href="/settings">
             <DropdownMenuItem>Paramètres</DropdownMenuItem>
