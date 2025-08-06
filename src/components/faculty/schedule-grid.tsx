@@ -55,19 +55,19 @@ export function ScheduleGrid({ schedule }: { schedule: ScheduleEntry[] }) {
   
   return (
     <div className="rounded-md border relative w-full overflow-auto">
-      <table className="w-full caption-bottom text-sm">
+      <table className="w-full caption-bottom text-sm border-collapse">
         <thead className="[&_tr]:border-b">
           <tr className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[100px]">Heure</th>
+            <th className="h-12 px-4 text-left align-middle font-medium text-muted-foreground w-[100px] border-r">Heure</th>
             {daysOfWeek.map(day => (
-              <th key={day} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground">{day}</th>
+              <th key={day} className="h-12 px-4 text-left align-middle font-medium text-muted-foreground border-r">{day}</th>
             ))}
           </tr>
         </thead>
         <tbody className="[&_tr:last-child]:border-0">
           {timeSlots.map((slot, rowIndex) => (
             <tr key={slot} className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted">
-              <td className="p-4 align-middle font-medium text-muted-foreground">{slot} - {timeSlots[rowIndex+1] || `${parseInt(slot.split(':')[0]) + 1}:00`}</td>
+              <td className="p-4 align-middle font-medium text-muted-foreground border-r">{slot} - {timeSlots[rowIndex+1] || `${parseInt(slot.split(':')[0]) + 1}:00`}</td>
               {daysOfWeek.map((day, colIndex) => {
                   if (rowSpans[rowIndex][colIndex] === -1) {
                       return null; // This cell is covered by a rowspan from above
@@ -75,12 +75,12 @@ export function ScheduleGrid({ schedule }: { schedule: ScheduleEntry[] }) {
                   const entry = grid[rowIndex][colIndex];
                   const span = rowSpans[rowIndex][colIndex];
                   return (
-                      <td key={day} className={cn("p-2 align-top border-l h-24", entry ? 'bg-primary/5' : '')} rowSpan={span > 0 ? span : 1}>
+                      <td key={day} className={cn("p-1 align-top border-r min-h-[6rem]", entry ? 'bg-primary/5' : '')} rowSpan={span > 0 ? span : 1}>
                           {entry && (
-                              <div className="flex flex-col p-2 bg-primary/10 rounded-lg h-full">
+                              <div className="flex flex-col p-2 bg-primary/10 rounded-lg">
                                   <span className="font-bold text-primary">{entry.courseName}</span>
                                   <span className="text-sm text-muted-foreground">{entry.teacherName}</span>
-                                  <Badge variant="secondary" className="mt-auto self-start">{entry.location}</Badge>
+                                  <Badge variant="secondary" className="mt-2 self-start">{entry.location}</Badge>
                               </div>
                           )}
                       </td>
