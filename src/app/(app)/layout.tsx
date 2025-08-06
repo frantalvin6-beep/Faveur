@@ -104,6 +104,7 @@ const navItems = [
     subItems: [
         { href: '/finances/students', label: 'Finances Étudiants', icon: Users },
         { href: '/finances/faculty', label: 'Finances Enseignants', icon: UserSquare },
+        { href: '/finances/administration', label: 'Finances Administration', icon: Briefcase },
     ]
   },
   { href: '/settings', icon: Settings, label: 'Paramètres' },

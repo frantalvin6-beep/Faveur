@@ -1,4 +1,4 @@
-import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance } from './types';
+import type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance } from './types';
 
 export const students: Student[] = [
   { 
@@ -287,5 +287,34 @@ export const facultyFinances: FacultyFinance[] = facultyFinancesData.map(data =>
     return { ...data, ...calculated };
 });
 
+export const adminStaff: AdminStaff[] = [
+    { id: 'ADM-001', name: 'Jean Mvoula', email: 'jean.m@university.edu', position: 'Secrétaire général', hireDate: '2015-01-20' },
+    { id: 'ADM-002', name: 'Clara Bissila', email: 'clara.b@university.edu', position: 'Comptable', hireDate: '2019-07-11' },
+    { id: 'ADM-003', name: 'Michel Samba', email: 'michel.s@university.edu', position: 'Responsable académique', hireDate: '2017-08-01' },
+];
 
-export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance };
+export function calculerFinanceAdmin(
+  salaire: number, transport: number, avantages: number, montantPaye: number
+) {
+  const totalAPayer = salaire + transport + avantages;
+  const reste = totalAPayer - montantPaye;
+  const statut: AdminFinance['statut'] = reste <= 0 ? "Finalisé" : "Non finalisé";
+
+  return { totalAPayer, reste, statut };
+}
+
+const adminFinancesData: Omit<AdminFinance, 'totalAPayer' | 'reste' | 'statut'>[] = [
+    { matricule: 'ADM-001', fullName: 'Jean Mvoula', poste: 'Secrétaire général', salaireMensuel: 500000, indemniteTransport: 20000, autresAvantages: 30000, montantPaye: 550000 },
+    { matricule: 'ADM-002', fullName: 'Clara Bissila', poste: 'Comptable', salaireMensuel: 450000, indemniteTransport: 20000, autresAvantages: 20000, montantPaye: 300000 },
+    { matricule: 'ADM-003', fullName: 'Michel Samba', poste: 'Responsable académique', salaireMensuel: 600000, indemniteTransport: 20000, autresAvantages: 40000, montantPaye: 600000 },
+];
+
+export const adminFinances: AdminFinance[] = adminFinancesData.map(data => {
+    const calculated = calculerFinanceAdmin(
+        data.salaireMensuel, data.indemniteTransport, data.autresAvantages, data.montantPaye
+    );
+    return { ...data, ...calculated };
+});
+
+
+export type { Student, Faculty, Department, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance };

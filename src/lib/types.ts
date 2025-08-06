@@ -179,3 +179,24 @@ export interface FacultyFinance {
     reste: number;
     statut: 'Finalisé' | 'Non finalisé';
 }
+
+export interface AdminStaff {
+  id: string;
+  name: string;
+  email: string;
+  position: string;
+  hireDate: string;
+}
+
+export interface AdminFinance {
+  matricule: string;
+  fullName: string;
+  poste: string;
+  salaireMensuel: number;
+  indemniteTransport: number;
+  autresAvantages: number;
+  totalAPayer: number;
+  montantPaye: number;
+  reste: number;
+  statut: 'Finalisé' | 'Non finalisé';
+}
