@@ -9,7 +9,7 @@
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
-import {Message} from 'genkit/experimental/ai';
+import {Message} from 'genkit';
 
 const AiAssistantInputSchema = z.object({
   history: z.array(Message).describe('The conversation history.'),

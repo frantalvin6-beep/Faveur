@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import { Bot, Loader2, Send, User } from 'lucide-react';
-import { Message } from 'genkit/experimental/ai';
+import { Message } from 'genkit';
 
 import { aiAssistant } from '@/ai/flows/ai-assistant';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
