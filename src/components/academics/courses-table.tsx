@@ -19,7 +19,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Course, Faculty } from '@/lib/types';
+import { Course, Faculty, Chapter } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -49,7 +49,7 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
   const [level, setLevel] = React.useState('');
   const [semester, setSemester] = React.useState('');
   const [credits, setCredits] = React.useState(0);
-  const [lessons, setLessons] = React.useState('');
+  const [chaptersText, setChaptersText] = React.useState('');
   const [teacherIds, setTeacherIds] = React.useState<string[]>([]);
   const [openTeacherPopover, setOpenTeacherPopover] = React.useState(false);
 
@@ -60,6 +60,11 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
       return;
     }
 
+    const chapters: Chapter[] = chaptersText
+      .split('\n')
+      .filter(l => l.trim() !== '')
+      .map(line => ({ title: line }));
+
     const newCourse: Course = {
       code,
       name,
@@ -67,7 +72,7 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
       level,
       semester,
       credits,
-      lessons: lessons.split('\n').filter(l => l.trim() !== ''),
+      chapters,
       teacherIds: teacherIds,
     };
     onAddCourse(newCourse);
@@ -79,7 +84,7 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
     setLevel('');
     setSemester('');
     setCredits(0);
-    setLessons('');
+    setChaptersText('');
     setTeacherIds([]);
   };
 
@@ -174,8 +179,8 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                 </Popover>
             </div>
             <div className="space-y-2">
-                <Label htmlFor="lessons">Leçons (une par ligne)</Label>
-                <Textarea id="lessons" value={lessons} onChange={e => setLessons(e.target.value)} placeholder="Chapitre 1: Introduction&#10;Chapitre 2: Concepts clés" />
+                <Label htmlFor="chapters">Chapitres (un par ligne)</Label>
+                <Textarea id="chapters" value={chaptersText} onChange={e => setChaptersText(e.target.value)} placeholder="Chapitre 1: Introduction&#10;Chapitre 2: Concepts clés" />
             </div>
 
           </div>
@@ -199,7 +204,7 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
         <TableHeader>
           <TableRow>
             <TableHead>Code</TableHead>
-            <TableHead>Nom de la matière & Leçons</TableHead>
+            <TableHead>Nom de la matière & Chapitres</TableHead>
             <TableHead>Enseignants</TableHead>
             <TableHead>Semestre</TableHead>
             <TableHead>Crédits</TableHead>
@@ -212,9 +217,9 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
               <TableCell className="font-mono align-top">{item.code}</TableCell>
               <TableCell className="font-medium align-top">
                 {item.name}
-                {item.lessons && item.lessons.length > 0 && (
+                {item.chapters && item.chapters.length > 0 && (
                   <ul className="mt-2 list-disc pl-5 text-xs text-muted-foreground">
-                    {item.lessons.map(lesson => <li key={lesson}>{lesson}</li>)}
+                    {item.chapters.map(chapter => <li key={chapter.title}>{chapter.title}</li>)}
                   </ul>
                 )}
               </TableCell>

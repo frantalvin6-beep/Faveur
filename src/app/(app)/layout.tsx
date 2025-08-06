@@ -68,6 +68,7 @@ const navItems = [
     subItems: [
         { href: '/academics/departments', label: 'Facultés et départements', icon: Building },
         { href: '/academics/courses', label: 'Cours et matières', icon: BookOpen },
+        { href: '/academics/syllabus', label: 'Syllabus des cours', icon: BookCopy },
         { href: '/academics/calendar', label: 'Calendrier académique', icon: Calendar },
     ]
   },

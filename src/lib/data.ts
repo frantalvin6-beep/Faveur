@@ -1,5 +1,5 @@
 
-import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction } from './types';
+import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter } from './types';
 
 export const students: Student[] = [
   { 
@@ -126,11 +126,17 @@ export const courses: Course[] = [
         level: 'Licence 1', 
         semester: 'Semestre 1', 
         credits: 5,
-        lessons: [
-            'Variables et Types de données',
-            'Structures de contrôle (if, for, while)',
-            'Fonctions et procédures',
-            'Tableaux et listes'
+        chapters: [
+            { title: 'Variables et Types de données' },
+            { 
+                title: 'Structures de contrôle',
+                subChapters: [
+                    { title: 'Conditions (if/else)' },
+                    { title: 'Boucles (for, while)' }
+                ]
+            },
+            { title: 'Fonctions et procédures' },
+            { title: 'Tableaux et listes' }
         ],
         teacherIds: ['F003']
     },
@@ -141,11 +147,11 @@ export const courses: Course[] = [
         level: 'Licence 2', 
         semester: 'Semestre 3', 
         credits: 4,
-        lessons: [
-            'Introduction à l\'IA',
-            'Agents intelligents',
-            'Résolution de problèmes par la recherche',
-            'Logique propositionnelle et du premier ordre'
+        chapters: [
+            { title: 'Introduction à l\'IA' },
+            { title: 'Agents intelligents' },
+            { title: 'Résolution de problèmes par la recherche' },
+            { title: 'Logique propositionnelle et du premier ordre' }
         ],
         teacherIds: ['F001']
     },

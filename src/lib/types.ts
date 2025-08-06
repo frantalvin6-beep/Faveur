@@ -1,4 +1,5 @@
 
+
 export interface Student {
   id: string;
   name: string;
@@ -39,8 +40,13 @@ export interface Course {
   level: string;
   semester: string;
   credits: number;
-  lessons?: string[];
+  chapters?: Chapter[];
   teacherIds?: string[];
+}
+
+export interface Chapter {
+    title: string;
+    subChapters?: { title: string }[];
 }
 
 export interface AcademicRecord {
