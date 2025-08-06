@@ -5,37 +5,22 @@ import * as React from 'react';
 import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import {
-  File,
-  Archive,
-  Trash2,
-  ArchiveX,
   Send,
-  Inbox,
-  PenSquare,
-  Reply,
-  ReplyAll,
-  Forward,
   Search,
   Plus,
   Paperclip,
   Mic,
+  MessageSquare,
 } from 'lucide-react';
 
 import { cn } from '@/lib/utils';
 import { Message } from '@/lib/types';
-import { useIsMobile } from '@/hooks/use-mobile';
-import { Separator } from '@/components/ui/separator';
-import { Input } from '@/components/ui/input';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
 
 interface CommunicationClientProps {
   messages: Message[];
@@ -43,12 +28,19 @@ interface CommunicationClientProps {
 
 
 export function CommunicationClient({ messages: initialMessages }: CommunicationClientProps) {
-  const isMobile = useIsMobile();
   const [messages, setMessages] = React.useState<Message[]>(initialMessages);
   const [selected, setSelected] = React.useState<string | null>(messages.find(m => m.status !== "Envoyé")?.id ?? null);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const { toast } = useToast();
 
   const conversation = messages.find((item) => item.id === selected);
+  
+  const handleAction = (feature: string) => {
+    toast({
+        title: "Bientôt disponible",
+        description: `La fonctionnalité "${feature}" sera bientôt disponible.`,
+    });
+  };
 
   const handleSendMessage = (newMessage: Omit<Message, 'id' | 'sentAt'>) => {
     const messageToSend: Message = {
@@ -57,15 +49,12 @@ export function CommunicationClient({ messages: initialMessages }: Communication
       sentAt: new Date().toISOString(),
     };
     setMessages(prev => [messageToSend, ...prev]);
-    // In a real app, this would also update the selected conversation
-    // For this demo, we'll just add it to the general pool
   };
   
   // Group messages by participants to form conversations
   const conversations = React.useMemo(() => {
     const groups: { [key: string]: Message[] } = {};
     messages.forEach(message => {
-        // Simple grouping by sender/recipient name for demo purposes
         const otherParty = message.sender.name === 'Admin' 
             ? message.recipients[0].name 
             : message.sender.name;
@@ -95,7 +84,7 @@ export function CommunicationClient({ messages: initialMessages }: Communication
       <div className="flex flex-col border-r">
         <div className="flex h-16 items-center justify-between border-b px-4">
           <h1 className="text-xl font-bold">Messages</h1>
-           <Button variant="ghost" size="icon">
+           <Button variant="ghost" size="icon" onClick={() => handleAction("Nouveau message")}>
             <Plus className="h-5 w-5" />
           </Button>
         </div>
@@ -145,6 +134,7 @@ export function CommunicationClient({ messages: initialMessages }: Communication
 
 function MessageDisplay({ conversation, onSendMessage }: { conversation: Message | undefined, onSendMessage: (message: Omit<Message, 'id' | 'sentAt'>) => void }) {
   const [newMessage, setNewMessage] = React.useState('');
+  const { toast } = useToast();
   
   if (!conversation) {
     return (
@@ -168,6 +158,13 @@ function MessageDisplay({ conversation, onSendMessage }: { conversation: Message
         status: 'Envoyé'
     });
     setNewMessage('');
+  };
+  
+  const handleAction = (feature: string) => {
+    toast({
+        title: "Bientôt disponible",
+        description: `La fonctionnalité "${feature}" sera bientôt disponible.`,
+    });
   };
 
   return (
@@ -224,10 +221,10 @@ function MessageDisplay({ conversation, onSendMessage }: { conversation: Message
             className="pr-20"
           />
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center">
-            <Button variant="ghost" size="icon">
+            <Button variant="ghost" size="icon" onClick={() => handleAction("Pièces jointes")}>
               <Paperclip className="h-5 w-5" />
             </Button>
-             <Button variant="ghost" size="icon">
+             <Button variant="ghost" size="icon" onClick={() => handleAction("Message vocal")}>
               <Mic className="h-5 w-5" />
             </Button>
             <Button size="icon" onClick={handleSend} disabled={!newMessage.trim()}>
