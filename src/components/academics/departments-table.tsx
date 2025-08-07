@@ -44,15 +44,20 @@ function AddDepartmentForm({ onAddDepartment, parentId }: { onAddDepartment: (de
       alert("Veuillez remplir tous les champs.");
       return;
     }
-
-    onAddDepartment({
+    
+    const departmentData: Omit<Department, 'id'> = {
       name,
       head,
       facultyCount: 0,
       studentCount: 0,
       creationDate: new Date().toISOString().split('T')[0],
-      parentId: parentId,
-    });
+    };
+
+    if (parentId) {
+      departmentData.parentId = parentId;
+    }
+
+    onAddDepartment(departmentData);
 
     setIsOpen(false);
     setName('');
