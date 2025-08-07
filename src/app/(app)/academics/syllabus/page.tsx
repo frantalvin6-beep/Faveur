@@ -2,11 +2,12 @@
 'use client';
 
 import * as React from 'react';
-import { initialCourses } from '@/lib/data';
+import { getCourses, updateCourse, Course, Chapter } from '@/lib/data';
 import { SyllabusTable } from '@/components/academics/syllabus-table';
-import { Course, Chapter } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ChapterRowData extends Chapter {
   courseCode: string;
@@ -22,15 +23,35 @@ interface GroupedChapters {
 }
 
 export default function SyllabusPage() {
-    const [courses, setCourses] = React.useState<Course[]>(initialCourses);
+    const [courses, setCourses] = React.useState<Course[]>([]);
+    const [loading, setLoading] = React.useState(true);
     const [searchTerm, setSearchTerm] = React.useState('');
+    const { toast } = useToast();
 
-    const handleCourseUpdate = (updatedCourse: Course) => {
-        const newCourses = courses.map(c => c.code === updatedCourse.code ? updatedCourse : c);
-        setCourses(newCourses);
-        const index = initialCourses.findIndex(c => c.code === updatedCourse.code);
-        if (index !== -1) {
-            initialCourses[index] = updatedCourse;
+    React.useEffect(() => {
+        async function fetchData() {
+            try {
+                setLoading(true);
+                const coursesData = await getCourses();
+                setCourses(coursesData);
+            } catch (error) {
+                console.error("Failed to fetch courses:", error);
+                toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, [toast]);
+
+    const handleCourseUpdate = async (updatedCourse: Course) => {
+        try {
+            await updateCourse(updatedCourse.code, updatedCourse);
+            setCourses(prev => prev.map(c => c.code === updatedCourse.code ? updatedCourse : c));
+            toast({ title: 'Syllabus mis à jour', description: `Les chapitres pour ${updatedCourse.name} ont été enregistrés.` });
+        } catch (error) {
+            console.error("Failed to update course:", error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le syllabus.' });
         }
     };
     
@@ -50,10 +71,8 @@ export default function SyllabusPage() {
         handleCourseUpdate({ ...course, chapters: updatedChapters });
     };
 
-    // This useMemo hook now serves as the single source of truth for generating the chapter list.
     const groupedChapters = React.useMemo(() => {
         const allChapters: ChapterRowData[] = [];
-        // We iterate through a dynamically updated 'courses' state
         courses.forEach(course => {
             if (course.chapters) {
                 course.chapters.forEach(chapter => {
@@ -94,6 +113,22 @@ export default function SyllabusPage() {
     }, [courses, searchTerm]);
 
     const departmentOrder = Object.keys(groupedChapters).sort();
+
+  if (loading) {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <Skeleton className="h-8 w-72" />
+                    <Skeleton className="h-4 w-96 mt-2" />
+                </div>
+                <Skeleton className="h-10 w-72" />
+            </div>
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

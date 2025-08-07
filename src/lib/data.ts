@@ -65,10 +65,22 @@ export async function getDepartments(): Promise<Department[]> {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Department));
 }
 
-export async function addDepartment(department: Omit<Department, 'id'>): Promise<Department> {
+export async function addDepartment(department: Omit<Department, 'id' | 'parentId'> & { parentId?: string }): Promise<Department> {
     const docRef = doc(collection(db, 'departments'));
-    const newDepartment = { ...department, id: docRef.id };
-    await setDoc(docRef, newDepartment);
+    
+    // Construct the final ID
+    const id = department.parentId 
+      ? `${department.parentId}-OPT${docRef.id.slice(-4)}`
+      : `DEP${docRef.id.slice(-4)}`;
+
+    const newDepartment: Department = {
+        ...department,
+        id: id,
+    };
+    // remove parentId before saving
+    delete (newDepartment as any).parentId;
+
+    await setDoc(doc(db, 'departments', id), newDepartment);
     return newDepartment;
 }
 

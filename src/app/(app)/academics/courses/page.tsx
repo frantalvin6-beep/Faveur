@@ -2,14 +2,12 @@
 'use client';
 
 import * as React from 'react';
-import { courses as initialCourses } from '@/lib/data';
-import { CoursesTable } from '@/components/academics/courses-table';
-import { Course } from '@/lib/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { getCourses, getDepartments, addCourse, deleteCourse, Course, Department } from '@/lib/data';
+import { CoursesTable, AddCourseForm } from '@/components/academics/courses-table';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { PlusCircle } from 'lucide-react';
-import { AddCourseForm } from '@/components/academics/courses-table';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 interface GroupedCourses {
   [department: string]: {
@@ -18,19 +16,50 @@ interface GroupedCourses {
 }
 
 export default function CoursesPage() {
-    const [courses, setCourses] = React.useState<Course[]>(initialCourses);
+    const [courses, setCourses] = React.useState<Course[]>([]);
+    const [departments, setDepartments] = React.useState<Department[]>([]);
+    const [loading, setLoading] = React.useState(true);
     const [searchTerm, setSearchTerm] = React.useState('');
+    const { toast } = useToast();
 
-    const handleAddCourse = (newCourse: Course) => {
-        setCourses(prev => [...prev, newCourse]);
-        initialCourses.push(newCourse);
+    React.useEffect(() => {
+        async function fetchData() {
+            try {
+                setLoading(true);
+                const [coursesData, departmentsData] = await Promise.all([getCourses(), getDepartments()]);
+                setCourses(coursesData);
+                setDepartments(departmentsData);
+            } catch (error) {
+                console.error("Failed to fetch data:", error);
+                toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
+            } finally {
+                setLoading(false);
+            }
+        }
+        fetchData();
+    }, [toast]);
+
+    const handleAddCourse = async (newCourse: Course) => {
+        try {
+            await addCourse(newCourse);
+            setCourses(prev => [...prev, newCourse]);
+            toast({ title: 'Matière ajoutée', description: `La matière ${newCourse.name} a été enregistrée.` });
+        } catch (error) {
+            console.error("Failed to add course:", error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter la matière.' });
+        }
     };
 
-    const handleDeleteCourse = (code: string) => {
+    const handleDeleteCourse = async (code: string) => {
         if (confirm("Êtes-vous sûr de vouloir supprimer cette matière ?")) {
-            setCourses(prev => prev.filter(c => c.code !== code));
-            const index = initialCourses.findIndex(c => c.code === code);
-            if (index > -1) initialCourses.splice(index, 1);
+            try {
+                await deleteCourse(code);
+                setCourses(prev => prev.filter(c => c.code !== code));
+                toast({ title: 'Matière supprimée' });
+            } catch (error) {
+                console.error("Failed to delete course:", error);
+                toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer la matière.' });
+            }
         }
     }
 
@@ -59,6 +88,22 @@ export default function CoursesPage() {
 
     const departmentOrder = Object.keys(groupedCourses).sort();
 
+  if (loading) {
+      return (
+          <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                  <div>
+                      <Skeleton className="h-8 w-72" />
+                      <Skeleton className="h-4 w-96 mt-2" />
+                  </div>
+                  <Skeleton className="h-10 w-72" />
+              </div>
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+          </div>
+      );
+  }
+
   return (
     <div className="space-y-6">
        <div className="flex items-center justify-between">
@@ -75,7 +120,7 @@ export default function CoursesPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
-            <AddCourseForm onAddCourse={handleAddCourse} />
+            <AddCourseForm onAddCourse={handleAddCourse} allDepartments={departments} />
          </div>
        </div>
 

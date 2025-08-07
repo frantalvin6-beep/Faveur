@@ -19,7 +19,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Course, Faculty, Chapter } from '@/lib/types';
+import { Course, Faculty, Chapter, Department } from '@/lib/types';
 import { Badge } from '@/components/ui/badge';
 import {
   Dialog,
@@ -33,7 +33,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { departments, faculty } from '@/lib/data';
+import { faculty } from '@/lib/data';
 import { Textarea } from '../ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
@@ -48,7 +48,7 @@ interface ChapterInput {
   estimatedDuration: string;
 }
 
-export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) => void }) {
+export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (course: Course) => void, allDepartments: Department[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [code, setCode] = React.useState('');
   const [name, setName] = React.useState('');
@@ -82,14 +82,14 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
     const finalChapters: Chapter[] = chapters
       .filter(c => c.title.trim() !== '')
       .map((c, index) => ({
-        id: `CH-${code}-${index + 1}`,
+        id: `CH-${code.toUpperCase()}-${index + 1}`,
         title: c.title,
         estimatedDuration: c.estimatedDuration,
         subChapters: c.subChapters.split('\n').filter(sc => sc.trim() !== '').map(sc => ({ title: sc }))
       }));
 
     const newCourse: Course = {
-      code,
+      code: code.toUpperCase(),
       name,
       department,
       level,
@@ -141,7 +141,7 @@ export function AddCourseForm({ onAddCourse }: { onAddCourse: (course: Course) =
                 <Select onValueChange={setDepartment} value={department} required>
                   <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                   <SelectContent>
-                    {departments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                    {allDepartments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -342,5 +342,3 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
     </div>
   );
 }
-
-    

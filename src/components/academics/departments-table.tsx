@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
-function AddDepartmentForm({ onAddDepartment, parentId }: { onAddDepartment: (dept: Department) => void, parentId?: string }) {
+function AddDepartmentForm({ onAddDepartment, parentId }: { onAddDepartment: (dept: Omit<Department, 'id'>) => void, parentId?: string }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [name, setName] = React.useState('');
   const [head, setHead] = React.useState('');
@@ -45,16 +45,15 @@ function AddDepartmentForm({ onAddDepartment, parentId }: { onAddDepartment: (de
       return;
     }
 
-    const newDept: Department = {
-      id: parentId ? `${parentId}-OPT${Date.now().toString().slice(-3)}` : `DEP${Date.now().toString().slice(-3)}`,
+    onAddDepartment({
       name,
       head,
       facultyCount: 0,
       studentCount: 0,
       creationDate: new Date().toISOString().split('T')[0],
-    };
+      parentId: parentId,
+    });
 
-    onAddDepartment(newDept);
     setIsOpen(false);
     setName('');
     setHead('');
@@ -103,26 +102,16 @@ function AddDepartmentForm({ onAddDepartment, parentId }: { onAddDepartment: (de
 }
 
 
-export function DepartmentsTable({ data }: { data: Department[] }) {
+export function DepartmentsTable({ data, onAddDepartment, onDeleteDepartment }: { data: Department[], onAddDepartment: (dept: Omit<Department, 'id'>) => void, onDeleteDepartment: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [departments, setDepartments] = React.useState(data);
 
-  const filteredDepartments = departments.filter((dept) =>
+  const filteredDepartments = data.filter((dept) =>
     dept.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     (dept.head && dept.head.toLowerCase().includes(searchTerm.toLowerCase()))
   );
   
-  const handleAddDepartment = (newDept: Department) => {
-      setDepartments(prev => [...prev, newDept]);
-  };
-
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification pour ${id} sera bientôt implémentée.`);
-  const handleDelete = (id: string) => {
-    if(confirm('Êtes-vous sûr de vouloir supprimer ce département ?')) {
-        setDepartments(departments.filter(d => d.id !== id));
-    }
-  };
-
+  
   return (
     <Card>
       <CardHeader>
@@ -138,7 +127,7 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <AddDepartmentForm onAddDepartment={handleAddDepartment} />
+                <AddDepartmentForm onAddDepartment={onAddDepartment} />
             </div>
         </div>
       </CardHeader>
@@ -178,13 +167,13 @@ export function DepartmentsTable({ data }: { data: Department[] }) {
                             Modifier
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                            onClick={() => handleDelete(dept.id)}
+                            onClick={() => onDeleteDepartment(dept.id)}
                             className="text-destructive focus:text-destructive"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />
                             Supprimer
                         </DropdownMenuItem>
-                         <AddDepartmentForm onAddDepartment={handleAddDepartment} parentId={dept.id} />
+                         <AddDepartmentForm onAddDepartment={onAddDepartment} parentId={dept.id} />
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>

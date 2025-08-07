@@ -31,6 +31,7 @@ export interface Department {
     facultyCount: number;
     studentCount: number;
     creationDate: string;
+    parentId?: string;
 }
 
 export interface Course {
@@ -212,19 +213,6 @@ export interface AdminStaff {
   email: string;
   position: string;
   hireDate: string;
-}
-
-export interface AdminFinance {
-  matricule: string;
-  fullName: string;
-  poste: string;
-  salaireMensuel: number;
-  indemniteTransport: number;
-  autresAvantages: number;
-  totalAPayer: number;
-  montantPaye: number;
-  reste: number;
-  statut: 'Finalisé' | 'Non finalisé';
 }
 
 export interface AccountingTransaction {
