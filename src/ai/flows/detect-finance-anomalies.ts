@@ -62,7 +62,7 @@ const detectAnomaliesFlow = ai.defineFlow(
     outputSchema: DetectAnomaliesOutputSchema,
   },
   async input => {
-    const {output} = await prompt(input);
+    const {output} = await prompt(input, { model: 'googleai/gemini-1.5-pro' });
     return output!;
   }
 );
