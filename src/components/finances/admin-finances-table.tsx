@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -39,6 +40,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Packer, Document, Paragraph, TextRun, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, WidthType, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
 
 
 function formatCurrency(amount: number) {
@@ -207,7 +209,7 @@ export function AdminFinancesTable({ data, onAddFinance, onUpdateFinance }: { da
       f.totalAPayer, f.montantPaye, f.reste, f.statut
   ]);
 
-  const handleExport = (format: 'csv' | 'pdf' | 'word') => {
+  const handleExport = (format: 'csv' | 'pdf' | 'word' | 'excel') => {
     if (filteredData.length === 0) {
       toast({ variant: 'destructive', title: 'Exportation impossible', description: 'Aucune donnée à exporter.' });
       return;
@@ -215,7 +217,12 @@ export function AdminFinancesTable({ data, onAddFinance, onUpdateFinance }: { da
     const exportData = getExportData(filteredData);
     const filename = `export-paie-admin-${new Date().toISOString().slice(0, 10)}`;
 
-    if (format === 'csv') {
+    if (format === 'excel') {
+        const worksheet = XLSX.utils.json_to_sheet(filteredData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Paie Admin");
+        XLSX.writeFile(workbook, `${filename}.xlsx`);
+    } else if (format === 'csv') {
       const csvContent = [headers.join(','), ...exportData.map(row => row.join(','))].join('\n');
       const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
       saveAs(blob, `${filename}.csv`);
@@ -259,6 +266,7 @@ export function AdminFinancesTable({ data, onAddFinance, onUpdateFinance }: { da
                 <Button variant="outline">Exporter <ChevronDown className="ml-2 h-4 w-4" /></Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => handleExport('excel')}><FileSpreadsheet className="mr-2 h-4 w-4" />Exporter en Excel</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport('csv')}><FileSpreadsheet className="mr-2 h-4 w-4" />Exporter en CSV</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport('pdf')}><FileText className="mr-2 h-4 w-4" />Exporter en PDF</DropdownMenuItem>
                 <DropdownMenuItem onClick={() => handleExport('word')}><FileType className="mr-2 h-4 w-4" />Exporter en Word</DropdownMenuItem>

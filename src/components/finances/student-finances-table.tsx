@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -38,6 +39,7 @@ import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Packer, Document, Paragraph, TextRun, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, WidthType, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
+import * as XLSX from 'xlsx';
 
 
 function formatCurrency(amount: number) {
@@ -149,76 +151,49 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
 
   const getGroupName = () => finances[0] ? `${finances[0].option.replace(/ /g, '_')}-${finances[0].level.replace(/ /g, '_')}` : 'export_sans_nom';
   
-  const handleExportCsv = () => {
+  const handleExport = (format: 'csv' | 'pdf' | 'word' | 'excel') => {
     if (finances.length === 0) {
         toast({ variant: "destructive", title: "Exportation impossible", description: "Il n'y a aucune donnée à exporter." });
         return;
     }
-    const csvContent = [ detailedExportHeaders.join(','), ...getDetailedExportData().map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')) ].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    saveAs(blob, `export-finances-${getGroupName()}.csv`);
-    toast({ title: "Exportation CSV réussie" });
-  };
+    const filename = `export-finances-${getGroupName()}`;
 
-  const handleExportPdf = () => {
-    if (finances.length === 0) {
-        toast({ variant: "destructive", title: "Exportation impossible", description: "Il n'y a aucune donnée à exporter." });
-        return;
-    }
-    const doc = new jsPDF({ orientation: 'landscape' });
-    const groupName = finances[0] ? `${finances[0].option} - ${finances[0].level}` : "Export de finances";
-    doc.text(groupName, 14, 15);
-    autoTable(doc, {
-      startY: 20,
-      head: [detailedExportHeaders],
-      body: getDetailedExportData().map(row => row.map(cell => String(cell))),
-    });
-    doc.save(`export-finances-${getGroupName()}.pdf`);
-    toast({ title: "Exportation PDF réussie" });
-  };
-
-  const handleExportWord = () => {
-     if (finances.length === 0) {
-        toast({ variant: "destructive", title: "Exportation impossible", description: "Il n'y a aucune donnée à exporter." });
-        return;
-    }
-
-    const groupName = finances[0] ? `${finances[0].option} - ${finances[0].level}` : "Export de finances";
-
-    const table = new DocxTable({
-        width: { size: 100, type: WidthType.PERCENTAGE },
-        rows: [
-            new DocxTableRow({
-                tableHeader: true,
-                children: detailedExportHeaders.map(header => new DocxTableCell({
-                    children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, size: 14 })], alignment: AlignmentType.CENTER })],
-                })),
-            }),
-            ...getDetailedExportData().map(rowData => new DocxTableRow({
-                children: rowData.map(cellData => new DocxTableCell({
-                    children: [new Paragraph({ text: String(cellData), size: 14 })],
-                })),
-            })),
-        ],
-    });
-
-    const doc = new Document({
-        sections: [{
-            properties: {},
-            children: [
-                new Paragraph({ children: [new TextRun({ text: groupName, bold: true, size: 28 })], alignment: AlignmentType.CENTER }),
-                new Paragraph(""), // spacing
-                table,
+    if (format === 'excel') {
+        const worksheet = XLSX.utils.json_to_sheet(finances);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Finances Étudiants");
+        XLSX.writeFile(workbook, `${filename}.xlsx`);
+    } else if (format === 'csv') {
+        const csvContent = [ detailedExportHeaders.join(','), ...getDetailedExportData().map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')) ].join('\n');
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        saveAs(blob, `${filename}.csv`);
+    } else if (format === 'pdf') {
+        const doc = new jsPDF({ orientation: 'landscape' });
+        const groupName = finances[0] ? `${finances[0].option} - ${finances[0].level}` : "Export de finances";
+        doc.text(groupName, 14, 15);
+        autoTable(doc, {
+          startY: 20,
+          head: [detailedExportHeaders],
+          body: getDetailedExportData().map(row => row.map(cell => String(cell))),
+        });
+        doc.save(`${filename}.pdf`);
+    } else if (format === 'word') {
+       const groupName = finances[0] ? `${finances[0].option} - ${finances[0].level}` : "Export de finances";
+       const table = new DocxTable({
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            rows: [
+                new DocxTableRow({ tableHeader: true, children: detailedExportHeaders.map(header => new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, size: 14 })], alignment: AlignmentType.CENTER })], })) }),
+                ...getDetailedExportData().map(rowData => new DocxTableRow({ children: rowData.map(cellData => new DocxTableCell({ children: [new Paragraph({ text: String(cellData), size: 14 })],})),})),
             ],
-        }],
-    });
+        });
+       const doc = new Document({ sections: [{ properties: {}, children: [ new Paragraph({ children: [new TextRun({ text: groupName, bold: true, size: 28 })], alignment: AlignmentType.CENTER }), new Paragraph(""), table,],}],});
+       Packer.toBlob(doc).then(blob => {
+           saveAs(blob, `${filename}.docx`);
+       });
+    }
 
-    Packer.toBlob(doc).then(blob => {
-        saveAs(blob, `export-finances-${getGroupName()}.docx`);
-        toast({ title: "Exportation Word réussie" });
-    });
+    toast({ title: `Exportation ${format.toUpperCase()} réussie` });
   };
-
   
   const handleUpdateAdvance = (updatedStudent: StudentFinance) => {
     onUpdateStudent(updatedStudent);
@@ -240,15 +215,19 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={handleExportCsv}>
+                 <DropdownMenuItem onClick={() => handleExport('excel')}>
+                  <FileSpreadsheet className="mr-2 h-4 w-4" />
+                  Exporter en Excel
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => handleExport('csv')}>
                   <FileSpreadsheet className="mr-2 h-4 w-4" />
                   Exporter en CSV
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportPdf}>
+                <DropdownMenuItem onClick={() => handleExport('pdf')}>
                   <FileText className="mr-2 h-4 w-4" />
                   Exporter en PDF
                 </DropdownMenuItem>
-                <DropdownMenuItem onClick={handleExportWord}>
+                <DropdownMenuItem onClick={() => handleExport('word')}>
                   <FileType className="mr-2 h-4 w-4" />
                   Exporter en Word
                 </DropdownMenuItem>
