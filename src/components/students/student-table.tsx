@@ -21,7 +21,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Student } from '@/lib/types';
+import { Student, Department } from '@/lib/types';
 import { CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -36,16 +36,27 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { departments } from '@/lib/data';
+import { getDepartments } from '@/lib/data';
 
 
 function AddStudentForm({ onAddStudent }: { onAddStudent: (student: Omit<Student, 'id'>) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [departments, setDepartments] = React.useState<Department[]>([]);
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [gender, setGender] = React.useState<'Masculin' | 'Féminin'>('Masculin');
   const [department, setDepartment] = React.useState('');
   const [year, setYear] = React.useState(1);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      async function fetchDepartments() {
+        const departmentsData = await getDepartments();
+        setDepartments(departmentsData);
+      }
+      fetchDepartments();
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
