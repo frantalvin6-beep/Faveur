@@ -1,17 +1,21 @@
+
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { DollarSign, Users, UserSquare, BookOpen } from "lucide-react";
 import { DashboardCharts } from "@/components/dashboard/charts";
-import { students, faculty, departments } from "@/lib/data";
+import { getStudents, getFaculty, getDepartments } from "@/lib/data";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 }
 
-export default function DashboardPage() {
+export default async function DashboardPage() {
+  const students = await getStudents();
+  const faculty = await getFaculty();
+  const departments = await getDepartments();
 
   const totalStudents = students.length;
   const totalFaculty = faculty.length;
-  // We filter out the options to only count parent departments
+  // Nous filtrons les options pour ne compter que les départements parents
   const totalDepartments = departments.filter(d => !d.id.includes('OPT')).length;
 
   return (
