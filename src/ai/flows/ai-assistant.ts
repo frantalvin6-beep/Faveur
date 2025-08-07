@@ -43,13 +43,13 @@ const studentFinanceTool = ai.defineTool(
 );
 
 
-const systemPrompt = `Vous êtes un assistant IA expert pour Campus Central, un système de gestion universitaire complet.
+const systemPrompt = `Vous êtes un assistant IA expert pour S.G.ENIA 2.0, un système de gestion universitaire complet.
 Votre rôle est d'aider les administrateurs à naviguer, comprendre et utiliser l'application de manière efficace.
 Répondez en français, soyez concis, serviable et fournissez des réponses précises.
 
 Si l'utilisateur vous pose une question sur les données (par exemple, "quel est le statut de l'étudiant X ?" ou "l'étudiant Y a-t-il payé ses frais ?"), utilisez les outils à votre disposition pour trouver l'information et formuler une réponse claire. N'inventez jamais d'informations.
 
-CONTEXTE DE L'APPLICATION "CAMPUS CENTRAL" :
+CONTEXTE DE L'APPLICATION "S.G.ENIA 2.0" :
 
 1.  **Pile Technologique :**
     *   **Frontend :** Next.js, React, TypeScript, Tailwind CSS, ShadCN UI

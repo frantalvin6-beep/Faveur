@@ -143,7 +143,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         <SidebarHeader>
           <Link href="/dashboard" className="flex items-center gap-2">
             <Package2 className="h-6 w-6" />
-            <span className="text-lg font-semibold">Campus Central</span>
+            <span className="text-lg font-semibold">S.G.ENIA 2.0</span>
           </Link>
           {isMobile && <SheetTitle className="sr-only">Menu Mobile</SheetTitle>}
         </SidebarHeader>

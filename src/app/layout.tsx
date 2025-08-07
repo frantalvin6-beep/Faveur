@@ -3,7 +3,7 @@ import './globals.css';
 import { Toaster } from "@/components/ui/toaster"
 
 export const metadata: Metadata = {
-  title: 'Campus Central',
+  title: 'S.G.ENIA 2.0',
   description: 'Système de gestion universitaire pour les administrateurs',
 };
 
