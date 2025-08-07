@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { StudentFinance, getStudentFinances, addStudentFinance, updateStudentFinance, calculerFinance, departments as allDepartments, accountingTransactions } from '@/lib/data';
+import { StudentFinance, getStudentFinances, addStudentFinance, updateStudentFinance, calculerFinance, accountingTransactions, getDepartments, Department } from '@/lib/data';
 import { StudentFinancesTable } from '@/components/finances/student-finances-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,7 +30,7 @@ interface GroupedFinances {
 
 function AddStudentFinanceForm({ onAddStudent }: { onAddStudent: (student: StudentFinance) => void }) {
     const [isOpen, setIsOpen] = React.useState(false);
-    const [departments, setDepartments] = React.useState<any[]>([]);
+    const [departments, setDepartments] = React.useState<Department[]>([]);
 
     // Form state
     const [matricule, setMatricule] = React.useState('');
@@ -50,9 +50,11 @@ function AddStudentFinanceForm({ onAddStudent }: { onAddStudent: (student: Stude
     const [avance, setAvance] = React.useState(0);
 
     React.useEffect(() => {
-        // In a real app with many departments, you'd fetch this.
-        // For now, we use the static import.
-        setDepartments(allDepartments);
+        async function fetchDepartments() {
+            const depts = await getDepartments();
+            setDepartments(depts);
+        }
+        fetchDepartments();
     }, []);
 
     const handleSubmit = (e: React.FormEvent) => {

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useState } from 'react';
@@ -18,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Switch } from '@/components/ui/switch';
 import { Textarea } from '@/components/ui/textarea';
 import { generateReport } from '@/ai/flows/generate-ai-powered-reports';
-import { students, faculty } from '@/lib/data';
+import { getStudents, getFaculty } from '@/lib/data';
 import { Download, Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
@@ -49,6 +50,7 @@ export function ReportGenerator() {
     setIsLoading(true);
     setReport('');
     try {
+      const [students, faculty] = await Promise.all([getStudents(), getFaculty()]);
       const result = await generateReport({
         ...data,
         studentData: JSON.stringify(students),

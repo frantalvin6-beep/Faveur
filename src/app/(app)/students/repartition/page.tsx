@@ -1,5 +1,6 @@
+
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { departments } from "@/lib/data";
+import { getDepartments } from "@/lib/data";
 import { Users } from "lucide-react";
 
 const filieres = [
@@ -18,7 +19,8 @@ const filieres = [
 ]
 
 
-export default function RepartitionPage() {
+export default async function RepartitionPage() {
+  const departments = await getDepartments();
   return (
     <div className="space-y-6">
       <div>
