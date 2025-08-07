@@ -22,7 +22,7 @@ const nextConfig: NextConfig = {
   },
   webpack: (config, { isServer }) => {
     if (!isServer) {
-      // 1. Configurer les fallbacks pour les modules Node.js
+      // Configure fallbacks for Node.js modules
       config.resolve.fallback = {
         ...(config.resolve.fallback || {}),
         async_hooks: false,
@@ -31,7 +31,7 @@ const nextConfig: NextConfig = {
         tls: false,
       };
 
-      // 2. Alias pour contourner le module problématique
+      // Alias the problematic module to an empty one
       config.resolve.alias = {
         ...(config.resolve.alias || {}),
         "@opentelemetry/context-async-hooks": path.resolve(__dirname, 'empty-module.js'),
