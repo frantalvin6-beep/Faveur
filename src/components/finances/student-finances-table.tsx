@@ -57,61 +57,53 @@ function getStatusBadgeVariant(status: StudentFinance['statut']) {
   }
 }
 
-function UpdateAdvanceForm({ student, onUpdate }: { student: StudentFinance, onUpdate: (updatedStudent: StudentFinance) => void }) {
-    const [isOpen, setIsOpen] = React.useState(false);
-    const [newAdvance, setNewAdvance] = React.useState(student.avance);
+function EditableCurrencyCell({ value, onSave }: { value: number, onSave: (newValue: number) => void }) {
+    const [currentValue, setCurrentValue] = React.useState(value);
+    const [isEditing, setIsEditing] = React.useState(false);
+    const inputRef = React.useRef<HTMLInputElement>(null);
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        
-        const updatedStudentData = { ...student, avance: newAdvance };
-        const calculated = calculerFinance(
-            updatedStudentData.inscription, updatedStudentData.fournitures, updatedStudentData.support, updatedStudentData.bourseType,
-            updatedStudentData.reduction, updatedStudentData.scolariteBase, updatedStudentData.latrine, updatedStudentData.session,
-            updatedStudentData.rattrapage, newAdvance
-        );
-        onUpdate({ ...updatedStudentData, ...calculated });
-        
-        setIsOpen(false);
+    const handleSave = () => {
+        if (currentValue !== value) {
+            onSave(currentValue);
+        }
+        setIsEditing(false);
     };
-    
-    return (
-        <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Mettre à jour l'avance
-                </DropdownMenuItem>
-            </DropdownMenuTrigger>
-            <DialogContent className="sm:max-w-md">
-                <DialogHeader>
-                    <DialogTitle>Mettre à jour l'avance pour {student.fullName}</DialogTitle>
-                </DialogHeader>
-                <form onSubmit={handleSubmit}>
-                    <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="current-total">Total à Payer</Label>
-                            <Input id="current-total" value={formatCurrency(student.totalAPayer)} disabled />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="current-advance">Avance Actuelle</Label>
-                            <Input id="current-advance" value={formatCurrency(student.avance)} disabled />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="new-advance">Nouvelle Avance</Label>
-                            <Input id="new-advance" type="number" value={newAdvance} onChange={(e) => setNewAdvance(Number(e.target.value))} />
-                        </div>
-                    </div>
-                    <DialogFooter>
-                        <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
-                        <Button type="submit">Enregistrer</Button>
-                    </DialogFooter>
-                </form>
-            </DialogContent>
-        </Dialog>
-    )
-}
 
+    React.useEffect(() => {
+        if (isEditing && inputRef.current) {
+            inputRef.current.select();
+        }
+    }, [isEditing]);
+
+    if (isEditing) {
+        return (
+            <Input
+                ref={inputRef}
+                type="number"
+                value={currentValue}
+                onChange={(e) => setCurrentValue(Number(e.target.value))}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSave();
+                    if (e.key === 'Escape') {
+                        setCurrentValue(value);
+                        setIsEditing(false);
+                    }
+                }}
+                className="w-32 mx-auto h-8 text-right"
+            />
+        );
+    }
+
+    return (
+        <div
+            onClick={() => setIsEditing(true)}
+            className="font-semibold text-green-600 cursor-pointer rounded-md p-1 hover:bg-muted"
+        >
+            {formatCurrency(value)}
+        </div>
+    );
+}
 
 export function StudentFinancesTable({ initialData, onUpdateStudent }: { initialData: StudentFinance[], onUpdateStudent: (student: StudentFinance) => void }) {
   const [finances, setFinances] = React.useState(initialData);
@@ -195,8 +187,14 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
     toast({ title: `Exportation ${format.toUpperCase()} réussie` });
   };
   
-  const handleUpdateAdvance = (updatedStudent: StudentFinance) => {
-    onUpdateStudent(updatedStudent);
+  const handleUpdateAdvance = (student: StudentFinance, newAdvance: number) => {
+    const updatedStudentData = { ...student, avance: newAdvance };
+    const calculated = calculerFinance(
+        updatedStudentData.inscription, updatedStudentData.fournitures, updatedStudentData.support, updatedStudentData.bourseType,
+        updatedStudentData.reduction, updatedStudentData.scolariteBase, updatedStudentData.latrine, updatedStudentData.session,
+        updatedStudentData.rattrapage, newAdvance
+    );
+    onUpdateStudent({ ...updatedStudentData, ...calculated });
   };
 
   return (
@@ -248,7 +246,6 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
                 <TableHead className="text-right">Avancé</TableHead>
                 <TableHead className="text-right">Reste</TableHead>
                 <TableHead className="text-center">Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -259,27 +256,20 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
                   <TableCell>{f.level}</TableCell>
                   <TableCell><Badge variant="secondary">{f.option}</Badge></TableCell>
                   <TableCell className="text-right font-semibold">{formatCurrency(f.totalAPayer)}</TableCell>
-                  <TableCell className="text-right text-green-600 font-semibold">{formatCurrency(f.avance)}</TableCell>
+                  <TableCell className="text-right">
+                    <EditableCurrencyCell 
+                        value={f.avance}
+                        onSave={(newValue) => handleUpdateAdvance(f, newValue)}
+                    />
+                  </TableCell>
                   <TableCell className={cn("text-right font-bold", f.reste > 0 ? "text-red-600" : "text-gray-500")}>{formatCurrency(f.reste)}</TableCell>
                   <TableCell className="text-center">
                     <Badge variant={getStatusBadgeVariant(f.statut)}>{f.statut}</Badge>
                   </TableCell>
-                  <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                         <UpdateAdvanceForm student={f} onUpdate={handleUpdateAdvance} />
-                      </DropdownMenuContent>
-                    </DropdownMenu>
-                  </TableCell>
                 </TableRow>
               )) : (
                 <TableRow>
-                  <TableCell colSpan={9} className="h-24 text-center">Aucun étudiant dans ce groupe.</TableCell>
+                  <TableCell colSpan={8} className="h-24 text-center">Aucun étudiant dans ce groupe.</TableCell>
                 </TableRow>
               )}
             </TableBody>
