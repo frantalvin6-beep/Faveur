@@ -2,7 +2,7 @@
 'use client'
 
 import { useState } from 'react'
-import { notFound } from 'next/navigation'
+import { useRouter, notFound } from 'next/navigation'
 import { students as initialStudents, Student, AcademicRecord, CourseRecord, courses as allCourses, initialCourses } from '@/lib/data'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -32,7 +32,7 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { PlusCircle, Trash2, Loader2 } from 'lucide-react'
+import { PlusCircle, Trash2, Loader2, ArrowLeft } from 'lucide-react'
 import { calculateGpa } from '@/ai/flows/calculate-student-gpa'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 
@@ -189,6 +189,7 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
 
 export default function StudentHistoryPage({ params }: { params: { id: string } }) {
   const [students, setStudents] = useState(initialStudents);
+  const router = useRouter();
   const student = students.find((s) => s.id === params.id)
 
   if (!student) {
@@ -220,10 +221,18 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
 
   return (
     <div className="space-y-6">
+       <div className="flex items-center gap-4 mb-4">
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.back()}>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="sr-only">Retour</span>
+            </Button>
+            <h1 className="text-3xl font-bold">{student.name}</h1>
+        </div>
+
       <Card>
         <CardHeader>
-          <CardTitle className="text-3xl">{student.name}</CardTitle>
-          <CardDescription>Historique académique complet de l'étudiant.</CardDescription>
+          <CardTitle>Dossier de l'étudiant</CardTitle>
+          <CardDescription>Informations personnelles et de contact.</CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 gap-4">
           <div><span className="font-semibold">Matricule:</span> {student.id}</div>
@@ -236,7 +245,8 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
 
       <Card>
         <CardHeader>
-          <CardTitle>Résultats académiques</CardTitle>
+          <CardTitle>Historique académique</CardTitle>
+          <CardDescription>Détail des résultats par semestre.</CardDescription>
         </CardHeader>
         <CardContent>
           {student.academicHistory.length > 0 ? (
@@ -288,5 +298,3 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
     </div>
   )
 }
-
-    
