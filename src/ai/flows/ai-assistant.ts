@@ -10,6 +10,7 @@
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 import {Message} from 'genkit';
+import {getStudentFinanceStatusByName} from '@/services/university-data';
 
 const AiAssistantInputSchema = z.object({
   history: z.array(Message).describe('The conversation history.'),
@@ -26,9 +27,27 @@ export async function aiAssistant(input: AiAssistantInput): Promise<AiAssistantO
   return aiAssistantFlow(input);
 }
 
+
+const studentFinanceTool = ai.defineTool(
+    {
+        name: 'getStudentFinanceStatusByName',
+        description: 'Obtient le statut financier (frais de scolarité) d\'un étudiant spécifique en fonction de son nom.',
+        inputSchema: z.object({
+            studentName: z.string().describe('Le nom complet de l\'étudiant.'),
+        }),
+        outputSchema: z.object({
+            status: z.string().describe('Une phrase décrivant le statut financier de l\'étudiant (par exemple, "Finalisé" ou "Non finalisé avec un reste de X FCFA").'),
+        }),
+    },
+    async (input) => getStudentFinanceStatusByName(input.studentName),
+);
+
+
 const systemPrompt = `Vous êtes un assistant IA expert pour Campus Central, un système de gestion universitaire complet.
 Votre rôle est d'aider les administrateurs à naviguer, comprendre et utiliser l'application de manière efficace.
-Répondez en français, soyez concis, serviable et fournissez des réponses précises basées uniquement sur les informations ci-dessous. N'inventez jamais de fonctionnalités.
+Répondez en français, soyez concis, serviable et fournissez des réponses précises.
+
+Si l'utilisateur vous pose une question sur les données (par exemple, "quel est le statut de l'étudiant X ?" ou "l'étudiant Y a-t-il payé ses frais ?"), utilisez les outils à votre disposition pour trouver l'information et formuler une réponse claire. N'inventez jamais d'informations.
 
 CONTEXTE DE L'APPLICATION "CAMPUS CENTRAL" :
 
@@ -74,8 +93,7 @@ CONTEXTE DE L'APPLICATION "CAMPUS CENTRAL" :
     *   Lors de la saisie des notes dans l'historique d'un étudiant, le calcul du GPA et la décision (Admis, Redoublant, Échec) sont effectués par l'IA.
     *   La page "Rapports" utilise l'IA pour générer des analyses textuelles complètes.
     *   La page "Finances Enseignants" peut utiliser l'IA pour détecter des anomalies dans les paiements.
-
-Votre mission est de répondre aux questions des utilisateurs en vous basant STRICTEMENT sur ces fonctionnalités. Par exemple, si un utilisateur demande "Comment ajouter un étudiant ?", vous devriez le guider vers la section "Étudiants" > "Liste des étudiants" et lui expliquer qu'il y a un bouton pour cela. Si un utilisateur demande comment calculer une moyenne, expliquez-lui que cela se fait automatiquement lors de la saisie des notes dans l'historique de l'étudiant. Si on vous interroge sur la détection de fraude, expliquez l'outil d'analyse des anomalies dans la section des finances des enseignants.`;
+    *   L'assistant IA peut interroger la base de données en lecture seule pour répondre à des questions spécifiques sur les données (ex: statut financier d'un étudiant).`;
 
 const aiAssistantFlow = ai.defineFlow(
   {
@@ -89,6 +107,7 @@ const aiAssistantFlow = ai.defineFlow(
     const llmResponse = await ai.generate({
       model: 'googleai/gemini-1.5-flash',
       prompt: prompt,
+      tools: [studentFinanceTool],
       history: [
         new Message({role: 'system', content: [{text: systemPrompt}]}),
         ...history,
