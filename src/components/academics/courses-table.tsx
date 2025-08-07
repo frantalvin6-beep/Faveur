@@ -33,7 +33,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { faculty } from '@/lib/data';
+import { getFaculty } from '@/lib/data';
 import { Textarea } from '../ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
@@ -50,6 +50,7 @@ interface ChapterInput {
 
 export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (course: Course) => void, allDepartments: Department[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
   const [code, setCode] = React.useState('');
   const [name, setName] = React.useState('');
   const [department, setDepartment] = React.useState('');
@@ -59,6 +60,16 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
   const [chapters, setChapters] = React.useState<ChapterInput[]>([{ id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
   const [teacherIds, setTeacherIds] = React.useState<string[]>([]);
   const [openTeacherPopover, setOpenTeacherPopover] = React.useState(false);
+
+  React.useEffect(() => {
+    if (isOpen) {
+        async function fetchFaculty() {
+            const facultyData = await getFaculty();
+            setAllFaculty(facultyData);
+        }
+        fetchFaculty();
+    }
+  }, [isOpen]);
 
   const handleAddChapter = () => {
     setChapters(prev => [...prev, { id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
@@ -111,7 +122,7 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
     setTeacherIds([]);
   };
 
-  const selectedTeachers = faculty.filter(f => teacherIds.includes(f.id));
+  const selectedTeachers = allFaculty.filter(f => teacherIds.includes(f.id));
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -181,7 +192,7 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
                               <CommandList>
                                   <CommandEmpty>Aucun enseignant trouvé.</CommandEmpty>
                                   <CommandGroup>
-                                  {faculty.map((teacher) => (
+                                  {allFaculty.map((teacher) => (
                                       <CommandItem
                                           key={teacher.id}
                                           onSelect={() => {
@@ -262,7 +273,16 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
 
 
 export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDeleteCourse: (code: string) => void }) {
+  const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
   const handleEdit = (code: string) => alert(`Modification de ${code} bientôt disponible.`);
+
+  React.useEffect(() => {
+    async function fetchFaculty() {
+        const facultyData = await getFaculty();
+        setAllFaculty(facultyData);
+    }
+    fetchFaculty();
+  }, []);
 
   return (
     <div className="rounded-md border">
@@ -300,7 +320,7 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
                 {item.teacherIds && item.teacherIds.length > 0 ? (
                     <div className="flex flex-col gap-1">
                         {item.teacherIds.map(id => {
-                            const teacher = faculty.find(f => f.id === id);
+                            const teacher = allFaculty.find(f => f.id === id);
                             return teacher ? <Badge key={id} variant="outline" className="font-normal">{teacher.name}</Badge> : null;
                         })}
                     </div>
