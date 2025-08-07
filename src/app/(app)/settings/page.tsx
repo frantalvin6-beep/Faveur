@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import Link from "next/link";
 
 const roles = [
   { 
@@ -143,6 +144,26 @@ export default function SettingsPage() {
               </TableBody>
             </Table>
           </div>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader>
+          <CardTitle>Base de données</CardTitle>
+          <CardDescription>Actions relatives à la base de données de l'application.</CardDescription>
+        </CardHeader>
+        <CardContent>
+            <div className="flex items-center justify-between">
+                <div>
+                    <Label className="font-semibold">Peupler la base de données</Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                        Initialise la base de données avec des données d'exemple. Ceci est utile pour la première configuration.
+                    </p>
+                </div>
+                <Link href="/seed-data" passHref>
+                    <Button variant="outline">Aller à la page de peuplement</Button>
+                </Link>
+            </div>
         </CardContent>
       </Card>
 
