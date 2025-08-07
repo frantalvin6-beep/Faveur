@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, Edit, Trash2, Check, X } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,8 +21,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { ExamGrade } from '@/lib/types';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/hooks/use-toast';
 
 function getGradeColor(grade: number) {
   if (grade >= 15) return 'text-green-600';
@@ -31,38 +31,73 @@ function getGradeColor(grade: number) {
   return 'text-red-600';
 }
 
-export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: ExamGrade[], onGradeUpdate: (grade: ExamGrade) => void, onGradeDelete: (id: string) => void }) {
-  const [grades, setGrades] = React.useState(data);
-  const [editingId, setEditingId] = React.useState<string | null>(null);
-  const [currentGrade, setCurrentGrade] = React.useState<number>(0);
-  const [currentCoefficient, setCurrentCoefficient] = React.useState<number>(1);
+function EditableCell({ value, onSave }: { value: number, onSave: (newValue: number) => void }) {
+    const [currentValue, setCurrentValue] = React.useState(value);
+    const [isEditing, setIsEditing] = React.useState(false);
+    const inputRef = React.useRef<HTMLInputElement>(null);
 
-  React.useEffect(() => {
-    setGrades(data);
-  }, [data]);
-  
-  const handleEditClick = (grade: ExamGrade) => {
-    setEditingId(grade.id);
-    setCurrentGrade(grade.grade);
-    setCurrentCoefficient(grade.coefficient);
-  };
-  
-  const handleCancelEdit = () => {
-    setEditingId(null);
-  }
-  
-  const handleSaveEdit = (grade: ExamGrade) => {
-     onGradeUpdate({ ...grade, grade: currentGrade, coefficient: currentCoefficient });
-     setEditingId(null);
-  }
+    const handleSave = () => {
+        if (currentValue !== value) {
+            onSave(currentValue);
+        }
+        setIsEditing(false);
+    };
 
-  if (data.length === 0) {
+    React.useEffect(() => {
+        if (isEditing && inputRef.current) {
+            inputRef.current.select();
+        }
+    }, [isEditing]);
+
+    if (isEditing) {
+        return (
+            <Input
+                ref={inputRef}
+                type="number"
+                value={currentValue}
+                onChange={(e) => setCurrentValue(Number(e.target.value))}
+                onBlur={handleSave}
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSave();
+                    if (e.key === 'Escape') {
+                        setCurrentValue(value);
+                        setIsEditing(false);
+                    }
+                }}
+                className="w-24 mx-auto h-8 text-center"
+            />
+        );
+    }
+
     return (
-        <div className="text-center text-muted-foreground py-8">
-            Aucune note saisie pour cette session. Cliquez sur "Saisir une note" pour commencer.
+        <div
+            onClick={() => setIsEditing(true)}
+            className={cn("font-bold text-lg cursor-pointer rounded-md p-1 hover:bg-muted", getGradeColor(value))}
+        >
+            {value.toFixed(2)}
         </div>
-    )
-  }
+    );
+}
+
+
+export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: ExamGrade[], onGradeUpdate: (grade: ExamGrade) => void, onGradeDelete: (id: string) => void }) {
+    const { toast } = useToast();
+
+    if (data.length === 0) {
+        return (
+            <div className="text-center text-muted-foreground py-8">
+                Aucune note saisie pour cette session. Cliquez sur "Saisir une note" pour commencer.
+            </div>
+        )
+    }
+
+    const handleSave = (item: ExamGrade, field: 'grade' | 'coefficient', newValue: number) => {
+        onGradeUpdate({ ...item, [field]: newValue });
+        toast({
+            title: "Note mise à jour",
+            description: `La modification pour ${item.studentName} a été enregistrée.`
+        });
+    };
 
   return (
     <div className="relative w-full overflow-auto rounded-md border">
@@ -78,77 +113,45 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
             </TableRow>
         </TableHeader>
         <TableBody>
-            {grades.map((item) => (
+            {data.map((item) => (
             <TableRow key={item.id}>
                 <TableCell className="font-mono text-xs">{item.studentId}</TableCell>
                 <TableCell className="font-medium">{item.studentName}</TableCell>
                 
                 <TableCell className="text-center">
-                    {editingId === item.id ? (
-                        <Input 
-                            type="number"
-                            value={currentGrade}
-                            onChange={(e) => setCurrentGrade(Number(e.target.value))}
-                            className="w-24 mx-auto h-8"
-                            autoFocus
-                            onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(item)}
-                        />
-                    ) : (
-                        <span className={`font-bold text-lg ${getGradeColor(item.grade)}`}>
-                            {item.grade.toFixed(2)}
-                        </span>
-                    )}
+                    <EditableCell 
+                        value={item.grade}
+                        onSave={(newValue) => handleSave(item, 'grade', newValue)}
+                    />
                 </TableCell>
                 
                 <TableCell className="text-center">
-                   {editingId === item.id ? (
-                        <Input 
-                            type="number"
-                            value={currentCoefficient}
-                            onChange={(e) => setCurrentCoefficient(Number(e.target.value))}
-                            className="w-20 mx-auto h-8"
-                             onKeyDown={(e) => e.key === 'Enter' && handleSaveEdit(item)}
-                        />
-                    ) : (
-                       item.coefficient
-                    )}
+                     <EditableCell 
+                        value={item.coefficient}
+                        onSave={(newValue) => handleSave(item, 'coefficient', newValue)}
+                    />
                 </TableCell>
                 <TableCell className="text-center font-medium">{ (item.grade * item.coefficient).toFixed(2) }</TableCell>
                 
                 <TableCell className="text-right">
-                    {editingId === item.id ? (
-                        <div className='flex gap-2 justify-end'>
-                            <Button size="icon" className="h-8 w-8" onClick={() => handleSaveEdit(item)}>
-                                <Check className="h-4 w-4" />
-                            </Button>
-                            <Button size="icon" variant="outline" className="h-8 w-8" onClick={handleCancelEdit}>
-                                <X className="h-4 w-4" />
-                            </Button>
-                        </div>
-                    ) : (
-                        <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Ouvrir le menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEditClick(item)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Modifier
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                onClick={() => onGradeDelete(item.id)}
-                                className="text-destructive focus:text-destructive"
-                            >
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Supprimer
-                            </DropdownMenuItem>
-                            </DropdownMenuContent>
-                        </DropdownMenu>
-                    )}
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" className="h-8 w-8 p-0">
+                            <span className="sr-only">Ouvrir le menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                        <DropdownMenuItem
+                            onClick={() => onGradeDelete(item.id)}
+                            className="text-destructive focus:text-destructive"
+                        >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Supprimer
+                        </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </TableCell>
             </TableRow>
             ))}
