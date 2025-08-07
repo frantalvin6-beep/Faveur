@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AdminFinance } from '@/lib/types';
+import { AdminFinance, AdminStaff } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculerFinanceAdmin, adminStaff } from '@/lib/data';
+import { calculerFinanceAdmin } from '@/lib/data';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Packer, Document, Paragraph, TextRun, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, WidthType, AlignmentType } from 'docx';
@@ -114,7 +114,7 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: AdminFinance, onUpd
     )
 }
 
-function AddAdminFinanceForm({ onAdd }: { onAdd: (finance: AdminFinance) => void }) {
+function AddAdminFinanceForm({ onAdd, allStaff }: { onAdd: (finance: AdminFinance) => void, allStaff: AdminStaff[] }) {
     const [isOpen, setIsOpen] = React.useState(false);
     
     const [matricule, setMatricule] = React.useState('');
@@ -125,7 +125,7 @@ function AddAdminFinanceForm({ onAdd }: { onAdd: (finance: AdminFinance) => void
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        const staff = adminStaff.find(s => s.id === matricule);
+        const staff = allStaff.find(s => s.id === matricule);
         if (!staff) {
             alert('Veuillez sélectionner un membre du personnel.');
             return;
@@ -172,7 +172,7 @@ function AddAdminFinanceForm({ onAdd }: { onAdd: (finance: AdminFinance) => void
                                 <Label>Personnel</Label>
                                 <Select onValueChange={setMatricule} value={matricule}>
                                     <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                                    <SelectContent>{adminStaff.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.position})</SelectItem>)}</SelectContent>
+                                    <SelectContent>{allStaff.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.position})</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2"><Label>Salaire Mensuel</Label><Input type="number" value={salaireMensuel} onChange={(e) => setSalaireMensuel(Number(e.target.value))} /></div>
@@ -191,7 +191,7 @@ function AddAdminFinanceForm({ onAdd }: { onAdd: (finance: AdminFinance) => void
     );
 }
 
-export function AdminFinancesTable({ data, onAddFinance, onUpdateFinance }: { data: AdminFinance[], onAddFinance: (finance: AdminFinance) => void, onUpdateFinance: (finance: AdminFinance) => void }) {
+export function AdminFinancesTable({ data, adminStaff, onAddFinance, onUpdateFinance }: { data: AdminFinance[], adminStaff: AdminStaff[], onAddFinance: (finance: AdminFinance) => void, onUpdateFinance: (finance: AdminFinance) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const { toast } = useToast();
 
@@ -272,7 +272,7 @@ export function AdminFinancesTable({ data, onAddFinance, onUpdateFinance }: { da
                 <DropdownMenuItem onClick={() => handleExport('word')}><FileType className="mr-2 h-4 w-4" />Exporter en Word</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AddAdminFinanceForm onAdd={onAddFinance} />
+            <AddAdminFinanceForm onAdd={onAddFinance} allStaff={adminStaff} />
           </div>
         </div>
       </CardHeader>

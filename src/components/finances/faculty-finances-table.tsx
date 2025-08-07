@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { FacultyFinance } from '@/lib/types';
+import { FacultyFinance, Faculty } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
@@ -35,7 +35,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculerSalaireComplet, faculty } from '@/lib/data';
+import { calculerSalaireComplet } from '@/lib/data';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Packer, Document, Paragraph, TextRun, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, WidthType, AlignmentType } from 'docx';
@@ -62,11 +62,11 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: FacultyFinance, onU
     const [isOpen, setIsOpen] = React.useState(false);
     const [montantPaye, setMontantPaye] = React.useState(finance.montantPaye);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         
         const updatedFinanceData = { ...finance, montantPaye };
-        const calculated = calculerSalaireComplet(
+        const calculated = await calculerSalaireComplet(
             updatedFinanceData.teacherId,
             montantPaye,
             updatedFinanceData.tauxL1,
@@ -116,7 +116,7 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: FacultyFinance, onU
     )
 }
 
-function AddFacultyFinanceForm({ onAdd }: { onAdd: (finance: FacultyFinance) => void }) {
+function AddFacultyFinanceForm({ onAdd, allFaculty }: { onAdd: (finance: FacultyFinance) => void, allFaculty: Faculty[] }) {
     const [isOpen, setIsOpen] = React.useState(false);
     
     const [teacherId, setTeacherId] = React.useState('');
@@ -126,15 +126,15 @@ function AddFacultyFinanceForm({ onAdd }: { onAdd: (finance: FacultyFinance) => 
     const [tauxMaster, setTauxMaster] = React.useState(12000);
     const [montantPaye, setMontantPaye] = React.useState(0);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        const teacher = faculty.find(f => f.id === teacherId);
+        const teacher = allFaculty.find(f => f.id === teacherId);
         if (!teacher) {
             alert('Veuillez sélectionner un enseignant.');
             return;
         }
 
-        const calculated = calculerSalaireComplet(teacherId, montantPaye, tauxL1, tauxL2, tauxL3, tauxMaster);
+        const calculated = await calculerSalaireComplet(teacherId, montantPaye, tauxL1, tauxL2, tauxL3, tauxMaster);
         
         const newFinance: FacultyFinance = {
             teacherId,
@@ -170,7 +170,7 @@ function AddFacultyFinanceForm({ onAdd }: { onAdd: (finance: FacultyFinance) => 
                                 <Label>Enseignant</Label>
                                 <Select onValueChange={setTeacherId} value={teacherId}>
                                     <SelectTrigger><SelectValue placeholder="Sélectionner un enseignant..." /></SelectTrigger>
-                                    <SelectContent>{faculty.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                                    <SelectContent>{allFaculty.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
                                 </Select>
                                 <p className="text-sm text-muted-foreground">Les heures et le total seront calculés à partir de la feuille de présence et de la charge horaire.</p>
                             </div>
@@ -192,7 +192,7 @@ function AddFacultyFinanceForm({ onAdd }: { onAdd: (finance: FacultyFinance) => 
     );
 }
 
-export function FacultyFinancesTable({ data, onAddFinance, onUpdateFinance }: { data: FacultyFinance[], onAddFinance: (finance: FacultyFinance) => void, onUpdateFinance: (finance: FacultyFinance) => void }) {
+export function FacultyFinancesTable({ data, allFaculty, onAddFinance, onUpdateFinance }: { data: FacultyFinance[], allFaculty: Faculty[], onAddFinance: (finance: FacultyFinance) => void, onUpdateFinance: (finance: FacultyFinance) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
   const { toast } = useToast();
 
@@ -276,7 +276,7 @@ export function FacultyFinancesTable({ data, onAddFinance, onUpdateFinance }: { 
                 <DropdownMenuItem onClick={() => handleExport('word')}><FileType className="mr-2 h-4 w-4" />Exporter en Word</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AddFacultyFinanceForm onAdd={onAddFinance} />
+            <AddFacultyFinanceForm onAdd={onAddFinance} allFaculty={allFaculty}/>
           </div>
         </div>
       </CardHeader>

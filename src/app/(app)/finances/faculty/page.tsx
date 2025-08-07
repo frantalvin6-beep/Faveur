@@ -1,86 +1,124 @@
+
 'use client';
 
 import * as React from 'react';
-import { facultyFinances as initialFacultyFinances, FacultyFinance, calculerSalaireComplet, teacherWorkload, accountingTransactions, faculty } from '@/lib/data';
+import { FacultyFinance, calculerSalaireComplet, AccountingTransaction, faculty as allFaculty, getFacultyFinances, updateFacultyFinance, addFacultyFinance, addAccountingTransaction, getFaculty } from '@/lib/data';
 import { FacultyFinancesTable } from '@/components/finances/faculty-finances-table';
 import { useToast } from '@/hooks/use-toast';
 import { detectAnomalies, DetectAnomaliesOutput } from '@/ai/flows/detect-finance-anomalies';
 import { Button } from '@/components/ui/button';
 import { Bot, Loader2 } from 'lucide-react';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Faculty } from '@/lib/types';
+
 
 export default function FacultyFinancesPage() {
-  const [facultyFinances, setFacultyFinances] = React.useState(initialFacultyFinances);
+  const [facultyFinances, setFacultyFinances] = React.useState<FacultyFinance[]>([]);
+  const [faculty, setFaculty] = React.useState<Faculty[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
   const [isLoadingAnomalies, setIsLoadingAnomalies] = React.useState(false);
   const [analysisResult, setAnalysisResult] = React.useState<DetectAnomaliesOutput | null>(null);
 
-  // Recalculate all finances based on current workload whenever the component mounts
-  // This simulates data being fresh from a database.
-  React.useEffect(() => {
-    const updatedFinances = initialFacultyFinances.map(finance => {
-      const calculated = calculerSalaireComplet(
-        finance.teacherId,
-        finance.montantPaye,
-        finance.tauxL1,
-        finance.tauxL2,
-        finance.tauxL3,
-        finance.tauxMaster
-      );
-      return { ...finance, ...calculated };
-    });
-    setFacultyFinances(updatedFinances);
-  }, []);
+  const refetchData = React.useCallback(async () => {
+     try {
+        setLoading(true);
+        const [financesData, facultyData] = await Promise.all([
+            getFacultyFinances(),
+            getFaculty()
+        ]);
+        
+        const updatedFinancesPromises = financesData.map(async finance => {
+            const calculated = await calculerSalaireComplet(
+                finance.teacherId,
+                finance.montantPaye,
+                finance.tauxL1,
+                finance.tauxL2,
+                finance.tauxL3,
+                finance.tauxMaster
+            );
+            return { ...finance, ...calculated };
+        });
 
-  const handleUpdateFinance = (updatedFinance: FacultyFinance) => {
+        const updatedFinances = await Promise.all(updatedFinancesPromises);
+
+        setFacultyFinances(updatedFinances);
+        setFaculty(facultyData);
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données financières.' });
+    } finally {
+        setLoading(false);
+    }
+  }, [toast]);
+
+
+  React.useEffect(() => {
+    refetchData();
+  }, [refetchData]);
+
+  const handleUpdateFinance = async (updatedFinance: FacultyFinance) => {
     const originalFinance = facultyFinances.find(f => f.teacherId === updatedFinance.teacherId);
     const paymentAmount = updatedFinance.montantPaye - (originalFinance?.montantPaye || 0);
 
-    setFacultyFinances(prev => prev.map(f => f.teacherId === updatedFinance.teacherId ? updatedFinance : f));
-    
-    if (paymentAmount > 0) {
-        accountingTransactions.unshift({
-            id: `TRN-FAC-${Date.now()}`,
-            date: new Date().toISOString().split('T')[0],
-            type: 'Dépense',
-            sourceBeneficiary: updatedFinance.fullName,
-            category: 'Salaires',
-            amount: paymentAmount,
-            paymentMethod: 'Virement bancaire', // Default method
-            description: `Paiement salaire enseignant`,
-            responsible: 'DRH'
-        });
-        toast({
-            title: "Transaction enregistrée",
-            description: `Une dépense de ${paymentAmount.toLocaleString()} FCFA pour ${updatedFinance.fullName} a été ajoutée à la comptabilité.`,
-        });
+    try {
+        await updateFacultyFinance(updatedFinance.teacherId, updatedFinance);
+        setFacultyFinances(prev => prev.map(f => f.teacherId === updatedFinance.teacherId ? updatedFinance : f));
+        
+        if (paymentAmount > 0) {
+            const newTransaction: Omit<AccountingTransaction, 'id'> = {
+                date: new Date().toISOString().split('T')[0],
+                type: 'Dépense',
+                sourceBeneficiary: updatedFinance.fullName,
+                category: 'Salaires',
+                amount: paymentAmount,
+                paymentMethod: 'Virement bancaire', // Default method
+                description: `Paiement salaire enseignant`,
+                responsible: 'DRH'
+            };
+            await addAccountingTransaction(newTransaction);
+            toast({
+                title: "Transaction enregistrée",
+                description: `Une dépense de ${paymentAmount.toLocaleString()} FCFA pour ${updatedFinance.fullName} a été ajoutée à la comptabilité.`,
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour la paie.' });
     }
   };
   
-  const handleAddFinance = (newFinance: FacultyFinance) => {
-     // Prevent duplicates
+  const handleAddFinance = async (newFinance: FacultyFinance) => {
     if (facultyFinances.some(f => f.teacherId === newFinance.teacherId)) {
         alert('Une fiche de paie pour cet enseignant existe déjà.');
         return;
     }
-    setFacultyFinances(prev => [...prev, newFinance]);
     
-    if (newFinance.montantPaye > 0) {
-        accountingTransactions.unshift({
-            id: `TRN-FAC-${Date.now()}`,
-            date: new Date().toISOString().split('T')[0],
-            type: 'Dépense',
-            sourceBeneficiary: newFinance.fullName,
-            category: 'Salaires',
-            amount: newFinance.montantPaye,
-            paymentMethod: 'Virement bancaire',
-            description: `Avance sur salaire enseignant`,
-            responsible: 'DRH'
-        });
-        toast({
-            title: "Transaction enregistrée",
-            description: `Une dépense de ${newFinance.montantPaye.toLocaleString()} FCFA pour ${newFinance.fullName} a été ajoutée à la comptabilité.`,
-        });
+    try {
+        await addFacultyFinance(newFinance);
+        setFacultyFinances(prev => [...prev, newFinance]);
+        
+        if (newFinance.montantPaye > 0) {
+            const newTransaction: Omit<AccountingTransaction, 'id'> = {
+                date: new Date().toISOString().split('T')[0],
+                type: 'Dépense',
+                sourceBeneficiary: newFinance.fullName,
+                category: 'Salaires',
+                amount: newFinance.montantPaye,
+                paymentMethod: 'Virement bancaire',
+                description: `Avance sur salaire enseignant`,
+                responsible: 'DRH'
+            };
+            await addAccountingTransaction(newTransaction);
+            toast({
+                title: "Transaction enregistrée",
+                description: `Une dépense de ${newFinance.montantPaye.toLocaleString()} FCFA pour ${newFinance.fullName} a été ajoutée à la comptabilité.`,
+            });
+        }
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'initialiser la paie.' });
     }
   };
 
@@ -108,6 +146,18 @@ export default function FacultyFinancesPage() {
         setIsLoadingAnomalies(false);
     }
   };
+
+  if (loading) {
+      return (
+          <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                  <Skeleton className="h-8 w-96" />
+                  <Skeleton className="h-4 w-96 mt-2" />
+              </div>
+              <Skeleton className="h-80 w-full" />
+          </div>
+      );
+  }
 
 
   return (
@@ -153,6 +203,7 @@ export default function FacultyFinancesPage() {
 
         <FacultyFinancesTable 
             data={facultyFinances} 
+            allFaculty={faculty}
             onAddFinance={handleAddFinance}
             onUpdateFinance={handleUpdateFinance}
         />
