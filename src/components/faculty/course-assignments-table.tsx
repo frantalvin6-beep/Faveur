@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -19,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CourseAssignment } from '@/lib/types';
+import { CourseAssignment, Faculty, Department } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -33,10 +34,13 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { faculty as allFaculty, departments as allDepartments } from '@/lib/data';
+import { getFaculty, getDepartments } from '@/lib/data';
 
-function AddAssignmentForm({ onAddAssignment }: { onAddAssignment: (assignment: CourseAssignment) => void }) {
+function AddAssignmentForm({ onAddAssignment }: { onAddAssignment: (assignment: Omit<CourseAssignment, 'id'>) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
+  const [allDepartments, setAllDepartments] = React.useState<Department[]>([]);
+  
   const [teacherId, setTeacherId] = React.useState('');
   const [courseName, setCourseName] = React.useState('');
   const [courseCode, setCourseCode] = React.useState('');
@@ -44,6 +48,17 @@ function AddAssignmentForm({ onAddAssignment }: { onAddAssignment: (assignment: 
   const [level, setLevel] = React.useState('');
   const [semester, setSemester] = React.useState('');
   const [hourlyVolume, setHourlyVolume] = React.useState(0);
+
+  React.useEffect(() => {
+    async function loadData() {
+      const [facultyData, deptData] = await Promise.all([getFaculty(), getDepartments()]);
+      setAllFaculty(facultyData);
+      setAllDepartments(deptData.filter(d => !d.id.includes('OPT')));
+    }
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +68,7 @@ function AddAssignmentForm({ onAddAssignment }: { onAddAssignment: (assignment: 
       return;
     }
 
-    const newAssignment: CourseAssignment = {
-      id: `CA${Date.now()}`,
+    const newAssignment: Omit<CourseAssignment, 'id'> = {
       teacherId,
       teacherName: teacher.name,
       courseName,
@@ -108,7 +122,7 @@ function AddAssignmentForm({ onAddAssignment }: { onAddAssignment: (assignment: 
                   <SelectValue placeholder="Sélectionnez un département" />
                 </SelectTrigger>
                 <SelectContent>
-                  {allDepartments.filter(d => !d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                  {allDepartments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -146,28 +160,18 @@ function AddAssignmentForm({ onAddAssignment }: { onAddAssignment: (assignment: 
 }
 
 
-export function CourseAssignmentsTable({ data }: { data: CourseAssignment[] }) {
+export function CourseAssignmentsTable({ data, onAddAssignment, onDeleteAssignment }: { data: CourseAssignment[], onAddAssignment: (assignment: Omit<CourseAssignment, 'id'>) => void, onDeleteAssignment: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [assignments, setAssignments] = React.useState(data);
 
-  const filteredAssignments = assignments.filter((item) =>
+  const filteredAssignments = data.filter((item) =>
     item.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.courseName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.courseCode.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAddAssignment = (newAssignment: CourseAssignment) => {
-    setAssignments(prev => [...prev, newAssignment]);
-  };
-
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'attribution ${id} sera bientôt implémentée.`);
-  const handleDelete = (id: string) => {
-    if(confirm('Êtes-vous sûr de vouloir supprimer cette attribution ?')) {
-        setAssignments(assignments.filter(a => a.id !== id));
-    }
-  };
-
+  
   return (
     <Card>
       <CardHeader>
@@ -183,7 +187,7 @@ export function CourseAssignmentsTable({ data }: { data: CourseAssignment[] }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <AddAssignmentForm onAddAssignment={handleAddAssignment} />
+                <AddAssignmentForm onAddAssignment={onAddAssignment} />
             </div>
         </div>
       </CardHeader>
@@ -231,7 +235,7 @@ export function CourseAssignmentsTable({ data }: { data: CourseAssignment[] }) {
                             Modifier
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                            onClick={() => handleDelete(item.id)}
+                            onClick={() => onDeleteAssignment(item.id)}
                             className="text-destructive focus:text-destructive"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />

@@ -5,6 +5,8 @@ import * as React from 'react';
 import { ScheduleEntry } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '../ui/button';
+import { X } from 'lucide-react';
 
 const timeSlots = [
   '08:00', '09:00', '10:00', '11:00', '12:00', '13:00',
@@ -19,7 +21,7 @@ const timeToNumber = (time: string) => {
   return hours + minutes / 60;
 };
 
-export function ScheduleGrid({ schedule }: { schedule: ScheduleEntry[] }) {
+export function ScheduleGrid({ schedule, onDelete }: { schedule: ScheduleEntry[], onDelete: (id: string) => void }) {
   const grid: (ScheduleEntry | null)[][] = Array(timeSlots.length).fill(null).map(() => Array(daysOfWeek.length).fill(null));
   const rowSpans: (number)[][] = Array(timeSlots.length).fill(0).map(() => Array(daysOfWeek.length).fill(0));
 
@@ -75,12 +77,15 @@ export function ScheduleGrid({ schedule }: { schedule: ScheduleEntry[] }) {
                   const entry = grid[rowIndex][colIndex];
                   const span = rowSpans[rowIndex][colIndex];
                   return (
-                      <td key={day} className={cn("p-1 align-top border-r min-h-[6rem]", entry ? 'bg-primary/5' : '')} rowSpan={span > 0 ? span : 1}>
+                      <td key={day} className={cn("p-1 align-top border-r min-h-[6rem] relative group", entry ? 'bg-primary/5' : '')} rowSpan={span > 0 ? span : 1}>
                           {entry && (
                               <div className="flex flex-col p-2 bg-primary/10 rounded-lg h-full">
                                   <span className="font-bold text-primary">{entry.courseName}</span>
                                   <span className="text-sm text-muted-foreground">{entry.teacherName}</span>
                                   <Badge variant="secondary" className="mt-2 self-start">{entry.location}</Badge>
+                                  <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 text-destructive/50 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => onDelete(entry.id)}>
+                                    <X className="h-4 w-4"/>
+                                  </Button>
                               </div>
                           )}
                       </td>

@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { TeacherWorkload } from '@/lib/types';
+import { TeacherWorkload, CourseAssignment, Faculty } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import {
@@ -34,15 +34,29 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { faculty as allFaculty, courseAssignments as allAssignments } from '@/lib/data';
+import { getFaculty, getCourseAssignments } from '@/lib/data';
 
-function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) => void }) {
+function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: Omit<TeacherWorkload, 'id'>) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
+  const [allAssignments, setAllAssignments] = React.useState<CourseAssignment[]>([]);
+
   const [teacherId, setTeacherId] = React.useState('');
   const [assignmentId, setAssignmentId] = React.useState('');
   const [plannedHours, setPlannedHours] = React.useState(0);
 
   const teacherAssignments = allAssignments.filter(a => a.teacherId === teacherId);
+
+  React.useEffect(() => {
+    async function loadData() {
+        const [facultyData, assignmentsData] = await Promise.all([getFaculty(), getCourseAssignments()]);
+        setAllFaculty(facultyData);
+        setAllAssignments(assignmentsData);
+    }
+    if (isOpen) {
+        loadData();
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,8 +67,7 @@ function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) 
       return;
     }
 
-    const newEntry: TeacherWorkload = {
-      id: `TW${Date.now()}`,
+    const newEntry: Omit<TeacherWorkload, 'id'> = {
       teacherId: assignment.teacherId,
       teacherName: assignment.teacherName,
       courseName: assignment.courseName,
@@ -125,32 +138,16 @@ function AddWorkloadForm({ onAddEntry }: { onAddEntry: (entry: TeacherWorkload) 
 }
 
 
-export function TeacherWorkloadTable({ data }: { data: TeacherWorkload[] }) {
-  const [workload, setWorkload] = React.useState(data);
+export function TeacherWorkloadTable({ data, onAddWorkload, onDeleteWorkload }: { data: TeacherWorkload[], onAddWorkload: (workload: Omit<TeacherWorkload, 'id'>) => void, onDeleteWorkload: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  const filteredWorkload = workload.filter((item) =>
+  const filteredWorkload = data.filter((item) =>
     item.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.courseName.toLowerCase().includes(searchTerm.toLowerCase())
   );
   
-  const handleAddWorkload = (newEntry: TeacherWorkload) => {
-    // Check if a workload for this teacher and course already exists
-    const existing = workload.find(w => w.teacherId === newEntry.teacherId && w.courseName === newEntry.courseName);
-    if (existing) {
-        alert("Une charge horaire pour cet enseignant et ce cours existe déjà.");
-        return;
-    }
-    setWorkload(prev => [...prev, newEntry]);
-  };
-  
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification pour ${id} sera bientôt implémentée.`);
-  const handleDelete = (id: string) => {
-    if(confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
-        setWorkload(workload.filter(w => w.id !== id));
-    }
-  };
-
+  
   return (
     <Card>
       <CardHeader>
@@ -166,7 +163,7 @@ export function TeacherWorkloadTable({ data }: { data: TeacherWorkload[] }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <AddWorkloadForm onAddEntry={handleAddWorkload} />
+                <AddWorkloadForm onAddEntry={onAddWorkload} />
             </div>
         </div>
       </CardHeader>
@@ -217,7 +214,7 @@ export function TeacherWorkloadTable({ data }: { data: TeacherWorkload[] }) {
                                     Modifier
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
-                                    onClick={() => handleDelete(item.id)}
+                                    onClick={() => onDeleteWorkload(item.id)}
                                     className="text-destructive focus:text-destructive"
                                 >
                                     <Trash2 className="mr-2 h-4 w-4" />

@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -22,28 +23,111 @@ import {
 import { Faculty } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getDepartments } from '@/lib/data';
 
-export function FacultyTable({ data }: { data: Faculty[] }) {
-  const [faculty, setFaculty] = React.useState(data);
+
+function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty, 'id'>) => void }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [departments, setDepartments] = React.useState<any[]>([]);
+
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [phone, setPhone] = React.useState('');
+  const [department, setDepartment] = React.useState('');
+  const [position, setPosition] = React.useState<Faculty['position']>('Chargé de cours');
+  const [specialization, setSpecialization] = React.useState('');
+  const [teachingLevels, setTeachingLevels] = React.useState<Faculty['teachingLevels'][]>([]);
+
+  React.useEffect(() => {
+    async function loadDeps() {
+      const deps = await getDepartments();
+      setDepartments(deps.filter(d => d.id.includes('OPT')));
+    }
+    loadDeps();
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !department || !position) {
+      alert("Veuillez remplir les champs obligatoires.");
+      return;
+    }
+    onAddFaculty({
+      name, email, phone, department, position, specialization, teachingLevels,
+      hireDate: new Date().toISOString().split('T')[0]
+    });
+    setIsOpen(false);
+    // Reset form
+    setName('');
+    setEmail('');
+    setPhone('');
+    setDepartment('');
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Ajouter un membre
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-2xl">
+        <DialogHeader>
+          <DialogTitle>Nouveau membre du personnel</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+            <div className="space-y-2"><Label>Nom</Label><Input value={name} onChange={e => setName(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></div>
+            <div className="space-y-2"><Label>Téléphone</Label><Input value={phone} onChange={e => setPhone(e.target.value)} /></div>
+            <div className="space-y-2">
+                <Label>Département</Label>
+                <Select onValueChange={setDepartment} value={department}>
+                    <SelectTrigger><SelectValue placeholder="Sélectionner..."/></SelectTrigger>
+                    <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
+                </Select>
+            </div>
+             <div className="space-y-2">
+                <Label>Poste</Label>
+                <Select onValueChange={(v: Faculty['position']) => setPosition(v)} value={position}>
+                    <SelectTrigger><SelectValue/></SelectTrigger>
+                    <SelectContent>
+                        <SelectItem value="Chargé de cours">Chargé de cours</SelectItem>
+                        <SelectItem value="Professeur assistant">Professeur assistant</SelectItem>
+                        <SelectItem value="Professeur agrégé">Professeur agrégé</SelectItem>
+                        <SelectItem value="Professeur">Professeur</SelectItem>
+                    </SelectContent>
+                </Select>
+            </div>
+            <div className="space-y-2"><Label>Spécialisation</Label><Input value={specialization} onChange={e => setSpecialization(e.target.value)} /></div>
+
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+            <Button type="submit">Enregistrer</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+
+export function FacultyTable({ data, onAddFaculty, onDeleteFaculty }: { data: Faculty[], onAddFaculty: (faculty: Omit<Faculty, 'id'>) => void, onDeleteFaculty: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
 
-  const filteredFaculty = faculty.filter((member) =>
+  const filteredFaculty = data.filter((member) =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.department.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  const handleAdd = () => alert('La fonctionnalité d\'ajout d\'un nouveau membre du personnel sera bientôt implémentée.');
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification du membre du personnel ${id} sera bientôt implémentée.`);
-  const handleDelete = (id: string) => {
-    if(confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ? Cela supprimera également toutes ses entrées d\'emploi du temps.')) {
-        setFaculty(faculty.filter(f => f.id !== id));
-        // Note: In a real app, this should be a call to an API that handles cascading deletes.
-        // For this demo, we can't easily modify another component's state from here.
-        // The logic for filtering schedule will be handled in the schedule component based on the updated faculty list.
-    }
-  };
-
+  
   return (
     <Card>
       <CardHeader>
@@ -59,10 +143,7 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <Button onClick={handleAdd}>
-                    <PlusCircle className="mr-2 h-4 w-4" />
-                    Ajouter un membre
-                </Button>
+                <AddFacultyForm onAddFaculty={onAddFaculty} />
             </div>
         </div>
       </CardHeader>
@@ -115,7 +196,7 @@ export function FacultyTable({ data }: { data: Faculty[] }) {
                             Modifier
                         </DropdownMenuItem>
                         <DropdownMenuItem
-                            onClick={() => handleDelete(member.id)}
+                            onClick={() => onDeleteFaculty(member.id)}
                             className="text-destructive focus:text-destructive"
                         >
                             <Trash2 className="mr-2 h-4 w-4" />

@@ -2,24 +2,28 @@
 'use client';
 
 import * as React from 'react';
-import { scheduleData as initialScheduleData, faculty as allFaculty, courses as allCourses } from '@/lib/data';
+import { getSchedule, addScheduleEntry, getFaculty, getCourses, Faculty, Course, ScheduleEntry, deleteScheduleEntry } from '@/lib/data';
 import { ScheduleGrid } from '@/components/faculty/schedule-grid';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ScheduleEntry } from '@/lib/types';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { PlusCircle } from 'lucide-react';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+
 
 interface GroupedSchedule {
   [key: string]: ScheduleEntry[];
 }
 
-
-function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntry) => void }) {
+function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: Omit<ScheduleEntry, 'id'>) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
+  const [allCourses, setAllCourses] = React.useState<Course[]>([]);
+  
   const [teacherId, setTeacherId] = React.useState('');
   const [courseCode, setCourseCode] = React.useState('');
   const [dayOfWeek, setDayOfWeek] = React.useState<ScheduleEntry['dayOfWeek']>('Lundi');
@@ -30,6 +34,17 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntr
   const teacherCourses = allCourses.filter(c => c.teacherIds?.includes(teacherId));
   const selectedCourse = allCourses.find(c => c.code === courseCode);
 
+  React.useEffect(() => {
+    async function loadData() {
+      const [facultyData, coursesData] = await Promise.all([getFaculty(), getCourses()]);
+      setAllFaculty(facultyData);
+      setAllCourses(coursesData);
+    }
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen]);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const teacher = allFaculty.find(f => f.id === teacherId);
@@ -39,8 +54,7 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntr
       return;
     }
 
-    const newEntry: ScheduleEntry = {
-      id: `SCH${Date.now()}`,
+    const newEntry: Omit<ScheduleEntry, 'id'> = {
       teacherId,
       teacherName: teacher.name,
       courseName: selectedCourse.name,
@@ -123,14 +137,52 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: ScheduleEntr
   );
 }
 
-
 export default function FacultySchedulePage() {
-  const [schedule, setSchedule] = React.useState(initialScheduleData);
+  const [schedule, setSchedule] = React.useState<ScheduleEntry[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
+  const { toast } = useToast();
 
-  const handleAddEntry = (newEntry: ScheduleEntry) => {
-    setSchedule(prev => [...prev, newEntry]);
+  React.useEffect(() => {
+      async function fetchData() {
+          try {
+              setLoading(true);
+              const scheduleData = await getSchedule();
+              setSchedule(scheduleData);
+          } catch (error) {
+              console.error("Failed to fetch schedule:", error);
+              toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger l\'emploi du temps.' });
+          } finally {
+              setLoading(false);
+          }
+      }
+      fetchData();
+  }, [toast]);
+
+  const handleAddEntry = async (newEntryData: Omit<ScheduleEntry, 'id'>) => {
+    try {
+        const newEntry = await addScheduleEntry(newEntryData);
+        setSchedule(prev => [...prev, newEntry]);
+        toast({ title: 'Cours planifié', description: 'Le cours a été ajouté à l\'emploi du temps.' });
+    } catch (error) {
+        console.error("Failed to add schedule entry:", error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de planifier le cours.' });
+    }
   };
+  
+   const handleDeleteEntry = async (id: string) => {
+      if (confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
+          try {
+              await deleteScheduleEntry(id);
+              setSchedule(prev => prev.filter(s => s.id !== id));
+              toast({ title: 'Entrée supprimée' });
+          } catch (error) {
+              console.error("Failed to delete entry:", error);
+              toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer l\'entrée.' });
+          }
+      }
+  };
+
 
   const groupedSchedules = React.useMemo(() => {
     return schedule.reduce((acc, entry) => {
@@ -150,6 +202,22 @@ export default function FacultySchedulePage() {
         entry.courseName.toLowerCase().includes(searchTerm.toLowerCase())
     )
   ).sort();
+  
+  if (loading) {
+      return (
+          <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                  <div>
+                      <Skeleton className="h-8 w-72" />
+                      <Skeleton className="h-4 w-96 mt-2" />
+                  </div>
+                  <Skeleton className="h-10 w-72" />
+              </div>
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+          </div>
+      );
+  }
 
   return (
     <div className="space-y-6">
@@ -178,7 +246,7 @@ export default function FacultySchedulePage() {
               <CardTitle>{groupName.replace(' - ', ' | ')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <ScheduleGrid schedule={groupedSchedules[groupName]} />
+              <ScheduleGrid schedule={groupedSchedules[groupName]} onDelete={handleDeleteEntry} />
             </CardContent>
           </Card>
         ))

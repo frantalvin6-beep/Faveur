@@ -19,7 +19,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { TeacherAttendance, ProgramStatus } from '@/lib/types';
+import { TeacherAttendance, ProgramStatus, Course, Faculty, CourseAssignment } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -34,7 +34,7 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { faculty as allFaculty, courseAssignments as allAssignments, courses as allCourses } from '@/lib/data';
+import { getFaculty, getCourseAssignments, getCourses } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '../ui/command';
@@ -53,8 +53,12 @@ function getStatusBadgeVariant(status: TeacherAttendance['status']) {
   }
 }
 
-function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendance) => void }) {
+function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: Omit<TeacherAttendance, 'id'>) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
+  const [allAssignments, setAllAssignments] = React.useState<CourseAssignment[]>([]);
+  const [allCourses, setAllCourses] = React.useState<Course[]>([]);
+  
   const [teacherId, setTeacherId] = React.useState('');
   const [courseCode, setCourseCode] = React.useState('');
   const [date, setDate] = React.useState('');
@@ -69,6 +73,18 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
   const teacherCourses = allAssignments.filter(a => a.teacherId === teacherId);
   const courseDetails = allCourses.find(c => c.code === courseCode);
   const courseChapters = courseDetails?.chapters || [];
+
+  React.useEffect(() => {
+    async function loadData() {
+      const [facultyData, assignmentsData, coursesData] = await Promise.all([getFaculty(), getCourseAssignments(), getCourses()]);
+      setAllFaculty(facultyData);
+      setAllAssignments(assignmentsData);
+      setAllCourses(coursesData);
+    }
+    if (isOpen) {
+      loadData();
+    }
+  }, [isOpen]);
 
   const handleChapterChange = (chapterTitle: string) => {
     setSelectedChapter(chapterTitle);
@@ -94,8 +110,7 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
         programStatus = { chapter: selectedChapter, lessons: selectedLessons };
     }
 
-    const newEntry: TeacherAttendance = {
-      id: `ATT${Date.now()}`,
+    const newEntry: Omit<TeacherAttendance, 'id'> = {
       teacherId,
       teacherName: teacher.name,
       courseName: course.courseName,
@@ -233,7 +248,7 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: TeacherAttendan
 }
 
 
-export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: TeacherAttendance[], onAddEntry: (entry: TeacherAttendance) => void, onDeleteEntry: (id: string) => void }) {
+export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: TeacherAttendance[], onAddEntry: (entry: Omit<TeacherAttendance, 'id'>) => void, onDeleteEntry: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredAttendance = data.filter((item) =>

@@ -2,19 +2,73 @@
 'use client';
 
 import * as React from 'react';
-import { teacherWorkload } from '@/lib/data';
+import { TeacherWorkload, getTeacherWorkloads, addTeacherWorkload, deleteTeacherWorkload } from '@/lib/data';
 import { TeacherWorkloadTable } from '@/components/faculty/teacher-workload-table';
-import { useIsMobile } from '@/hooks/use-mobile'; // This is a bit of a hack to force re-rendering on navigation
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
+import { useIsMobile } from '@/hooks/use-mobile';
+
 
 export default function TeacherWorkloadPage() {
-  // Re-fetch data on component mount to get updates from other pages
-  const [workloadData, setWorkloadData] = React.useState(teacherWorkload);
-  const isMobile = useIsMobile(); // unused, but its change on route change can trigger a re-render
+  const [workloadData, setWorkloadData] = React.useState<TeacherWorkload[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const { toast } = useToast();
+  const isMobile = useIsMobile(); // Re-renders on route change
 
   React.useEffect(() => {
-    // This simulates fetching the latest data when the page is viewed
-    setWorkloadData([...teacherWorkload]);
-  }, [isMobile]); // Re-run when route changes
+    async function fetchData() {
+        try {
+            setLoading(true);
+            const data = await getTeacherWorkloads();
+            setWorkloadData(data);
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchData();
+  }, [toast, isMobile]);
+  
+  const handleAddWorkload = async (workload: Omit<TeacherWorkload, 'id'>) => {
+    // Check if a workload for this teacher and course already exists
+    if (workloadData.some(w => w.teacherId === workload.teacherId && w.courseName === workload.courseName)) {
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Une charge horaire pour cet enseignant et ce cours existe déjà.' });
+        return;
+    }
+
+    try {
+        const newWorkload = await addTeacherWorkload(workload);
+        setWorkloadData(prev => [...prev, newWorkload]);
+        toast({ title: 'Charge horaire ajoutée' });
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter la charge horaire.' });
+    }
+  };
+  
+  const handleDeleteWorkload = async (id: string) => {
+      if(confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
+          try {
+              await deleteTeacherWorkload(id);
+              setWorkloadData(prev => prev.filter(w => w.id !== id));
+              toast({ title: 'Charge horaire supprimée' });
+          } catch(error) {
+              console.error(error);
+              toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer la charge horaire.' });
+          }
+      }
+  };
+
+  if (loading) {
+      return (
+          <div className="space-y-4">
+              <Skeleton className="h-8 w-96" />
+              <Skeleton className="h-80 w-full" />
+          </div>
+      );
+  }
 
   return (
     <div>
@@ -22,7 +76,11 @@ export default function TeacherWorkloadPage() {
       <p className="text-muted-foreground mb-4">
         Suivi des heures de cours prévues et effectuées par chaque enseignant.
       </p>
-      <TeacherWorkloadTable data={workloadData} />
+      <TeacherWorkloadTable 
+        data={workloadData} 
+        onAddWorkload={handleAddWorkload}
+        onDeleteWorkload={handleDeleteWorkload}
+      />
     </div>
   );
 }

@@ -2,104 +2,65 @@
 'use client';
 
 import * as React from 'react';
-import { teacherAttendance as initialAttendance, teacherWorkload as initialWorkload, scheduleData } from '@/lib/data';
+import { getTeacherAttendance, addTeacherAttendance, deleteTeacherAttendance, TeacherAttendance } from '@/lib/data';
 import { AttendanceTable } from '@/components/faculty/attendance-table';
-import { TeacherAttendance, TeacherWorkload } from '@/lib/types';
-import { useIsMobile } from '@/hooks/use-mobile'; // This is a bit of a hack to force re-rendering on navigation
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function AttendancePage() {
-  const [attendance, setAttendance] = React.useState(initialAttendance);
-  const [workload, setWorkload] = React.useState(initialWorkload);
-  const isMobile = useIsMobile(); // unused, but its change on route change can trigger a re-render
+  const [attendance, setAttendance] = React.useState<TeacherAttendance[]>([]);
+  const [loading, setLoading] = React.useState(true);
+  const { toast } = useToast();
 
   React.useEffect(() => {
-    // This simulates fetching the latest data when the page is viewed
-    setWorkload([...initialWorkload]);
-  }, [isMobile]); // Re-run when route changes
+    async function fetchData() {
+        try {
+            setLoading(true);
+            const attendanceData = await getTeacherAttendance();
+            setAttendance(attendanceData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les présences.' });
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchData();
+  }, [toast]);
 
 
-  const handleAddEntry = (newEntry: TeacherAttendance) => {
-    // Add to attendance list
-    setAttendance(prev => [...prev, newEntry].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
-
-    // If present, update workload
-    if (newEntry.status === 'Présent') {
-      const scheduleEntry = scheduleData.find(
-        s => s.teacherId === newEntry.teacherId && s.courseCode === newEntry.courseCode
-      );
-      
-      if (scheduleEntry) {
-        const startTime = new Date(`1970-01-01T${scheduleEntry.startTime}:00`);
-        const endTime = new Date(`1970-01-01T${scheduleEntry.endTime}:00`);
-        const durationInHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-
-        setWorkload(prevWorkload => {
-          const workloadIndex = prevWorkload.findIndex(
-            w => w.teacherId === newEntry.teacherId && w.courseName === scheduleEntry.courseName
-          );
-
-          if (workloadIndex > -1) {
-            const updatedWorkload = [...prevWorkload];
-            const currentWorkload = updatedWorkload[workloadIndex];
-            updatedWorkload[workloadIndex] = {
-              ...currentWorkload,
-              completedHours: currentWorkload.completedHours + durationInHours,
-            };
-            // Note: In a real app, you would persist this change to the database.
-            // For now, we update the original imported data to simulate persistence across pages.
-            const originalWorkloadIndex = initialWorkload.findIndex(w => w.id === currentWorkload.id);
-            if (originalWorkloadIndex > -1) {
-                initialWorkload[originalWorkloadIndex] = updatedWorkload[workloadIndex];
-            }
-            return updatedWorkload;
-          }
-          return prevWorkload;
-        });
+  const handleAddEntry = async (newEntryData: Omit<TeacherAttendance, 'id'>) => {
+    try {
+        const newEntry = await addTeacherAttendance(newEntryData);
+        setAttendance(prev => [newEntry, ...prev]);
+        toast({ title: 'Présence enregistrée' });
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'enregistrer la présence.' });
+    }
+  };
+  
+  const handleDeleteEntry = async (id: string) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) {
+      try {
+          await deleteTeacherAttendance(id);
+          setAttendance(prev => prev.filter(a => a.id !== id));
+          toast({ title: 'Entrée supprimée' });
+      } catch (error) {
+          console.error(error);
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer l\'entrée.' });
       }
     }
   };
   
-  const handleDeleteEntry = (id: string) => {
-    if (confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) {
-      const entryToDelete = attendance.find(a => a.id === id);
-      if (!entryToDelete) return;
-
-      // Reverse the workload update if the deleted entry was 'Present'
-      if (entryToDelete.status === 'Présent') {
-        const scheduleEntry = scheduleData.find(
-          s => s.teacherId === entryToDelete.teacherId && s.courseCode === entryToDelete.courseCode
-        );
-
-        if (scheduleEntry) {
-            const startTime = new Date(`1970-01-01T${scheduleEntry.startTime}:00`);
-            const endTime = new Date(`1970-01-01T${scheduleEntry.endTime}:00`);
-            const durationInHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
-
-            setWorkload(prevWorkload => {
-                const workloadIndex = prevWorkload.findIndex(
-                    w => w.teacherId === entryToDelete.teacherId && w.courseName === scheduleEntry.courseName
-                );
-                if (workloadIndex > -1) {
-                    const updatedWorkload = [...prevWorkload];
-                    const currentWorkload = updatedWorkload[workloadIndex];
-                    updatedWorkload[workloadIndex] = {
-                        ...currentWorkload,
-                        completedHours: Math.max(0, currentWorkload.completedHours - durationInHours),
-                    };
-                    const originalWorkloadIndex = initialWorkload.findIndex(w => w.id === currentWorkload.id);
-                    if (originalWorkloadIndex > -1) {
-                        initialWorkload[originalWorkloadIndex] = updatedWorkload[workloadIndex];
-                    }
-                    return updatedWorkload;
-                }
-                return prevWorkload;
-            });
-        }
-      }
-      
-      setAttendance(attendance.filter(a => a.id !== id));
-    }
-  };
+  if (loading) {
+    return (
+        <div className="space-y-4">
+            <Skeleton className="h-8 w-96" />
+            <Skeleton className="h-80 w-full" />
+        </div>
+    );
+  }
 
   return (
     <div>

@@ -2,7 +2,7 @@
 
 import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter } from './types';
 import { db } from './firebase';
-import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 
 
 // --- STUDENT DATA SERVICES ---
@@ -19,10 +19,9 @@ export async function getStudent(id: string): Promise<Student | null> {
 }
 
 export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
-    // Generate a new document reference with a unique ID
     const newStudentRef = doc(collection(db, 'students'));
     const newStudent = { ...studentData, id: newStudentRef.id };
-    await setDoc(newStudentRef, newStudent);
+    await setDoc(newStudentRef, studentData); // Store data without the id inside the document
     return newStudent;
 }
 
@@ -46,7 +45,7 @@ export async function getFaculty(): Promise<Faculty[]> {
 export async function addFaculty(facultyMember: Omit<Faculty, 'id'>): Promise<Faculty> {
     const docRef = doc(collection(db, 'faculty'));
     const newFaculty = { ...facultyMember, id: docRef.id };
-    await setDoc(docRef, newFaculty);
+    await setDoc(docRef, facultyMember);
     return newFaculty;
 }
 
@@ -65,22 +64,10 @@ export async function getDepartments(): Promise<Department[]> {
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Department));
 }
 
-export async function addDepartment(department: Omit<Department, 'id' | 'parentId'> & { parentId?: string }): Promise<Department> {
+export async function addDepartment(department: Omit<Department, 'id'>): Promise<Department> {
     const docRef = doc(collection(db, 'departments'));
-    
-    // Construct the final ID
-    const id = department.parentId 
-      ? `${department.parentId}-OPT${docRef.id.slice(-4)}`
-      : `DEP${docRef.id.slice(-4)}`;
-
-    const newDepartment: Department = {
-        ...department,
-        id: id,
-    };
-    // remove parentId before saving
-    delete (newDepartment as any).parentId;
-
-    await setDoc(doc(db, 'departments', id), newDepartment);
+    const newDepartment = { ...department, id: docRef.id };
+    await setDoc(docRef, department);
     return newDepartment;
 }
 
@@ -121,6 +108,136 @@ export async function addStudentFinance(finance: StudentFinance): Promise<void> 
 
 export async function updateStudentFinance(matricule: string, data: Partial<StudentFinance>): Promise<void> {
     await updateDoc(doc(db, 'studentFinances', matricule), data);
+}
+
+// --- COURSE ASSIGNMENT SERVICES ---
+export async function getCourseAssignments(): Promise<CourseAssignment[]> {
+    const snapshot = await getDocs(collection(db, 'courseAssignments'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as CourseAssignment));
+}
+
+export async function addCourseAssignment(assignment: Omit<CourseAssignment, 'id'>): Promise<CourseAssignment> {
+    const docRef = doc(collection(db, 'courseAssignments'));
+    const newAssignment = { ...assignment, id: docRef.id };
+    await setDoc(docRef, assignment);
+    return newAssignment;
+}
+
+export async function deleteCourseAssignment(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'courseAssignments', id));
+}
+
+// --- SCHEDULE SERVICES ---
+export async function getSchedule(): Promise<ScheduleEntry[]> {
+    const snapshot = await getDocs(collection(db, 'schedule'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ScheduleEntry));
+}
+
+export async function addScheduleEntry(entry: Omit<ScheduleEntry, 'id'>): Promise<ScheduleEntry> {
+    const docRef = doc(collection(db, 'schedule'));
+    const newEntry = { ...entry, id: docRef.id };
+    await setDoc(docRef, entry);
+    return newEntry;
+}
+
+export async function deleteScheduleEntry(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'schedule', id));
+}
+
+// --- TEACHER WORKLOAD SERVICES ---
+export async function getTeacherWorkloads(): Promise<TeacherWorkload[]> {
+    const snapshot = await getDocs(collection(db, 'teacherWorkload'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeacherWorkload));
+}
+
+export async function addTeacherWorkload(workload: Omit<TeacherWorkload, 'id'>): Promise<TeacherWorkload> {
+    const docRef = doc(collection(db, 'teacherWorkload'));
+    const newWorkload = { ...workload, id: docRef.id };
+    await setDoc(docRef, workload);
+    return newWorkload;
+}
+
+export async function updateTeacherWorkload(id: string, data: Partial<TeacherWorkload>): Promise<void> {
+    await updateDoc(doc(db, 'teacherWorkload', id), data);
+}
+
+export async function deleteTeacherWorkload(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'teacherWorkload', id));
+}
+
+
+// --- TEACHER ATTENDANCE SERVICES ---
+export async function getTeacherAttendance(): Promise<TeacherAttendance[]> {
+    const snapshot = await getDocs(collection(db, 'teacherAttendance'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as TeacherAttendance));
+}
+
+export async function addTeacherAttendance(attendance: Omit<TeacherAttendance, 'id'>): Promise<TeacherAttendance> {
+    const docRef = doc(collection(db, 'teacherAttendance'));
+    const newAttendance = { ...attendance, id: docRef.id };
+    await setDoc(docRef, attendance);
+
+    // If present, update workload
+    if (newAttendance.status === 'Présent') {
+        const schedule = await getSchedule();
+        const scheduleEntry = schedule.find(
+            s => s.teacherId === newAttendance.teacherId && s.courseCode === newAttendance.courseCode
+        );
+
+        if (scheduleEntry) {
+            const workloads = await getTeacherWorkloads();
+            const workloadQuery = query(collection(db, "teacherWorkload"), where("teacherId", "==", newAttendance.teacherId), where("courseName", "==", scheduleEntry.courseName));
+            const workloadSnapshot = await getDocs(workloadQuery);
+            
+            if (!workloadSnapshot.empty) {
+                const workloadDoc = workloadSnapshot.docs[0];
+                const currentWorkload = workloadDoc.data() as TeacherWorkload;
+                
+                const startTime = new Date(`1970-01-01T${scheduleEntry.startTime}:00`);
+                const endTime = new Date(`1970-01-01T${scheduleEntry.endTime}:00`);
+                const durationInHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+
+                await updateTeacherWorkload(workloadDoc.id, {
+                    completedHours: currentWorkload.completedHours + durationInHours
+                });
+            }
+        }
+    }
+    return newAttendance;
+}
+
+export async function deleteTeacherAttendance(id: string): Promise<void> {
+    const attendanceDoc = await getDoc(doc(db, 'teacherAttendance', id));
+    if (!attendanceDoc.exists()) return;
+
+    const attendanceToDelete = attendanceDoc.data() as TeacherAttendance;
+
+    // Reverse the workload update if the deleted entry was 'Present'
+    if (attendanceToDelete.status === 'Présent') {
+        const schedule = await getSchedule();
+        const scheduleEntry = schedule.find(
+            s => s.teacherId === attendanceToDelete.teacherId && s.courseCode === attendanceToDelete.courseCode
+        );
+
+        if (scheduleEntry) {
+            const workloadQuery = query(collection(db, "teacherWorkload"), where("teacherId", "==", attendanceToDelete.teacherId), where("courseName", "==", scheduleEntry.courseName));
+            const workloadSnapshot = await getDocs(workloadQuery);
+            if (!workloadSnapshot.empty) {
+                const workloadDoc = workloadSnapshot.docs[0];
+                const currentWorkload = workloadDoc.data() as TeacherWorkload;
+
+                const startTime = new Date(`1970-01-01T${scheduleEntry.startTime}:00`);
+                const endTime = new Date(`1970-01-01T${scheduleEntry.endTime}:00`);
+                const durationInHours = (endTime.getTime() - startTime.getTime()) / (1000 * 60 * 60);
+                
+                await updateTeacherWorkload(workloadDoc.id, {
+                    completedHours: Math.max(0, currentWorkload.completedHours - durationInHours),
+                });
+            }
+        }
+    }
+
+    await deleteDoc(doc(db, 'teacherAttendance', id));
 }
 
 
@@ -196,11 +313,8 @@ const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'totalAPay
 ];
 
 // Re-export original functions with temporary mock data for other pages
-export const scheduleData: ScheduleEntry[] = [];
 export const examGrades: ExamGrade[] = [];
 export const examSchedule: ExamSchedule[] = [];
-export const teacherWorkload: TeacherWorkload[] = [];
-export const teacherAttendance: TeacherAttendance[] = [];
 export const messages: Message[] = [];
 export const adminStaff: AdminStaff[] = [];
 export const facultyFinances: FacultyFinance[] = [];
@@ -274,7 +388,7 @@ export function calculerComptabilite(transactions: AccountingTransaction[]) {
   return { revenus, depenses, solde: revenus - depenses };
 }
 
-export function calculerSalaireComplet(
+export async function calculerSalaireComplet(
     teacherId: string,
     montantPaye: number,
     tauxL1: number,
@@ -282,10 +396,11 @@ export function calculerSalaireComplet(
     tauxL3: number,
     tauxMaster: number
 ) {
-    const teacherWorkloads = teacherWorkload.filter(w => w.teacherId === teacherId);
+    const teacherWorkloads = await getTeacherWorkloads();
+    const filteredWorkloads = teacherWorkloads.filter(w => w.teacherId === teacherId);
 
     const getHoursForLevel = (levelPrefix: string) => 
-        teacherWorkloads.filter(w => w.level.startsWith(levelPrefix)).reduce((sum, w) => sum + w.completedHours, 0);
+        filteredWorkloads.filter(w => w.level.startsWith(levelPrefix)).reduce((sum, w) => sum + w.completedHours, 0);
 
     const heuresL1 = getHoursForLevel('Licence 1');
     const heuresL2 = getHoursForLevel('Licence 2');
@@ -317,3 +432,4 @@ export function calculerFinanceAdmin(
 // These are now obsolete and will be removed once all pages are migrated.
 export const initialCourses = courses_data;
 export const initialStudents = students_data;
+export const teacherWorkload: TeacherWorkload[] = []; // Obsolete
