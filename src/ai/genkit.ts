@@ -2,7 +2,6 @@
 
 import {genkit} from 'genkit';
 import {googleAI} from '@genkit-ai/googleai';
-import {defineFlow} from 'genkit';
 
 export const ai = genkit({
   plugins: [googleAI()],
@@ -10,4 +9,4 @@ export const ai = genkit({
 });
 
 // Dummy flow to keep genkit happy when no flows are defined
-defineFlow({name: 'dummyFlow'}, async () => {});
+ai.defineFlow({name: 'dummyFlow'}, async () => {});
