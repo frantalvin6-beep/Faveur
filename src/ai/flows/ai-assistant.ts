@@ -42,7 +42,7 @@ const aiAssistantFlow = ai.defineFlow(
     const {history, prompt} = input;
     
     const llmResponse = await ai.generate({
-      model: 'googleai/gemini-2.0-flash',
+      model: 'googleai/gemini-1.5-flash',
       prompt: prompt,
       history: [
         new Message({role: 'system', content: [{text: systemPrompt}]}),
