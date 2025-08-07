@@ -1,13 +1,19 @@
 'use client';
 
 import * as React from 'react';
-import { facultyFinances as initialFacultyFinances, FacultyFinance, calculerSalaireComplet, teacherWorkload, accountingTransactions } from '@/lib/data';
+import { facultyFinances as initialFacultyFinances, FacultyFinance, calculerSalaireComplet, teacherWorkload, accountingTransactions, faculty } from '@/lib/data';
 import { FacultyFinancesTable } from '@/components/finances/faculty-finances-table';
 import { useToast } from '@/hooks/use-toast';
+import { detectAnomalies, DetectAnomaliesOutput } from '@/ai/flows/detect-finance-anomalies';
+import { Button } from '@/components/ui/button';
+import { Bot, Loader2 } from 'lucide-react';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 export default function FacultyFinancesPage() {
   const [facultyFinances, setFacultyFinances] = React.useState(initialFacultyFinances);
   const { toast } = useToast();
+  const [isLoadingAnomalies, setIsLoadingAnomalies] = React.useState(false);
+  const [analysisResult, setAnalysisResult] = React.useState<DetectAnomaliesOutput | null>(null);
 
   // Recalculate all finances based on current workload whenever the component mounts
   // This simulates data being fresh from a database.
@@ -78,12 +84,73 @@ export default function FacultyFinancesPage() {
     }
   };
 
+  const handleAnalyzeAnomalies = async () => {
+    setIsLoadingAnomalies(true);
+    setAnalysisResult(null);
+    try {
+        const result = await detectAnomalies({
+            financeData: JSON.stringify(facultyFinances),
+            personnelData: JSON.stringify(faculty),
+        });
+        setAnalysisResult(result);
+        toast({
+            title: "Analyse terminée",
+            description: `L'IA a trouvé ${result.anomalies.length} anomalie(s) potentielle(s).`
+        });
+    } catch (error) {
+        console.error(error);
+        toast({
+            variant: "destructive",
+            title: "Erreur d'analyse",
+            description: "Impossible de lancer l'analyse des anomalies."
+        });
+    } finally {
+        setIsLoadingAnomalies(false);
+    }
+  };
+
+
   return (
     <div className="space-y-6">
-        <h1 className="text-3xl font-bold">Finances des Enseignants</h1>
-        <p className="text-muted-foreground">
-          Suivi de la rémunération des enseignants basée sur les heures de cours et les taux horaires.
-        </p>
+        <div>
+            <h1 className="text-3xl font-bold">Finances des Enseignants</h1>
+            <p className="text-muted-foreground">
+            Suivi de la rémunération des enseignants basée sur les heures de cours et les taux horaires.
+            </p>
+        </div>
+        
+        <div className="flex items-center gap-4">
+             <Button onClick={handleAnalyzeAnomalies} disabled={isLoadingAnomalies}>
+                {isLoadingAnomalies ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Bot className="mr-2 h-4 w-4" />}
+                Analyser les anomalies avec l'IA
+            </Button>
+        </div>
+        
+        {analysisResult && (
+            <div className="space-y-4">
+                {analysisResult.anomalies.length > 0 ? (
+                     analysisResult.anomalies.map((anomaly, index) => (
+                        <Alert key={index} variant={anomaly.severity === 'Haute' ? 'destructive' : 'default'}>
+                            <AlertTitle>
+                                Anomalie de sévérité {anomaly.severity}
+                            </AlertTitle>
+                            <AlertDescription>
+                                <p className='font-semibold'>{anomaly.description}</p>
+                                <p className='mt-1 text-xs'>Recommandation: {anomaly.recommendation}</p>
+                            </AlertDescription>
+                        </Alert>
+                    ))
+                ) : (
+                    <Alert variant="default" className='border-green-500'>
+                        <AlertTitle className='text-green-600'>Aucune anomalie détectée</AlertTitle>
+                        <AlertDescription>
+                            L'analyse par l'IA n'a révélé aucune incohérence ou anomalie dans les données de paie.
+                        </AlertDescription>
+                    </Alert>
+                )}
+            </div>
+        )}
+
         <FacultyFinancesTable 
             data={facultyFinances} 
             onAddFinance={handleAddFinance}

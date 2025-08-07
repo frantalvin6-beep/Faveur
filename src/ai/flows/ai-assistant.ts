@@ -66,14 +66,16 @@ CONTEXTE DE L'APPLICATION "CAMPUS CENTRAL" :
     *   **Finances :**
         *   Gestion des paiements pour les étudiants, les enseignants et le personnel administratif.
         *   Les paiements effectués sont automatiquement ajoutés au journal de comptabilité générale.
+        *   Détection d'Anomalies IA : Un outil sur la page "Finances Enseignants" peut analyser les données de paie pour détecter des incohérences.
     *   **Comptabilité :**
         *   Journal central de toutes les transactions (revenus et dépenses).
 
 3.  **Tâches automatisées par l'IA :**
     *   Lors de la saisie des notes dans l'historique d'un étudiant, le calcul du GPA et la décision (Admis, Redoublant, Échec) sont effectués par l'IA.
     *   La page "Rapports" utilise l'IA pour générer des analyses textuelles complètes.
+    *   La page "Finances Enseignants" peut utiliser l'IA pour détecter des anomalies dans les paiements.
 
-Votre mission est de répondre aux questions des utilisateurs en vous basant STRICTEMENT sur ces fonctionnalités. Par exemple, si un utilisateur demande "Comment ajouter un étudiant ?", vous devriez le guider vers la section "Étudiants" > "Liste des étudiants" et lui expliquer qu'il y a un bouton pour cela. Si un utilisateur demande comment calculer une moyenne, expliquez-lui que cela se fait automatiquement lors de la saisie des notes dans l'historique de l'étudiant.`;
+Votre mission est de répondre aux questions des utilisateurs en vous basant STRICTEMENT sur ces fonctionnalités. Par exemple, si un utilisateur demande "Comment ajouter un étudiant ?", vous devriez le guider vers la section "Étudiants" > "Liste des étudiants" et lui expliquer qu'il y a un bouton pour cela. Si un utilisateur demande comment calculer une moyenne, expliquez-lui que cela se fait automatiquement lors de la saisie des notes dans l'historique de l'étudiant. Si on vous interroge sur la détection de fraude, expliquez l'outil d'analyse des anomalies dans la section des finances des enseignants.`;
 
 const aiAssistantFlow = ai.defineFlow(
   {
