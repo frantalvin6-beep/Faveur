@@ -1,8 +1,8 @@
 
 'use client'
 
-import { useState, useMemo } from 'react';
-import { departments as allDepartments, examGrades as allGrades, students as allStudents, courses as allCourses, initialCourses, examGrades } from '@/lib/data';
+import { useState, useMemo, useEffect } from 'react';
+import { getDepartments, getExamGrades, getStudents, getCourses, addExamGrade, deleteExamGrade, updateExamGrade, Course, Student } from '@/lib/data';
 import { GradesTable } from '@/components/exams/grades-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -21,9 +21,8 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { courseAssignments } from '@/lib/data';
-import { students } from '@/lib/data';
 import { toast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface ExamSession {
     courseName: string;
@@ -37,7 +36,7 @@ interface GroupedGrades {
     [key: string]: ExamSession[];
 }
 
-function AddGradeForm({ examSession, department, onAddGrade }: { examSession: ExamSession, department: string, onAddGrade: (grade: ExamGrade) => void }) {
+function AddGradeForm({ examSession, department, onAddGrade, allStudents, allCourses }: { examSession: ExamSession, department: string, onAddGrade: (grade: ExamGrade) => void, allStudents: Student[], allCourses: Course[] }) {
     const [isOpen, setIsOpen] = useState(false);
     const [studentId, setStudentId] = useState('');
     const [grade, setGrade] = useState<number | ''>('');
@@ -47,7 +46,7 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
         !examSession.grades.some(g => g.studentId === s.id)
     );
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const student = allStudents.find(s => s.id === studentId);
         if (!student || grade === '') {
@@ -57,26 +56,31 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
 
         const course = allCourses.find(c => c.code === examSession.courseCode);
         
-        const newGrade: ExamGrade = {
-            id: `G${Date.now()}`,
-            studentId,
-            studentName: student.name,
-            courseName: examSession.courseName,
-            courseCode: examSession.courseCode,
-            teacherName: examSession.teacherName,
-            department: department,
-            examType: examSession.examType,
-            grade: Number(grade),
-            coefficient: course?.credits || 1, 
-            date: new Date().toISOString().split('T')[0],
-        };
-        onAddGrade(newGrade);
-        
-        toast({ title: "Note ajoutée", description: `La note de ${newGrade.studentName} a été enregistrée.` });
-
-        setIsOpen(false);
-        setStudentId('');
-        setGrade('');
+        try {
+            const newGradeData: Omit<ExamGrade, 'id'> = {
+                studentId,
+                studentName: student.name,
+                courseName: examSession.courseName,
+                courseCode: examSession.courseCode,
+                teacherName: examSession.teacherName,
+                department: department,
+                examType: examSession.examType,
+                grade: Number(grade),
+                coefficient: course?.credits || 1, 
+                date: new Date().toISOString().split('T')[0],
+            };
+            const newGrade = await addExamGrade(newGradeData);
+            onAddGrade(newGrade);
+            
+            toast({ title: "Note ajoutée", description: `La note de ${newGrade.studentName} a été enregistrée.` });
+    
+            setIsOpen(false);
+            setStudentId('');
+            setGrade('');
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'ajouter la note." });
+        }
     };
 
     return (
@@ -122,77 +126,65 @@ function AddGradeForm({ examSession, department, onAddGrade }: { examSession: Ex
     )
 }
 
-function processAndGetAllGrades() {
-    const allStudentGrades = allGrades.map(g => g); // Create a mutable copy
-
-    students.forEach(student => {
-        student.academicHistory.forEach(record => {
-            record.courses.forEach(course => {
-                const assignedCourse = courseAssignments.find(ca => ca.courseName === course.name && allDepartments.find(d => d.name === ca.department)?.id === allDepartments.find(d=>d.name === student.department)?.id.split('-')[0]);
-                const gradeId = `G-${student.id}-${record.year}-${record.semester}-${course.name}`;
-
-                // Avoid adding duplicate grades if they already exist from academic history
-                if (!allStudentGrades.some(g => g.id === gradeId)) {
-                    allStudentGrades.push({
-                        id: gradeId,
-                        studentId: student.id,
-                        studentName: student.name,
-                        courseCode: assignedCourse?.courseCode || 'N/A',
-                        courseName: course.name,
-                        teacherName: assignedCourse?.teacherName || 'N/A',
-                        department: student.department,
-                        examType: 'Final', 
-                        grade: course.grade,
-                        coefficient: course.coefficient,
-                        date: `${record.year}-01-01`, 
-                    });
-                }
-            });
-        });
-    });
-
-    return allStudentGrades;
-}
-
-
 export default function GradesPage() {
-  const [grades, setGrades] = useState<ExamGrade[]>(processAndGetAllGrades());
+  const [grades, setGrades] = useState<ExamGrade[]>([]);
+  const [allStudents, setAllStudents] = useState<Student[]>([]);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
+  useEffect(() => {
+    async function fetchData() {
+        try {
+            setLoading(true);
+            const [gradesData, studentsData, coursesData] = await Promise.all([
+                getExamGrades(),
+                getStudents(),
+                getCourses()
+            ]);
+            setGrades(gradesData);
+            setAllStudents(studentsData);
+            setAllCourses(coursesData);
+        } catch (error) {
+            console.error(error);
+            toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les données." });
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchData();
+  }, []);
+
   const handleAddGrade = (newGrade: ExamGrade) => {
-    // Add to the shared data source
-    allGrades.push(newGrade);
-    // Update local state to re-render
     setGrades(prev => [...prev, newGrade]);
   };
   
-  const handleGradeUpdate = (updatedGrade: ExamGrade) => {
-    // Update the shared data source
-    const index = allGrades.findIndex(g => g.id === updatedGrade.id);
-    if (index > -1) {
-        allGrades[index] = updatedGrade;
+  const handleGradeUpdate = async (updatedGrade: ExamGrade) => {
+    try {
+        await updateExamGrade(updatedGrade.id, updatedGrade);
+        setGrades(prev => prev.map(g => g.id === updatedGrade.id ? updatedGrade : g));
+    } catch (error) {
+        console.error(error);
+        toast({ variant: "destructive", title: "Erreur", description: "Impossible de mettre à jour la note." });
     }
-    // Update local state to re-render
-    setGrades(prev => prev.map(g => g.id === updatedGrade.id ? updatedGrade : g));
   };
   
-  const handleGradeDelete = (gradeId: string) => {
+  const handleGradeDelete = async (gradeId: string) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
-      // Remove from the shared data source
-      const index = allGrades.findIndex(g => g.id === gradeId);
-      if (index > -1) {
-          allGrades.splice(index, 1);
-      }
-      // Remove from local state to re-render
-      setGrades(prev => prev.filter(g => g.id !== gradeId));
-      toast({ variant: 'destructive', title: 'Note supprimée' });
+        try {
+            await deleteExamGrade(gradeId);
+            setGrades(prev => prev.filter(g => g.id !== gradeId));
+            toast({ variant: 'destructive', title: 'Note supprimée' });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: "destructive", title: "Erreur", description: "Impossible de supprimer la note." });
+        }
     }
   };
 
   const groupedGrades = useMemo(() => {
     const groups: GroupedGrades = {};
 
-    // Use the component's state for rendering
     grades.forEach(grade => {
       const department = grade.department;
       if (!groups[department]) {
@@ -215,7 +207,6 @@ export default function GradesPage() {
       session.grades.push(grade);
     });
     
-    // Sort sessions within each department
     for (const dept in groups) {
       groups[dept].sort((a,b) => a.courseName.localeCompare(b.courseName));
     }
@@ -265,6 +256,22 @@ export default function GradesPage() {
 
   const sortedDepartmentKeys = Object.keys(groupedGrades).sort();
 
+  if (loading) {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <Skeleton className="h-8 w-72" />
+                    <Skeleton className="h-4 w-96 mt-2" />
+                </div>
+                <Skeleton className="h-10 w-72" />
+            </div>
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
+        </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -294,7 +301,7 @@ export default function GradesPage() {
                         <CardDescription>Enseignant: {session.teacherName} | {session.grades.length} notes saisies</CardDescription>
                     </div>
                     <div className="flex items-center gap-2">
-                         <AddGradeForm examSession={session} department={departmentName} onAddGrade={handleAddGrade} />
+                         <AddGradeForm examSession={session} department={departmentName} onAddGrade={handleAddGrade} allStudents={allStudents} allCourses={allCourses} />
                     </div>
                 </div>
               </CardHeader>

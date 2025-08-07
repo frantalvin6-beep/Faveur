@@ -19,9 +19,9 @@ export async function getStudent(id: string): Promise<Student | null> {
 }
 
 export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
-    const newStudentRef = doc(collection(db, 'students'));
-    const newStudent = { ...studentData, id: newStudentRef.id };
-    await setDoc(newStudentRef, studentData); // Store data without the id inside the document
+    const docRef = doc(collection(db, 'students'));
+    const newStudent = { ...studentData, id: docRef.id };
+    await setDoc(docRef, studentData); // Store data without the id inside the document
     return newStudent;
 }
 
@@ -93,6 +93,28 @@ export async function updateCourse(code: string, data: Partial<Course>): Promise
 
 export async function deleteCourse(code: string): Promise<void> {
     await deleteDoc(doc(db, 'courses', code));
+}
+
+// --- EXAM GRADES SERVICES ---
+
+export async function getExamGrades(): Promise<ExamGrade[]> {
+    const snapshot = await getDocs(collection(db, 'examGrades'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamGrade));
+}
+
+export async function addExamGrade(grade: Omit<ExamGrade, 'id'>): Promise<ExamGrade> {
+    const docRef = doc(collection(db, 'examGrades'));
+    const newGrade = { ...grade, id: docRef.id };
+    await setDoc(docRef, grade);
+    return newGrade;
+}
+
+export async function updateExamGrade(id: string, data: Partial<ExamGrade>): Promise<void> {
+    await updateDoc(doc(db, 'examGrades', id), data);
+}
+
+export async function deleteExamGrade(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'examGrades', id));
 }
 
 

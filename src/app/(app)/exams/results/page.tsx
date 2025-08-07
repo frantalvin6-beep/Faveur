@@ -2,27 +2,41 @@
 'use client';
 
 import * as React from 'react';
-import { initialStudents, initialCourses, examGrades as allGrades, departments as allDepartments } from '@/lib/data';
+import { getStudents, getCourses, getExamGrades } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Student } from '@/lib/types';
+import { Student, ExamGrade, Course } from '@/lib/types';
 import { processStudentResults, ProcessedStudent, GroupedResults } from '@/lib/results-processor';
 import { ResultsTable } from '@/components/exams/results-table';
 import { SummaryTable } from '@/components/exams/summary-table';
-import { useIsMobile } from '@/hooks/use-mobile'; // Hook to trigger re-render on navigation
+import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function ResultsPage() {
   const [searchTerm, setSearchTerm] = React.useState('');
-  // This state will be used to trigger re-renders when data changes.
+  const [loading, setLoading] = React.useState(true);
   const [processedResults, setProcessedResults] = React.useState<ProcessedStudent[]>([]);
+  const { toast } = useToast();
 
-  // The isMobile hook changes value on navigation, forcing a re-render of the component
-  const isMobile = useIsMobile(); 
-  
-  // Recalculate results whenever the page is rendered (e.g., after navigation)
   React.useEffect(() => {
-    setProcessedResults(processStudentResults(initialStudents, allGrades, initialCourses));
-  }, [isMobile]); // Re-run effect when the route changes or window resizes past breakpoint
+    async function fetchData() {
+        try {
+            setLoading(true);
+            const [students, grades, courses] = await Promise.all([
+                getStudents(),
+                getExamGrades(),
+                getCourses()
+            ]);
+            setProcessedResults(processStudentResults(students, grades, courses));
+        } catch (error) {
+            console.error("Failed to fetch and process results:", error);
+            toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger et calculer les résultats." });
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchData();
+  }, [toast]);
 
 
   const groupedResults = React.useMemo(() => {
@@ -60,6 +74,22 @@ export default function ResultsPage() {
   }, [processedResults, searchTerm]);
   
   const sortedGroupKeys = Object.keys(groupedResults).sort();
+
+  if (loading) {
+    return (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <Skeleton className="h-8 w-72" />
+                    <Skeleton className="h-4 w-96 mt-2" />
+                </div>
+                <Skeleton className="h-10 w-72" />
+            </div>
+            <Skeleton className="h-64 w-full" />
+            <Skeleton className="h-64 w-full" />
+        </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

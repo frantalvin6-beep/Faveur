@@ -48,6 +48,11 @@ function EditableCell({ value, onSave }: { value: number, onSave: (newValue: num
             inputRef.current.select();
         }
     }, [isEditing]);
+    
+    React.useEffect(() => {
+        setCurrentValue(value);
+    }, [value]);
+
 
     if (isEditing) {
         return (
