@@ -19,10 +19,11 @@ export async function getStudent(id: string): Promise<Student | null> {
 }
 
 export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
-    const docRef = doc(collection(db, 'students'));
-    const newStudent = { ...studentData, id: docRef.id };
-    await setDoc(docRef, studentData); // Store data without the id inside the document
-    return newStudent;
+    // Generate a new ID, but use the provided data to create the document
+    const studentWithId: Student = { ...studentData, id: doc(collection(db, 'students')).id, academicHistory: [] };
+    // Use the matricule (id) as the document ID in Firestore for easy lookup
+    await setDoc(doc(db, 'students', studentWithId.id), studentWithId);
+    return studentWithId;
 }
 
 
@@ -79,7 +80,7 @@ export async function deleteDepartment(id: string): Promise<void> {
 
 export async function getCourses(): Promise<Course[]> {
     const snapshot = await getDocs(collection(db, 'courses'));
-    return snapshot.docs.map(doc => ({ code: doc.id, ...doc.data() } as Course));
+    return snapshot.docs.map(doc => ({ ...doc.data(), code: doc.id } as Course));
 }
 
 export async function addCourse(course: Course): Promise<Course> {
@@ -263,7 +264,59 @@ export async function deleteTeacherAttendance(id: string): Promise<void> {
 }
 
 
-// --- MOCK DATA FOR SEEDING (to be removed later) ---
+// --- ACCOUNTING SERVICES ---
+export async function getAccountingTransactions(): Promise<AccountingTransaction[]> {
+    const snapshot = await getDocs(collection(db, 'accountingTransactions'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AccountingTransaction));
+}
+
+export async function addAccountingTransaction(transaction: Omit<AccountingTransaction, 'id'>): Promise<AccountingTransaction> {
+    const docRef = doc(collection(db, 'accountingTransactions'));
+    const newTransaction = { ...transaction, id: docRef.id };
+    await setDoc(docRef, transaction);
+    return newTransaction;
+}
+
+export async function deleteAccountingTransaction(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'accountingTransactions', id));
+}
+
+
+// --- FINANCIAL DATA SERVICES (Faculty & Admin) ---
+export async function getFacultyFinances(): Promise<FacultyFinance[]> {
+    const snapshot = await getDocs(collection(db, 'facultyFinances'));
+    return snapshot.docs.map(doc => doc.data() as FacultyFinance);
+}
+
+export async function addFacultyFinance(finance: FacultyFinance): Promise<void> {
+    await setDoc(doc(db, 'facultyFinances', finance.teacherId), finance);
+}
+
+export async function updateFacultyFinance(teacherId: string, data: Partial<FacultyFinance>): Promise<void> {
+    await updateDoc(doc(db, 'facultyFinances', teacherId), data);
+}
+
+export async function getAdminFinances(): Promise<AdminFinance[]> {
+    const snapshot = await getDocs(collection(db, 'adminFinances'));
+    return snapshot.docs.map(doc => doc.data() as AdminFinance);
+}
+
+export async function getAdminStaff(): Promise<AdminStaff[]> {
+    const snapshot = await getDocs(collection(db, 'adminStaff'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdminStaff));
+}
+
+
+export async function addAdminFinance(finance: AdminFinance): Promise<void> {
+    await setDoc(doc(db, 'adminFinances', finance.matricule), finance);
+}
+
+export async function updateAdminFinance(matricule: string, data: Partial<AdminFinance>): Promise<void> {
+    await updateDoc(doc(db, 'adminFinances', matricule), data);
+}
+
+
+// --- MOCK DATA FOR SEEDING ---
 export const students_data: Student[] = [
   { 
     id: 'S001', 
@@ -301,9 +354,9 @@ export const faculty_data: Faculty[] = [
 
 export const departments_data: Department[] = [
     { id: 'DEP01', name: 'Département IA et Robotique', head: 'Dr. Eva Correia', facultyCount: 40, studentCount: 450, creationDate: '2020-01-15' },
-    { id: 'DEP01-OPT02', name: 'Intelligence Artificielle (IA)', head: 'Dr. Eva Correia', facultyCount: 15, studentCount: 150, creationDate: '2020-01-15' },
+    { id: 'DEP01-OPT02', name: 'Intelligence Artificielle (IA)', head: 'Dr. Eva Correia', facultyCount: 15, studentCount: 150, creationDate: '2020-01-15', parentId: 'DEP01' },
     { id: 'DEP02', name: 'Département Génie Électrique et Informatique Industrielle', head: 'Dr. Marc Dubois', facultyCount: 55, studentCount: 600, creationDate: '2018-05-20' },
-    { id: 'DEP02-OPT01', name: 'Électronique', head: 'Dr. Marc Dubois', facultyCount: 20, studentCount: 200, creationDate: '2018-05-20' },
+    { id: 'DEP02-OPT01', name: 'Électronique', head: 'Dr. Marc Dubois', facultyCount: 20, studentCount: 200, creationDate: '2018-05-20', parentId: 'DEP02' },
 ];
 
 export const courses_data: Course[] = [
@@ -329,22 +382,16 @@ export const courses_data: Course[] = [
     },
 ];
 
-const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'totalAPayer' | 'reste' | 'statut'>[] = [
+export const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'totalAPayer' | 'reste' | 'statut'>[] = [
     { matricule: 'S001', fullName: 'Alice Johnson', level: 'Licence 3', option: 'Intelligence Artificielle (IA)', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 498000 },
     { matricule: 'S002', fullName: 'Bob Smith', level: 'Licence 2', option: 'Électronique', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 250000 },
 ];
 
-// Re-export original functions with temporary mock data for other pages
-export const examGrades: ExamGrade[] = [];
-export const examSchedule: ExamSchedule[] = [];
-export const messages: Message[] = [];
-export const adminStaff: AdminStaff[] = [];
-export const facultyFinances: FacultyFinance[] = [];
-export const adminFinances: AdminFinance[] = [];
-export const accountingTransactions: AccountingTransaction[] = [];
-export const courseAssignments: CourseAssignment[] = [];
-export const faculty: Faculty[] = faculty_data;
-export const departments: Department[] = departments_data;
+
+export const adminStaff_data: AdminStaff[] = [
+    { id: 'ADM01', name: 'Jean Dupont', email: 'jean.dupont@campus.com', position: 'Secrétaire Général', hireDate: '2015-03-01'},
+    { id: 'ADM02', name: 'Marie Curie', email: 'marie.curie@campus.com', position: 'Responsable Financier', hireDate: '2018-07-23'},
+];
 
 
 // --- UTILITY FUNCTIONS ---
@@ -450,8 +497,45 @@ export function calculerFinanceAdmin(
   return { totalAPayer, reste, statut };
 }
 
-// In a real app, initial data would be fetched, but here we modify it in-memory
-// These are now obsolete and will be removed once all pages are migrated.
-export const initialCourses = courses_data;
-export const initialStudents = students_data;
-export const teacherWorkload: TeacherWorkload[] = []; // Obsolete
+export async function seedDatabase() {
+    const batch = writeBatch(db);
+
+    // Seed students
+    students_data.forEach(student => {
+        const docRef = doc(db, "students", student.id);
+        batch.set(docRef, student);
+    });
+
+    // Seed faculty
+    faculty_data.forEach(facultyMember => {
+        const docRef = doc(db, "faculty", facultyMember.id);
+        batch.set(docRef, facultyMember);
+    });
+
+    // Seed departments
+    departments_data.forEach(department => {
+        const docRef = doc(db, "departments", department.id);
+        batch.set(docRef, department);
+    });
+
+    // Seed courses
+    courses_data.forEach(course => {
+        const docRef = doc(db, "courses", course.code);
+        batch.set(docRef, course);
+    });
+
+    // Seed student finances
+    studentFinances_data.forEach(finance => {
+        const docRef = doc(db, "studentFinances", finance.matricule);
+        batch.set(docRef, finance);
+    });
+
+    // Seed admin staff
+    adminStaff_data.forEach(staff => {
+        const docRef = doc(db, "adminStaff", staff.id);
+        batch.set(docRef, staff);
+    });
+
+    // Commit the batch
+    await batch.commit();
+}
