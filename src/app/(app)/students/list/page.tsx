@@ -1,44 +1,77 @@
+
 'use client'
 
-import { useState } from 'react';
-import { students as allStudents, departments as allDepartments } from '@/lib/data';
+import { useState, useEffect } from 'react';
+import { getStudents, getDepartments, Student, Department } from '@/lib/data';
 import { StudentTable } from '@/components/students/student-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
-import { Student } from '@/lib/types';
+import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function StudentsListPage() {
   const [searchTerm, setSearchTerm] = useState('');
+  const [students, setStudents] = useState<Student[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setLoading(true);
+        const [studentsData, departmentsData] = await Promise.all([getStudents(), getDepartments()]);
+        setStudents(studentsData);
+        setDepartments(departmentsData);
+      } catch (error) {
+        console.error("Failed to fetch data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+  
   const getStudentsForDepartment = (departmentName: string): Student[] => {
-    let students = allStudents.filter(student => student.department === departmentName);
+    let studentsInDept = students.filter(student => student.department === departmentName);
     if (searchTerm) {
-        students = students.filter((student) =>
+        studentsInDept = studentsInDept.filter((student) =>
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             student.email.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }
-    return students;
+    return studentsInDept;
   };
-  
+
   const handleRename = (deptName: string) => alert(`La fonctionnalité pour renommer "${deptName}" sera bientôt disponible.`);
   const handleDelete = (deptName: string) => alert(`La fonctionnalité pour supprimer "${deptName}" sera bientôt disponible.`);
 
-   const displayedDepartments = allDepartments.filter(dept => {
+   const displayedDepartments = departments.filter(dept => {
         const studentsInDept = getStudentsForDepartment(dept.name);
         const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
         
         if (!searchTerm) {
-            // Si aucun terme de recherche, afficher uniquement les départements qui ont des étudiants
-            return allStudents.some(s => s.department === dept.name);
+            return students.some(s => s.department === dept.name);
         }
         
-        // S'il y a un terme de recherche, afficher si le nom du département correspond OU s'il y a des étudiants correspondant à la recherche
         return searchMatchInDeptName || studentsInDept.length > 0;
     });
 
+  if (loading) {
+      return (
+          <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                  <div>
+                      <Skeleton className="h-8 w-72" />
+                      <Skeleton className="h-4 w-96 mt-2" />
+                  </div>
+                  <Skeleton className="h-10 w-72" />
+              </div>
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+          </div>
+      );
+  }
 
   return (
     <div className="space-y-6">
@@ -58,8 +91,6 @@ export default function StudentsListPage() {
       {displayedDepartments.map((dept) => {
         const studentsForDept = getStudentsForDepartment(dept.name);
         
-        // Masquer la carte s'il y a un terme de recherche et qu'aucun étudiant n'a été trouvé pour ce département.
-        // Mais la conserver si le terme de recherche correspond au nom du département lui-même.
         if (searchTerm && studentsForDept.length === 0 && !dept.name.toLowerCase().includes(searchTerm.toLowerCase())) {
             return null;
         }
@@ -87,11 +118,11 @@ export default function StudentsListPage() {
           </Card>
         )
       })}
-       {displayedDepartments.length === 0 && searchTerm && (
+       {displayedDepartments.length === 0 && !loading && (
             <Card>
                 <CardContent>
                     <p className="text-muted-foreground text-center py-8">
-                        Aucun département ou étudiant ne correspond à votre recherche.
+                        {searchTerm ? "Aucun département ou étudiant ne correspond à votre recherche." : "Aucun étudiant à afficher. Commencez par en ajouter un."}
                     </p>
                 </CardContent>
             </Card>

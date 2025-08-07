@@ -1,7 +1,8 @@
+
 'use client';
 
 import * as React from 'react';
-import { studentFinances as initialStudentFinances, StudentFinance, accountingTransactions } from '@/lib/data';
+import { StudentFinance, getStudentFinances, addStudentFinance, updateStudentFinance, calculerFinance, departments as allDepartments, accountingTransactions } from '@/lib/data';
 import { StudentFinancesTable } from '@/components/finances/student-finances-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -18,9 +19,9 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { calculerFinance, departments } from '@/lib/data';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '@/components/ui/skeleton';
 
 interface GroupedFinances {
   [key: string]: StudentFinance[];
@@ -29,6 +30,7 @@ interface GroupedFinances {
 
 function AddStudentFinanceForm({ onAddStudent }: { onAddStudent: (student: StudentFinance) => void }) {
     const [isOpen, setIsOpen] = React.useState(false);
+    const [departments, setDepartments] = React.useState<any[]>([]);
 
     // Form state
     const [matricule, setMatricule] = React.useState('');
@@ -47,6 +49,11 @@ function AddStudentFinanceForm({ onAddStudent }: { onAddStudent: (student: Stude
     const [rattrapage, setRattrapage] = React.useState(0);
     const [avance, setAvance] = React.useState(0);
 
+    React.useEffect(() => {
+        // In a real app with many departments, you'd fetch this.
+        // For now, we use the static import.
+        setDepartments(allDepartments);
+    }, []);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -84,7 +91,7 @@ function AddStudentFinanceForm({ onAddStudent }: { onAddStudent: (student: Stude
                     <DialogTitle>Ajouter un nouvel étudiant aux finances</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="flex-grow overflow-hidden flex flex-col">
-                   <ScrollArea className="flex-grow pr-6">
+                   <ScrollArea className="flex-grow pr-6 -mr-6">
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 py-4">
                             {/* Champs principaux */}
                             <div className="space-y-2"><Label htmlFor="matricule">Matricule</Label><Input id="matricule" value={matricule} onChange={(e) => setMatricule(e.target.value)} required /></div>
@@ -122,53 +129,86 @@ function AddStudentFinanceForm({ onAddStudent }: { onAddStudent: (student: Stude
 
 
 export default function StudentFinancesPage() {
-  const [studentFinances, setStudentFinances] = React.useState(initialStudentFinances);
+  const [studentFinances, setStudentFinances] = React.useState<StudentFinance[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
   const { toast } = useToast();
 
-  const handleAddStudent = (newStudent: StudentFinance) => {
-    setStudentFinances(prev => [...prev, newStudent]);
-     if (newStudent.avance > 0) {
-        accountingTransactions.unshift({
-            id: `TRN-STU-${Date.now()}`,
-            date: new Date().toISOString().split('T')[0],
-            type: 'Revenu',
-            sourceBeneficiary: newStudent.fullName,
-            category: 'Frais scolarité',
-            amount: newStudent.avance,
-            paymentMethod: 'Espèces',
-            description: `Paiement initial frais de scolarité`,
-            responsible: 'Caissier'
-        });
-        toast({
-            title: "Transaction enregistrée",
-            description: `Un revenu de ${newStudent.avance.toLocaleString()} FCFA pour ${newStudent.fullName} a été ajouté à la comptabilité.`,
-        });
+  React.useEffect(() => {
+    async function fetchData() {
+        try {
+            setLoading(true);
+            const data = await getStudentFinances();
+            setStudentFinances(data);
+        } catch (error) {
+            console.error("Failed to fetch student finances:", error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données financières.' });
+        } finally {
+            setLoading(false);
+        }
+    }
+    fetchData();
+  }, [toast]);
+
+  const handleAddStudent = async (newStudent: StudentFinance) => {
+    try {
+        await addStudentFinance(newStudent);
+        setStudentFinances(prev => [...prev, newStudent]);
+        toast({ title: "Étudiant ajouté", description: `Les informations financières pour ${newStudent.fullName} ont été enregistrées.`});
+
+        if (newStudent.avance > 0) {
+            // This part still uses local data, should be migrated to a service
+            accountingTransactions.unshift({
+                id: `TRN-STU-${Date.now()}`,
+                date: new Date().toISOString().split('T')[0],
+                type: 'Revenu',
+                sourceBeneficiary: newStudent.fullName,
+                category: 'Frais scolarité',
+                amount: newStudent.avance,
+                paymentMethod: 'Espèces',
+                description: `Paiement initial frais de scolarité`,
+                responsible: 'Caissier'
+            });
+            toast({
+                title: "Transaction enregistrée",
+                description: `Un revenu de ${newStudent.avance.toLocaleString()} FCFA pour ${newStudent.fullName} a été ajouté à la comptabilité.`,
+            });
+        }
+    } catch (error) {
+        console.error("Failed to add student finance:", error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter l\'étudiant.' });
     }
   };
   
-  const handleUpdateStudent = (updatedStudent: StudentFinance) => {
+  const handleUpdateStudent = async (updatedStudent: StudentFinance) => {
     const originalStudent = studentFinances.find(s => s.matricule === updatedStudent.matricule);
     const paymentAmount = updatedStudent.avance - (originalStudent?.avance || 0);
 
-    setStudentFinances(prev => prev.map(s => s.matricule === updatedStudent.matricule ? updatedStudent : s));
-    
-    if (paymentAmount > 0) {
-        accountingTransactions.unshift({
-            id: `TRN-STU-${Date.now()}`,
-            date: new Date().toISOString().split('T')[0],
-            type: 'Revenu',
-            sourceBeneficiary: updatedStudent.fullName,
-            category: 'Frais scolarité',
-            amount: paymentAmount,
-            paymentMethod: 'Espèces', // Default method
-            description: `Paiement frais de scolarité`,
-            responsible: 'Caissier'
-        });
-        toast({
-            title: "Transaction enregistrée",
-            description: `Un revenu de ${paymentAmount.toLocaleString()} FCFA pour ${updatedStudent.fullName} a été ajouté à la comptabilité.`,
-        });
+    try {
+        await updateStudentFinance(updatedStudent.matricule, updatedStudent);
+        setStudentFinances(prev => prev.map(s => s.matricule === updatedStudent.matricule ? updatedStudent : s));
+        
+        if (paymentAmount > 0) {
+            // This part still uses local data, should be migrated to a service
+            accountingTransactions.unshift({
+                id: `TRN-STU-${Date.now()}`,
+                date: new Date().toISOString().split('T')[0],
+                type: 'Revenu',
+                sourceBeneficiary: updatedStudent.fullName,
+                category: 'Frais scolarité',
+                amount: paymentAmount,
+                paymentMethod: 'Espèces',
+                description: `Paiement frais de scolarité`,
+                responsible: 'Caissier'
+            });
+            toast({
+                title: "Transaction enregistrée",
+                description: `Un revenu de ${paymentAmount.toLocaleString()} FCFA pour ${updatedStudent.fullName} a été ajouté à la comptabilité.`,
+            });
+        }
+    } catch (error) {
+        console.error("Failed to update student finance:", error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour les finances de l\'étudiant.' });
     }
   };
 
@@ -211,6 +251,22 @@ export default function StudentFinancesPage() {
   }, [searchTerm, groupedFinances]);
   
   const sortedGroupKeys = Object.keys(filteredGroups).sort();
+  
+  if (loading) {
+      return (
+          <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                  <div>
+                      <Skeleton className="h-8 w-72" />
+                      <Skeleton className="h-4 w-96 mt-2" />
+                  </div>
+                  <Skeleton className="h-10 w-72" />
+              </div>
+              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" />
+          </div>
+      );
+  }
 
 
   return (

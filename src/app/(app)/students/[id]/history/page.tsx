@@ -1,9 +1,9 @@
 
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter, notFound } from 'next/navigation'
-import { students as initialStudents, Student, AcademicRecord, CourseRecord, courses as allCourses, initialCourses } from '@/lib/data'
+import { Student, AcademicRecord, CourseRecord, getStudent, updateStudent, getCourses, Course } from '@/lib/data'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
@@ -35,6 +35,7 @@ import { Label } from '@/components/ui/label'
 import { PlusCircle, Trash2, Loader2, ArrowLeft } from 'lucide-react'
 import { calculateGpa } from '@/ai/flows/calculate-student-gpa'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Skeleton } from '@/components/ui/skeleton'
 
 
 function getDecisionBadgeVariant(decision: string) {
@@ -53,7 +54,7 @@ function getDecisionBadgeVariant(decision: string) {
 type CourseEntry = { id: string; name: string; grade: number; coefficient: number };
 
 
-function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecord: (record: AcademicRecord) => void }) {
+function GradeEntryForm({ student, onAddRecord, allCourses }: { student: Student, onAddRecord: (record: AcademicRecord) => void, allCourses: Course[] }) {
   const [semester, setSemester] = useState('')
   const [year, setYear] = useState(new Date().getFullYear())
   const [courses, setCourses] = useState<Partial<CourseEntry>[]>([{ id: `C${Date.now()}`, name: '', grade: undefined, coefficient: undefined }])
@@ -186,35 +187,54 @@ function GradeEntryForm({ student, onAddRecord }: { student: Student, onAddRecor
   )
 }
 
-
 export default function StudentHistoryPage({ params }: { params: { id: string } }) {
-  const [students, setStudents] = useState(initialStudents);
+  const [student, setStudent] = useState<Student | null>(null);
+  const [allCourses, setAllCourses] = useState<Course[]>([]);
   const router = useRouter();
-  const student = students.find((s) => s.id === params.id)
+
+  useEffect(() => {
+      async function fetchData() {
+          try {
+              const studentData = await getStudent(params.id);
+              if (studentData) {
+                  setStudent(studentData);
+              } else {
+                  notFound();
+              }
+              const coursesData = await getCourses();
+              setAllCourses(coursesData);
+          } catch (error) {
+              console.error("Failed to fetch student data:", error);
+              notFound();
+          }
+      }
+      fetchData();
+  }, [params.id]);
 
   if (!student) {
-    notFound()
+      return (
+          <div className="space-y-6">
+              <div className="flex items-center gap-4 mb-4">
+                  <Skeleton className="h-8 w-8" />
+                  <Skeleton className="h-8 w-48" />
+              </div>
+              <Skeleton className="h-32 w-full" />
+              <Skeleton className="h-64 w-full" />
+          </div>
+      );
   }
-  
-  const handleAddRecord = (record: AcademicRecord) => {
-    const updatedStudents = students.map(s => {
-      if (s.id === student.id) {
-        // Create a new academicHistory array with the new record
-        const newHistory = [...s.academicHistory, record];
-        // Sort the history to ensure chronological order (optional but good practice)
-        newHistory.sort((a, b) => a.year - b.year || a.semester.localeCompare(b.semester));
-        return { ...s, academicHistory: newHistory };
-      }
-      return s;
-    });
-    setStudents(updatedStudents);
-    // Also update the global data source to reflect changes across the app
-    const studentIndex = initialStudents.findIndex(s => s.id === student.id);
-    if(studentIndex !== -1) {
-        const studentToUpdate = initialStudents[studentIndex];
-        const newHistory = [...studentToUpdate.academicHistory, record];
-        newHistory.sort((a, b) => a.year - b.year || a.semester.localeCompare(b.semester));
-        initialStudents[studentIndex] = { ...studentToUpdate, academicHistory: newHistory };
+
+  const handleAddRecord = async (record: AcademicRecord) => {
+    const newHistory = [...student.academicHistory, record];
+    newHistory.sort((a, b) => a.year - b.year || a.semester.localeCompare(b.semester));
+    const updatedStudent = { ...student, academicHistory: newHistory };
+    
+    try {
+        await updateStudent(student.id, { academicHistory: newHistory });
+        setStudent(updatedStudent);
+    } catch (error) {
+        console.error("Failed to update student history:", error);
+        alert("Erreur lors de la mise à jour de l'historique.");
     }
   };
 
@@ -292,7 +312,7 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
           )}
         </CardContent>
          <CardFooter>
-            <GradeEntryForm student={student} onAddRecord={handleAddRecord} />
+            <GradeEntryForm student={student} onAddRecord={handleAddRecord} allCourses={allCourses} />
         </CardFooter>
       </Card>
     </div>

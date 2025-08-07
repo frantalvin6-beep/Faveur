@@ -1,10 +1,11 @@
+
 /**
  * @fileOverview Service layer to abstract data access for AI tools.
  * This file provides functions to query the in-memory database.
  * These functions are designed to be used by Genkit tools and only perform read operations.
  */
 
-import { studentFinances } from '@/lib/data';
+import { getStudentFinances } from '@/lib/data';
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
@@ -18,6 +19,7 @@ function formatCurrency(amount: number) {
 export async function getStudentFinanceStatusByName(studentName: string): Promise<{ status: string }> {
   console.log(`Searching for student: ${studentName}`);
   
+  const studentFinances = await getStudentFinances();
   const student = studentFinances.find(
     (s) => s.fullName.toLowerCase() === studentName.toLowerCase()
   );
