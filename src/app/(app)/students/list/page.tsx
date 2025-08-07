@@ -2,19 +2,21 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { getStudents, getDepartments, Student, Department } from '@/lib/data';
+import { getStudents, getDepartments, Student, Department, addStudent, deleteStudent } from '@/lib/data';
 import { StudentTable } from '@/components/students/student-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Edit, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export default function StudentsListPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [students, setStudents] = useState<Student[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+  const { toast } = useToast();
 
   useEffect(() => {
     async function fetchData() {
@@ -25,23 +27,50 @@ export default function StudentsListPage() {
         setDepartments(departmentsData);
       } catch (error) {
         console.error("Failed to fetch data:", error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, []);
+  }, [toast]);
   
   const getStudentsForDepartment = (departmentName: string): Student[] => {
     let studentsInDept = students.filter(student => student.department === departmentName);
     if (searchTerm) {
         studentsInDept = studentsInDept.filter((student) =>
             student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
             student.email.toLowerCase().includes(searchTerm.toLowerCase())
         );
     }
     return studentsInDept;
   };
+  
+  const handleAddStudent = async (studentData: Omit<Student, 'id'>) => {
+    try {
+      const newStudent = await addStudent(studentData);
+      setStudents(prev => [...prev, newStudent]);
+      toast({ title: "Étudiant ajouté", description: `L'étudiant ${newStudent.name} a été ajouté avec succès.` });
+    } catch(error) {
+      console.error(error);
+      toast({ variant: 'destructive', title: 'Erreur', description: "Impossible d'ajouter l'étudiant." });
+    }
+  };
+
+  const handleDeleteStudent = async (id: string) => {
+    if(confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
+        try {
+            await deleteStudent(id);
+            setStudents(currentStudents => currentStudents.filter(s => s.id !== id));
+            toast({ title: "Étudiant supprimé", description: "L'étudiant a été retiré de la base de données." });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer l'étudiant." });
+        }
+    }
+  };
+
 
   const handleRename = (deptName: string) => alert(`La fonctionnalité pour renommer "${deptName}" sera bientôt disponible.`);
   const handleDelete = (deptName: string) => alert(`La fonctionnalité pour supprimer "${deptName}" sera bientôt disponible.`);
@@ -51,6 +80,7 @@ export default function StudentsListPage() {
         const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
         
         if (!searchTerm) {
+            // Check if there are any students for this department in the full list before filtering by search
             return students.some(s => s.department === dept.name);
         }
         
@@ -113,7 +143,11 @@ export default function StudentsListPage() {
               </div>
             </CardHeader>
             <CardContent>
-                <StudentTable data={studentsForDept} />
+                <StudentTable 
+                    data={studentsForDept} 
+                    onAddStudent={handleAddStudent}
+                    onDeleteStudent={handleDeleteStudent}
+                />
             </CardContent>
           </Card>
         )

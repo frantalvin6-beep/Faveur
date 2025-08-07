@@ -39,7 +39,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { departments } from '@/lib/data';
 
 
-function AddStudentForm({ onAddStudent }: { onAddStudent: (student: Student) => void }) {
+function AddStudentForm({ onAddStudent }: { onAddStudent: (student: Omit<Student, 'id'>) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
@@ -54,8 +54,7 @@ function AddStudentForm({ onAddStudent }: { onAddStudent: (student: Student) => 
       return;
     }
 
-    const newStudent: Student = {
-      id: `S${Date.now().toString().slice(-4)}`,
+    onAddStudent({
       name,
       email,
       gender,
@@ -64,9 +63,8 @@ function AddStudentForm({ onAddStudent }: { onAddStudent: (student: Student) => 
       gpa: 0,
       enrollmentDate: new Date().toISOString().split('T')[0],
       academicHistory: [],
-    };
+    });
 
-    onAddStudent(newStudent);
     setIsOpen(false);
     // Reset form
     setName('');
@@ -131,30 +129,14 @@ function AddStudentForm({ onAddStudent }: { onAddStudent: (student: Student) => 
   );
 }
 
-export function StudentTable({ data }: { data: Student[] }) {
-  const [students, setStudents] = React.useState(data);
-
-  React.useEffect(() => {
-    setStudents(data);
-  }, [data]);
-
-
-  const handleAddStudent = (newStudent: Student) => {
-      setStudents(prev => [...prev, newStudent]);
-  };
+export function StudentTable({ data, onAddStudent, onDeleteStudent }: { data: Student[], onAddStudent: (student: Omit<Student, 'id'>) => void, onDeleteStudent: (id: string) => void }) {
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt implémentée.`);
-  const handleDelete = (id: string) => {
-    if(confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
-        setStudents(currentStudents => currentStudents.filter(s => s.id !== id));
-    }
-  };
-
 
   return (
     <>
         <div className="flex items-start justify-between mb-4">
             <CardDescription>Consulter et gérer les dossiers des étudiants.</CardDescription>
-            <AddStudentForm onAddStudent={handleAddStudent} />
+            <AddStudentForm onAddStudent={onAddStudent} />
         </div>
       <div className="rounded-md border overflow-x-auto">
         <Table>
@@ -170,7 +152,7 @@ export function StudentTable({ data }: { data: Student[] }) {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {students.length > 0 ? students.map((student) => (
+            {data.length > 0 ? data.map((student) => (
               <TableRow key={student.id}>
                 <TableCell className="font-medium">{student.name}</TableCell>
                 <TableCell className="hidden md:table-cell">{student.email}</TableCell>
@@ -200,7 +182,7 @@ export function StudentTable({ data }: { data: Student[] }) {
                         Modifier
                       </DropdownMenuItem>
                       <DropdownMenuItem
-                        onClick={() => handleDelete(student.id)}
+                        onClick={() => onDeleteStudent(student.id)}
                         className="text-destructive focus:text-destructive"
                       >
                         <Trash2 className="mr-2 h-4 w-4" />
