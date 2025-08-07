@@ -1,4 +1,5 @@
 
+
 import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter } from './types';
 import { db } from './firebase';
 import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -17,12 +18,14 @@ export async function getStudent(id: string): Promise<Student | null> {
     return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Student : null;
 }
 
-export async function addStudent(student: Omit<Student, 'id'>): Promise<Student> {
-    const docRef = doc(collection(db, 'students'));
-    const newStudent = { ...student, id: docRef.id };
-    await setDoc(docRef, newStudent);
+export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
+    // Generate a new document reference with a unique ID
+    const newStudentRef = doc(collection(db, 'students'));
+    const newStudent = { ...studentData, id: newStudentRef.id };
+    await setDoc(newStudentRef, newStudent);
     return newStudent;
 }
+
 
 export async function updateStudent(id: string, data: Partial<Student>): Promise<void> {
     await updateDoc(doc(db, 'students', id), data);
@@ -192,6 +195,9 @@ export const facultyFinances: FacultyFinance[] = [];
 export const adminFinances: AdminFinance[] = [];
 export const accountingTransactions: AccountingTransaction[] = [];
 export const courseAssignments: CourseAssignment[] = [];
+export const faculty: Faculty[] = faculty_data;
+export const departments: Department[] = departments_data;
+
 
 // --- UTILITY FUNCTIONS ---
 export function calculerFinance(
