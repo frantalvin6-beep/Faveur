@@ -110,10 +110,8 @@ const navItems = [
     label: 'Support & Assistance',
     subItems: [
         { href: '/communication', label: 'Chat en direct', icon: MessageSquare },
-        { href: '/ai-assistant', label: 'Assistant IA', icon: Bot },
     ]
   },
-  { href: '/reports', icon: FileText, label: 'Rapports' },
   { 
     id: 'finances',
     icon: DollarSign, 
@@ -204,13 +202,6 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
         </header>
         <main className="flex-1 p-4 sm:p-6 bg-background">
           {children}
-          <div className="fixed bottom-6 right-6 z-50">
-            <Link href="/ai-assistant">
-                <Button isIconOnly className="rounded-full shadow-lg" aria-label="Open AI Assistant">
-                  <Bot size={24}/>
-                </Button>
-            </Link>
-          </div>
         </main>
       </SidebarInset>
     </>

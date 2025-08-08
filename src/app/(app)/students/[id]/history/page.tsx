@@ -33,7 +33,6 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { PlusCircle, Trash2, Loader2, ArrowLeft } from 'lucide-react'
-import { calculateGpa } from '@/ai/flows/calculate-student-gpa'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -52,6 +51,32 @@ function getDecisionBadgeVariant(decision: string) {
 }
 
 type CourseEntry = { id: string; name: string; grade: number; coefficient: number };
+
+// Simple GPA and decision calculation function
+function calculateGpaAndDecision(courses: CourseRecord[]): { gpa: number; decision: 'Admis' | 'Échec' | 'Redoublant' } {
+  if (courses.length === 0) {
+    return { gpa: 0, decision: 'Échec' };
+  }
+  const totalPoints = courses.reduce((sum, course) => sum + course.grade * course.coefficient, 0);
+  const totalCoefficients = courses.reduce((sum, course) => sum + course.coefficient, 0);
+  
+  if (totalCoefficients === 0) {
+    return { gpa: 0, decision: 'Échec' };
+  }
+
+  const gpa = totalPoints / totalCoefficients;
+  
+  let decision: 'Admis' | 'Échec' | 'Redoublant';
+  if (gpa >= 10) {
+    decision = 'Admis';
+  } else if (gpa >= 7) {
+    decision = 'Redoublant';
+  } else {
+    decision = 'Échec';
+  }
+  
+  return { gpa, decision };
+}
 
 
 function GradeEntryForm({ student, onAddRecord, allCourses }: { student: Student, onAddRecord: (record: AcademicRecord) => void, allCourses: Course[] }) {
@@ -97,7 +122,7 @@ function GradeEntryForm({ student, onAddRecord, allCourses }: { student: Student
     setIsLoading(true);
     
     try {
-        const result = await calculateGpa({ courses: finalCourses });
+        const result = calculateGpaAndDecision(finalCourses);
 
         const newRecord: AcademicRecord = {
           semester,
@@ -114,7 +139,7 @@ function GradeEntryForm({ student, onAddRecord, allCourses }: { student: Student
         setYear(new Date().getFullYear());
         setCourses([{ id: `C${Date.now()}`, name: '', grade: undefined, coefficient: undefined }]);
     } catch (error) {
-        console.error("Failed to calculate GPA with AI:", error);
+        console.error("Failed to calculate GPA:", error);
         alert("Une erreur est survenue lors du calcul de la moyenne. Veuillez réessayer.");
     } finally {
         setIsLoading(false);
