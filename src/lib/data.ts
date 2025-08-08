@@ -387,11 +387,15 @@ export const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'to
     { matricule: 'S002', fullName: 'Bob Smith', level: 'Licence 2', option: 'Électronique', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 250000 },
 ];
 
+export const accountingTransactions: AccountingTransaction[] = [];
 
 export const adminStaff_data: AdminStaff[] = [
     { id: 'ADM01', name: 'Jean Dupont', email: 'jean.dupont@campus.com', position: 'Secrétaire Général', hireDate: '2015-03-01'},
     { id: 'ADM02', name: 'Marie Curie', email: 'marie.curie@campus.com', position: 'Responsable Financier', hireDate: '2018-07-23'},
 ];
+
+export const messages: Message[] = [];
+export const examSchedule: ExamSchedule[] = [];
 
 
 // --- UTILITY FUNCTIONS ---
@@ -425,25 +429,6 @@ export const studentFinances_data: StudentFinance[] = studentFinancesData.map(da
     );
     return { ...data, ...calculated };
 });
-
-export async function getStudentFinanceStatusByName(studentName: string): Promise<{ status: string }> {
-  const finances = await getStudentFinances();
-  const student = finances.find(
-    (s) => s.fullName.toLowerCase() === studentName.toLowerCase()
-  );
-
-  if (!student) {
-    return { status: `L'étudiant nommé "${studentName}" n'a pas été trouvé dans les archives financières.` };
-  }
-  
-  const formatCurrency = (amount: number) => new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
-
-  if (student.statut === 'Finalisé') {
-    return { status: `Oui, les frais de scolarité pour ${studentName} sont finalisés. Le solde est de 0.` };
-  } else {
-    return { status: `Non, les frais pour ${studentName} ne sont pas finalisés. Il reste un montant de ${formatCurrency(student.reste)} à payer.` };
-  }
-}
 
 export function calculerComptabilite(transactions: AccountingTransaction[]) {
   let revenus = 0;

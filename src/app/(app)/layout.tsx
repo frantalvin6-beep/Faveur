@@ -13,7 +13,6 @@ import {
   Package2,
   GraduationCap,
   PencilRuler,
-  MessageSquare,
   BookOpen,
   Calendar,
   DollarSign,
@@ -28,8 +27,6 @@ import {
   BookCopy,
   Wallet,
   UserCircle,
-  LifeBuoy,
-  Bot,
   Trophy,
 } from 'lucide-react';
 
@@ -102,14 +99,6 @@ const navItems = [
         { href: '/exams/grades', label: 'Saisie des notes', icon: ClipboardCheck },
         { href: '/exams/planning', label: 'Planification', icon: CalendarPlus },
         { href: '/exams/results', label: 'Résultats Globaux', icon: Trophy },
-    ]
-  },
-  { 
-    id: 'support',
-    icon: LifeBuoy, 
-    label: 'Support & Assistance',
-    subItems: [
-        { href: '/communication', label: 'Chat en direct', icon: MessageSquare },
     ]
   },
   { 
