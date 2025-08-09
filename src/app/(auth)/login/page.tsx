@@ -14,14 +14,14 @@ export default function LoginPage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
-          <CardTitle className="text-2xl font-bold">S.G.ENIA 2.0</CardTitle>
-          <CardDescription>Entrez vos identifiants pour accéder au panneau d'administration.</CardDescription>
+          <CardTitle className="text-2xl font-bold">Portail d'Administration</CardTitle>
+          <CardDescription>Entrez vos identifiants pour accéder à S.G.ENIA 2.0.</CardDescription>
         </CardHeader>
         <CardContent>
           <form className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="frantalvin86@gmail.com" required defaultValue="frantalvin86@gmail.com" />
+              <Input id="email" type="email" placeholder="admin@campuscentral.com" required defaultValue="admin@campuscentral.com" />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Mot de passe</Label>
@@ -33,6 +33,11 @@ export default function LoginPage() {
               </Button>
             </Link>
           </form>
+           <div className="mt-4 text-center text-sm">
+            <Link href="/" className="underline">
+              Retour à l'accueil
+            </Link>
+          </div>
         </CardContent>
       </Card>
     </div>
