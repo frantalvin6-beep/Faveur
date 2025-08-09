@@ -2,7 +2,8 @@
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { DollarSign, Users, UserSquare, BookOpen, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { DashboardCharts } from "@/components/dashboard/charts";
-import { getStudents, getFaculty, getDepartments, getAccountingTransactions, calculerComptabilite } from "@/lib/data";
+import { getStudents, getFaculty, getDepartments, getAccountingTransactions, calculerComptabilite, Department } from "@/lib/data";
+import type { Faculty } from "@/lib/types";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
@@ -19,6 +20,26 @@ export default async function DashboardPage() {
   // Nous filtrons les options pour ne compter que les départements parents
   const totalDepartments = departments.filter(d => !d.parentId).length;
   const { revenus, depenses, solde } = calculerComptabilite(transactions);
+
+  // Préparer les données pour les graphiques
+  const studentChartData = departments
+    .filter(d => d.parentId) // On ne garde que les options/filières
+    .map(dept => ({
+      name: dept.name,
+      total: students.filter(s => s.department === dept.name).length
+    }));
+
+  const facultyChartData = faculty
+    .reduce((acc, member) => {
+      const position = member.position;
+      acc[position] = (acc[position] || 0) + 1;
+      return acc;
+    }, {} as Record<Faculty['position'], number>);
+  
+  const facultyChartDataFormatted = Object.entries(facultyChartData).map(([name, total]) => ({
+    name,
+    total
+  }));
 
 
   return (
@@ -62,7 +83,7 @@ export default async function DashboardPage() {
         </Card>
       </div>
 
-      <DashboardCharts />
+      <DashboardCharts studentData={studentChartData} facultyData={facultyChartDataFormatted} />
     </div>
   );
 }

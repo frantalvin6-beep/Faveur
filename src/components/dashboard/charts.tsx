@@ -1,24 +1,25 @@
+
 'use client';
 import { Bar, BarChart, ResponsiveContainer, XAxis, YAxis, Tooltip, Legend } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import type { Department, Faculty } from "@/lib/types";
 
+interface StudentChartData {
+  name: string;
+  total: number;
+}
 
-const studentData = [
-  { name: 'IA & Robotique', total: 450 },
-  { name: 'Génie Elec & Info', total: 600 },
-  { name: 'Génie Info', total: 550 },
-  { name: 'Génie Civil', total: 300 },
-  { name: 'Digital Business', total: 250 },
-];
+interface FacultyChartData {
+  name: string;
+  total: number;
+}
 
-const facultyData = [
-  { name: 'Professeurs', total: 60 },
-  { name: 'Prof. agrégés', total: 85 },
-  { name: 'Prof. assistants', total: 110 },
-  { name: 'Chargés de cours', total: 95 },
-]
+interface DashboardChartsProps {
+  studentData: StudentChartData[];
+  facultyData: FacultyChartData[];
+}
 
-export function DashboardCharts() {
+export function DashboardCharts({ studentData, facultyData }: DashboardChartsProps) {
   return (
     <div className="grid gap-6 md:grid-cols-2">
         <Card>
@@ -37,7 +38,7 @@ export function DashboardCharts() {
                   labelStyle={{ color: 'hsl(var(--card-foreground))' }}
                 />
                 <Legend iconSize={10} verticalAlign="top" height={36} />
-                <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Étudiants" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
@@ -58,7 +59,7 @@ export function DashboardCharts() {
                   labelStyle={{ color: 'hsl(var(--card-foreground))' }}
                 />
                 <Legend iconSize={10} verticalAlign="top" height={36} />
-                <Bar dataKey="total" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} />
+                <Bar dataKey="total" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Personnel" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
