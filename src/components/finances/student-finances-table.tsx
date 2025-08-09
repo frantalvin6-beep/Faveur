@@ -33,7 +33,7 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { calculerFinance } from '@/lib/data';
+import { calculerFinance, updateStudentFinance, accountingTransactions } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
@@ -57,14 +57,14 @@ function getStatusBadgeVariant(status: StudentFinance['statut']) {
   }
 }
 
-function EditableCurrencyCell({ value, onSave }: { value: number, onSave: (newValue: number) => void }) {
-    const [currentValue, setCurrentValue] = React.useState(value);
+function EditableCurrencyCell({ student, onUpdateStudent }: { student: StudentFinance, onUpdateStudent: (student: StudentFinance, newAdvance: number) => void }) {
+    const [currentValue, setCurrentValue] = React.useState(student.avance);
     const [isEditing, setIsEditing] = React.useState(false);
     const inputRef = React.useRef<HTMLInputElement>(null);
 
     const handleSave = () => {
-        if (currentValue !== value) {
-            onSave(currentValue);
+        if (currentValue !== student.avance) {
+            onUpdateStudent(student, currentValue);
         }
         setIsEditing(false);
     };
@@ -74,6 +74,11 @@ function EditableCurrencyCell({ value, onSave }: { value: number, onSave: (newVa
             inputRef.current.select();
         }
     }, [isEditing]);
+    
+    React.useEffect(() => {
+        setCurrentValue(student.avance);
+    }, [student.avance]);
+
 
     if (isEditing) {
         return (
@@ -86,7 +91,7 @@ function EditableCurrencyCell({ value, onSave }: { value: number, onSave: (newVa
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSave();
                     if (e.key === 'Escape') {
-                        setCurrentValue(value);
+                        setCurrentValue(student.avance);
                         setIsEditing(false);
                     }
                 }}
@@ -100,18 +105,13 @@ function EditableCurrencyCell({ value, onSave }: { value: number, onSave: (newVa
             onClick={() => setIsEditing(true)}
             className="font-semibold text-green-600 cursor-pointer rounded-md p-1 hover:bg-muted"
         >
-            {formatCurrency(value)}
+            {formatCurrency(student.avance)}
         </div>
     );
 }
 
-export function StudentFinancesTable({ initialData, onUpdateStudent }: { initialData: StudentFinance[], onUpdateStudent: (student: StudentFinance) => void }) {
-  const [finances, setFinances] = React.useState(initialData);
+export function StudentFinancesTableWrapper({ initialData, onUpdateStudent }: { initialData: StudentFinance[], onUpdateStudent: (student: StudentFinance, newAdvance: number) => void }) {
   const { toast } = useToast();
-
-  React.useEffect(() => {
-    setFinances(initialData);
-  }, [initialData]);
 
   const detailedExportHeaders = [
         "Matricule", "Nom & Prénom", "Niveau d’études", "Option", "Frais d'inscription", "Semestre",
@@ -120,7 +120,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
     ];
 
 
-  const getDetailedExportData = () => finances.map(f => [
+  const getDetailedExportData = () => initialData.map(f => [
       f.matricule,
       f.fullName,
       f.level,
@@ -141,17 +141,17 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
       f.statut
   ]);
 
-  const getGroupName = () => finances[0] ? `${finances[0].option.replace(/ /g, '_')}-${finances[0].level.replace(/ /g, '_')}` : 'export_sans_nom';
+  const getGroupName = () => initialData[0] ? `${initialData[0].option.replace(/ /g, '_')}-${initialData[0].level.replace(/ /g, '_')}` : 'export_sans_nom';
   
   const handleExport = (format: 'csv' | 'pdf' | 'word' | 'excel') => {
-    if (finances.length === 0) {
+    if (initialData.length === 0) {
         toast({ variant: "destructive", title: "Exportation impossible", description: "Il n'y a aucune donnée à exporter." });
         return;
     }
     const filename = `export-finances-${getGroupName()}`;
 
     if (format === 'excel') {
-        const worksheet = XLSX.utils.json_to_sheet(finances);
+        const worksheet = XLSX.utils.json_to_sheet(initialData);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Finances Étudiants");
         XLSX.writeFile(workbook, `${filename}.xlsx`);
@@ -161,7 +161,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
         saveAs(blob, `${filename}.csv`);
     } else if (format === 'pdf') {
         const doc = new jsPDF({ orientation: 'landscape' });
-        const groupName = finances[0] ? `${finances[0].option} - ${finances[0].level}` : "Export de finances";
+        const groupName = initialData[0] ? `${initialData[0].option} - ${initialData[0].level}` : "Export de finances";
         doc.text(groupName, 14, 15);
         autoTable(doc, {
           startY: 20,
@@ -170,7 +170,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
         });
         doc.save(`${filename}.pdf`);
     } else if (format === 'word') {
-       const groupName = finances[0] ? `${finances[0].option} - ${finances[0].level}` : "Export de finances";
+       const groupName = initialData[0] ? `${initialData[0].option} - ${initialData[0].level}` : "Export de finances";
        const table = new DocxTable({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
@@ -187,15 +187,6 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
     toast({ title: `Exportation ${format.toUpperCase()} réussie` });
   };
   
-  const handleUpdateAdvance = (student: StudentFinance, newAdvance: number) => {
-    const updatedStudentData = { ...student, avance: newAdvance };
-    const calculated = calculerFinance(
-        updatedStudentData.inscription, updatedStudentData.fournitures, updatedStudentData.support, updatedStudentData.bourseType,
-        updatedStudentData.reduction, updatedStudentData.scolariteBase, updatedStudentData.latrine, updatedStudentData.session,
-        updatedStudentData.rattrapage, newAdvance
-    );
-    onUpdateStudent({ ...updatedStudentData, ...calculated });
-  };
 
   return (
     <Card>
@@ -249,7 +240,7 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
               </TableRow>
             </TableHeader>
             <TableBody>
-              {finances.length > 0 ? finances.map((f) => (
+              {initialData.length > 0 ? initialData.map((f) => (
                 <TableRow key={f.matricule}>
                   <TableCell className="font-mono text-xs">{f.matricule}</TableCell>
                   <TableCell className="font-medium">{f.fullName}</TableCell>
@@ -258,8 +249,8 @@ export function StudentFinancesTable({ initialData, onUpdateStudent }: { initial
                   <TableCell className="text-right font-semibold">{formatCurrency(f.totalAPayer)}</TableCell>
                   <TableCell className="text-right">
                     <EditableCurrencyCell 
-                        value={f.avance}
-                        onSave={(newValue) => handleUpdateAdvance(f, newValue)}
+                        student={f}
+                        onUpdateStudent={onUpdateStudent}
                     />
                   </TableCell>
                   <TableCell className={cn("text-right font-bold", f.reste > 0 ? "text-red-600" : "text-gray-500")}>{formatCurrency(f.reste)}</TableCell>

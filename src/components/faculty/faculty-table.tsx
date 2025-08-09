@@ -26,10 +26,11 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getDepartments } from '@/lib/data';
+import { getDepartments, addFaculty, deleteFaculty } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 
-function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty, 'id'>) => void }) {
+function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty, 'id'>) => Promise<Faculty> }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [departments, setDepartments] = React.useState<any[]>([]);
 
@@ -49,13 +50,13 @@ function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty
     loadDeps();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !department || !position) {
       alert("Veuillez remplir les champs obligatoires.");
       return;
     }
-    onAddFaculty({
+    await onAddFaculty({
       name, email, phone, department, position, specialization, teachingLevels,
       hireDate: new Date().toISOString().split('T')[0]
     });
@@ -117,10 +118,38 @@ function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty
 }
 
 
-export function FacultyTable({ data, onAddFaculty, onDeleteFaculty }: { data: Faculty[], onAddFaculty: (faculty: Omit<Faculty, 'id'>) => void, onDeleteFaculty: (id: string) => void }) {
+export function FacultyTable({ initialData }: { initialData: Faculty[]}) {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [faculty, setFaculty] = React.useState<Faculty[]>(initialData);
+  const { toast } = useToast();
 
-  const filteredFaculty = data.filter((member) =>
+  const handleAddFaculty = async (newFacultyMember: Omit<Faculty, 'id'>) => {
+    try {
+      const addedFaculty = await addFaculty(newFacultyMember);
+      setFaculty(prev => [...prev, addedFaculty]);
+      toast({ title: 'Membre ajouté', description: `Le membre du personnel ${addedFaculty.name} a été ajouté.` });
+      return addedFaculty;
+    } catch (error) {
+      console.error("Failed to add faculty:", error);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter le membre du personnel.' });
+      throw error;
+    }
+  };
+  
+  const handleDeleteFaculty = async (id: string) => {
+      if (confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ?')) {
+          try {
+              await deleteFaculty(id);
+              setFaculty(prev => prev.filter(f => f.id !== id));
+              toast({ title: 'Membre supprimé' });
+          } catch (error) {
+              console.error("Failed to delete faculty:", error);
+              toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer le membre.' });
+          }
+      }
+  };
+
+  const filteredFaculty = faculty.filter((member) =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.department.toLowerCase().includes(searchTerm.toLowerCase())
@@ -143,7 +172,7 @@ export function FacultyTable({ data, onAddFaculty, onDeleteFaculty }: { data: Fa
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <AddFacultyForm onAddFaculty={onAddFaculty} />
+                <AddFacultyForm onAddFaculty={handleAddFaculty} />
             </div>
         </div>
       </CardHeader>

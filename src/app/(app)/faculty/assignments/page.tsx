@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { CourseAssignment, getCourseAssignments, addCourseAssignment, deleteCourseAssignment } from '@/lib/data';
+import { CourseAssignment, getCourseAssignments, addCourseAssignment, deleteCourseAssignment, getCourses, getFaculty } from '@/lib/data';
 import { CourseAssignmentsTable } from '@/components/faculty/course-assignments-table';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -13,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 export default function CourseAssignmentsPage() {
   const router = useRouter();
   const [assignments, setAssignments] = React.useState<CourseAssignment[]>([]);
+  const [courses, setCourses] = React.useState<any[]>([]);
+  const [faculty, setFaculty] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
 
@@ -20,8 +22,14 @@ export default function CourseAssignmentsPage() {
     async function fetchData() {
       try {
         setLoading(true);
-        const data = await getCourseAssignments();
+        const [data, coursesData, facultyData] = await Promise.all([
+          getCourseAssignments(),
+          getCourses(),
+          getFaculty()
+        ]);
         setAssignments(data);
+        setCourses(coursesData);
+        setFaculty(facultyData);
       } catch (error) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les attributions.' });
@@ -76,6 +84,8 @@ export default function CourseAssignmentsPage() {
         </div>
         <CourseAssignmentsTable 
             data={assignments} 
+            courses={courses}
+            faculty={faculty}
             onAddAssignment={handleAddAssignment}
             onDeleteAssignment={handleDeleteAssignment}
         />

@@ -34,11 +34,12 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
-import { getFaculty, getCourseAssignments, getCourses } from '@/lib/data';
+import { getFaculty, getCourseAssignments, getCourses, addTeacherAttendance, deleteTeacherAttendance } from '@/lib/data';
 import { cn } from '@/lib/utils';
 import { Popover, PopoverTrigger, PopoverContent } from '../ui/popover';
 import { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem } from '../ui/command';
 import { ScrollArea } from '../ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 function getStatusBadgeVariant(status: TeacherAttendance['status']) {
   switch (status) {
@@ -53,7 +54,7 @@ function getStatusBadgeVariant(status: TeacherAttendance['status']) {
   }
 }
 
-function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: Omit<TeacherAttendance, 'id'>) => void }) {
+function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: Omit<TeacherAttendance, 'id'>) => Promise<TeacherAttendance> }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
   const [allAssignments, setAllAssignments] = React.useState<CourseAssignment[]>([]);
@@ -91,7 +92,7 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: Omit<TeacherAtt
     setSelectedLessons([]); // Reset lessons when chapter changes
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const teacher = allFaculty.find(f => f.id === teacherId);
     const course = allAssignments.find(a => a.courseCode === courseCode && a.teacherId === teacherId);
@@ -121,7 +122,7 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: Omit<TeacherAtt
       programStatus,
     };
 
-    onAddEntry(newEntry);
+    await onAddEntry(newEntry);
     setIsOpen(false);
     // Reset form
     setTeacherId('');
@@ -248,10 +249,38 @@ function AddAttendanceForm({ onAddEntry }: { onAddEntry: (entry: Omit<TeacherAtt
 }
 
 
-export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: TeacherAttendance[], onAddEntry: (entry: Omit<TeacherAttendance, 'id'>) => void, onDeleteEntry: (id: string) => void }) {
+export function AttendanceTable({ initialData }: { initialData: TeacherAttendance[] }) {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [attendance, setAttendance] = React.useState(initialData);
+  const { toast } = useToast();
 
-  const filteredAttendance = data.filter((item) =>
+  const handleAddEntry = async (newEntryData: Omit<TeacherAttendance, 'id'>) => {
+    try {
+        const newEntry = await addTeacherAttendance(newEntryData);
+        setAttendance(prev => [newEntry, ...prev]);
+        toast({ title: 'Présence enregistrée' });
+        return newEntry;
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'enregistrer la présence.' });
+        throw error;
+    }
+  };
+  
+  const handleDeleteEntry = async (id: string) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer cette entrée ?")) {
+      try {
+          await deleteTeacherAttendance(id);
+          setAttendance(prev => prev.filter(a => a.id !== id));
+          toast({ title: 'Entrée supprimée' });
+      } catch (error) {
+          console.error(error);
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer l\'entrée.' });
+      }
+    }
+  };
+
+  const filteredAttendance = attendance.filter((item) =>
     item.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     item.courseName.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -271,7 +300,7 @@ export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: Tea
               onChange={(e) => setSearchTerm(e.target.value)}
               className="max-w-xs"
             />
-            <AddAttendanceForm onAddEntry={onAddEntry} />
+            <AddAttendanceForm onAddEntry={handleAddEntry} />
           </div>
         </div>
       </CardHeader>
@@ -324,7 +353,7 @@ export function AttendanceTable({ data, onAddEntry, onDeleteEntry }: { data: Tea
                         <DropdownMenuItem onClick={() => alert("Modification bientôt disponible")}>
                           <Edit className="mr-2 h-4 w-4" /> Modifier
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => onDeleteEntry(item.id)} className="text-destructive">
+                        <DropdownMenuItem onClick={() => handleDeleteEntry(item.id)} className="text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" /> Supprimer
                         </DropdownMenuItem>
                       </DropdownMenuContent>

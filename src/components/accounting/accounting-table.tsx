@@ -41,6 +41,7 @@ import autoTable from 'jspdf-autotable';
 import { Packer, Document, Paragraph, TextRun, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, WidthType, AlignmentType } from 'docx';
 import { cn } from '@/lib/utils';
 import * as XLSX from 'xlsx';
+import { addAccountingTransaction, deleteAccountingTransaction } from '@/lib/data';
 
 
 function formatCurrency(amount: number) {
@@ -64,7 +65,7 @@ const transactionCategories = [
 ];
 const paymentMethods = ['Espèces', 'Virement bancaire', 'Chèque'];
 
-function AddTransactionForm({ onAddTransaction }: { onAddTransaction: (entry: AccountingTransaction) => void }) {
+function AddTransactionForm({ onAddTransaction }: { onAddTransaction: (entry: Omit<AccountingTransaction, 'id'>) => Promise<AccountingTransaction> }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [type, setType] = React.useState<'Revenu' | 'Dépense'>('Dépense');
   const [date, setDate] = React.useState('');
@@ -75,15 +76,14 @@ function AddTransactionForm({ onAddTransaction }: { onAddTransaction: (entry: Ac
   const [description, setDescription] = React.useState('');
   const [responsible, setResponsible] = React.useState('');
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!type || !date || !sourceBeneficiary || !category || amount <= 0 || !paymentMethod || !responsible) {
       alert("Veuillez remplir tous les champs obligatoires.");
       return;
     }
 
-    const newTransaction: AccountingTransaction = {
-      id: `TRN${Date.now()}`,
+    const newTransaction: Omit<AccountingTransaction, 'id'> = {
       date,
       type,
       sourceBeneficiary,
@@ -94,7 +94,7 @@ function AddTransactionForm({ onAddTransaction }: { onAddTransaction: (entry: Ac
       responsible,
     };
 
-    onAddTransaction(newTransaction);
+    await onAddTransaction(newTransaction);
     setIsOpen(false);
     // Reset form
     setType('Dépense');
@@ -181,11 +181,38 @@ function AddTransactionForm({ onAddTransaction }: { onAddTransaction: (entry: Ac
 }
 
 
-export function AccountingTable({ data, onAddTransaction, onDeleteTransaction }: { data: AccountingTransaction[], onAddTransaction: (entry: AccountingTransaction) => void, onDeleteTransaction: (id: string) => void }) {
+export function AccountingTable({ initialData }: { initialData: AccountingTransaction[] }) {
   const [searchTerm, setSearchTerm] = React.useState('');
+  const [transactions, setTransactions] = React.useState(initialData);
   const { toast } = useToast();
+  
+  const handleAddTransaction = async (newTransactionData: Omit<AccountingTransaction, 'id'>) => {
+    try {
+        const newTransaction = await addAccountingTransaction(newTransactionData);
+        setTransactions(prev => [newTransaction, ...prev]);
+        toast({ title: 'Transaction ajoutée' });
+        return newTransaction;
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter la transaction.' });
+        throw error;
+    }
+  };
+  
+  const handleDeleteTransaction = async (id: string) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction ?")) {
+      try {
+        await deleteAccountingTransaction(id);
+        setTransactions(prev => prev.filter(t => t.id !== id));
+        toast({ variant: 'destructive', title: 'Transaction supprimée' });
+      } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer la transaction.' });
+      }
+    }
+  };
 
-  const filteredData = data.filter((item) =>
+  const filteredData = transactions.filter((item) =>
     Object.values(item).some(val => 
         String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )
@@ -260,7 +287,7 @@ export function AccountingTable({ data, onAddTransaction, onDeleteTransaction }:
                 <DropdownMenuItem onClick={() => handleExport('word')}><FileType className="mr-2 h-4 w-4" />Exporter en Word</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AddTransactionForm onAddTransaction={onAddTransaction} />
+            <AddTransactionForm onAddTransaction={handleAddTransaction} />
           </div>
         </div>
       </CardHeader>
@@ -306,7 +333,7 @@ export function AccountingTable({ data, onAddTransaction, onDeleteTransaction }:
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => onDeleteTransaction(item.id)} className="text-destructive">
+                        <DropdownMenuItem onClick={() => handleDeleteTransaction(item.id)} className="text-destructive">
                           <Trash2 className="mr-2 h-4 w-4" /> Supprimer
                         </DropdownMenuItem>
                       </DropdownMenuContent>
