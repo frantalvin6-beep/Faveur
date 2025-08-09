@@ -1,19 +1,14 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 
 export default function LoginPage() {
-  const router = useRouter();
-
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    // Dans une vraie application, vous auriez une logique d'authentification ici
-    router.push('/dashboard');
-  };
+  // La logique de redirection est maintenant gérée par le lien sur le bouton.
+  // Cela est plus fiable que la navigation programmatique pour ce cas simple.
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -23,7 +18,7 @@ export default function LoginPage() {
           <CardDescription>Entrez vos identifiants pour accéder au panneau d'administration.</CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleLogin} className="grid gap-4">
+          <form className="grid gap-4">
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
               <Input id="email" type="email" placeholder="frantalvin86@gmail.com" required defaultValue="frantalvin86@gmail.com" />
@@ -32,9 +27,11 @@ export default function LoginPage() {
               <Label htmlFor="password">Mot de passe</Label>
               <Input id="password" type="password" required defaultValue="password" />
             </div>
-            <Button type="submit" className="w-full">
-              Connexion
-            </Button>
+            <Link href="/dashboard" passHref>
+              <Button type="submit" className="w-full">
+                Connexion
+              </Button>
+            </Link>
           </form>
         </CardContent>
       </Card>
