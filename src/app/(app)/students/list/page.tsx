@@ -6,10 +6,116 @@ import { getStudents, getDepartments, Student, Department, addStudent, deleteStu
 import { StudentTable } from '@/components/students/student-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
+function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Student, 'id'>) => void }) {
+  const [isOpen, setIsOpen] = React.useState(false);
+  const [departments, setDepartments] = React.useState<Department[]>([]);
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [gender, setGender] = React.useState<'Masculin' | 'Féminin'>('Masculin');
+  const [department, setDepartment] = React.useState('');
+  const [year, setYear] = React.useState(1);
+
+  React.useEffect(() => {
+    if (isOpen) {
+      async function fetchDepartments() {
+        const departmentsData = await getDepartments();
+        // S'assurer que seules les options (pas les départements parents) sont sélectionnables
+        setDepartments(departmentsData.filter(d => d.parentId));
+      }
+      fetchDepartments();
+    }
+  }, [isOpen]);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name || !email || !department) {
+      alert("Veuillez remplir tous les champs.");
+      return;
+    }
+
+    onAddStudent({
+      name,
+      email,
+      gender,
+      department,
+      year,
+      gpa: 0,
+      enrollmentDate: new Date().toISOString().split('T')[0],
+      academicHistory: [],
+    });
+
+    setIsOpen(false);
+    // Reset form
+    setName('');
+    setEmail('');
+    setDepartment('');
+    setYear(1);
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={setIsOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <PlusCircle className="mr-2 h-4 w-4" />
+          Ajouter un étudiant
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Ajouter un nouvel étudiant</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit}>
+          <div className="grid gap-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="name">Nom complet</Label>
+              <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="email">Email</Label>
+              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
+            </div>
+             <div className="space-y-2">
+              <Label htmlFor="gender">Sexe</Label>
+              <Select onValueChange={(v: 'Masculin' | 'Féminin') => setGender(v)} value={gender}>
+                <SelectTrigger id="gender"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Masculin">Masculin</SelectItem>
+                  <SelectItem value="Féminin">Féminin</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="department">Département/Option</Label>
+              <Select onValueChange={setDepartment} value={department} required>
+                <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                <SelectContent>
+                  {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="year">Année</Label>
+              <Input id="year" type="number" min="1" max="5" value={year} onChange={e => setYear(Number(e.target.value))} required />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+            <Button type="submit">Enregistrer</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 
 export default function StudentsListPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -76,11 +182,13 @@ export default function StudentsListPage() {
   const handleDelete = (deptName: string) => alert(`La fonctionnalité pour supprimer "${deptName}" sera bientôt disponible.`);
 
    const displayedDepartments = departments.filter(dept => {
+        // We only want to display options, which have a parentId
+        if (!dept.parentId) return false;
+
         const studentsInDept = getStudentsForDepartment(dept.name);
         const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
         
         if (!searchTerm) {
-            // Check if there are any students for this department in the full list before filtering by search
             return students.some(s => s.department === dept.name);
         }
         
@@ -110,12 +218,15 @@ export default function StudentsListPage() {
             <h1 className="text-3xl font-bold">Liste des Étudiants par Option</h1>
             <p className="text-muted-foreground">Consultez et gérez les étudiants regroupés par leur option ou département.</p>
          </div>
-         <Input
-            placeholder="Rechercher un étudiant ou une option..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="max-w-sm"
-         />
+         <div className="flex items-center gap-2">
+            <Input
+                placeholder="Rechercher un étudiant ou une option..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="max-w-sm"
+            />
+            <AddStudentDialog onAddStudent={handleAddStudent} />
+        </div>
        </div>
 
       {displayedDepartments.map((dept) => {
@@ -145,7 +256,6 @@ export default function StudentsListPage() {
             <CardContent>
                 <StudentTable 
                     data={studentsForDept} 
-                    onAddStudent={handleAddStudent}
                     onDeleteStudent={handleDeleteStudent}
                 />
             </CardContent>

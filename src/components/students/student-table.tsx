@@ -21,133 +21,17 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from '@/components/ui/dropdown-menu';
-import { Student, Department } from '@/lib/types';
+import { Student } from '@/lib/types';
 import { CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getDepartments } from '@/lib/data';
 
-
-function AddStudentForm({ onAddStudent }: { onAddStudent: (student: Omit<Student, 'id'>) => void }) {
-  const [isOpen, setIsOpen] = React.useState(false);
-  const [departments, setDepartments] = React.useState<Department[]>([]);
-  const [name, setName] = React.useState('');
-  const [email, setEmail] = React.useState('');
-  const [gender, setGender] = React.useState<'Masculin' | 'Féminin'>('Masculin');
-  const [department, setDepartment] = React.useState('');
-  const [year, setYear] = React.useState(1);
-
-  React.useEffect(() => {
-    if (isOpen) {
-      async function fetchDepartments() {
-        const departmentsData = await getDepartments();
-        setDepartments(departmentsData);
-      }
-      fetchDepartments();
-    }
-  }, [isOpen]);
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!name || !email || !department) {
-      alert("Veuillez remplir tous les champs.");
-      return;
-    }
-
-    onAddStudent({
-      name,
-      email,
-      gender,
-      department,
-      year,
-      gpa: 0,
-      enrollmentDate: new Date().toISOString().split('T')[0],
-      academicHistory: [],
-    });
-
-    setIsOpen(false);
-    // Reset form
-    setName('');
-    setEmail('');
-    setDepartment('');
-    setYear(1);
-  };
-
-  return (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un étudiant
-        </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Ajouter un nouvel étudiant</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit}>
-          <div className="grid gap-4 py-4">
-            <div className="space-y-2">
-              <Label htmlFor="name">Nom complet</Label>
-              <Input id="name" value={name} onChange={e => setName(e.target.value)} required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" value={email} onChange={e => setEmail(e.target.value)} required />
-            </div>
-             <div className="space-y-2">
-              <Label htmlFor="gender">Sexe</Label>
-              <Select onValueChange={(v: 'Masculin' | 'Féminin') => setGender(v)} value={gender}>
-                <SelectTrigger id="gender"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Masculin">Masculin</SelectItem>
-                  <SelectItem value="Féminin">Féminin</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="department">Département/Option</Label>
-              <Select onValueChange={setDepartment} value={department}>
-                <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                <SelectContent>
-                  {departments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="year">Année</Label>
-              <Input id="year" type="number" min="1" max="5" value={year} onChange={e => setYear(Number(e.target.value))} required />
-            </div>
-          </div>
-          <DialogFooter>
-            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
-            <Button type="submit">Enregistrer</Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-export function StudentTable({ data, onAddStudent, onDeleteStudent }: { data: Student[], onAddStudent: (student: Omit<Student, 'id'>) => void, onDeleteStudent: (id: string) => void }) {
+export function StudentTable({ data, onDeleteStudent }: { data: Student[], onDeleteStudent: (id: string) => void }) {
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt implémentée.`);
 
   return (
     <>
         <div className="flex items-start justify-between mb-4">
             <CardDescription>Consulter et gérer les dossiers des étudiants.</CardDescription>
-            <AddStudentForm onAddStudent={onAddStudent} />
         </div>
       <div className="rounded-md border overflow-x-auto">
         <Table>
