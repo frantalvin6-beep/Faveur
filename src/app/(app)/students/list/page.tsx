@@ -1,6 +1,7 @@
 
 'use client'
 
+import * as React from 'react';
 import { useState, useEffect } from 'react';
 import { getStudents, getDepartments, Student, Department, addStudent, deleteStudent } from '@/lib/data';
 import { StudentTable } from '@/components/students/student-table';
