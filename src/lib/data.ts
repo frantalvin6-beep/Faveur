@@ -19,10 +19,9 @@ export async function getStudent(id: string): Promise<Student | null> {
 }
 
 export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
-    // Generate a new ID, but use the provided data to create the document
-    const studentWithId: Student = { ...studentData, id: doc(collection(db, 'students')).id, academicHistory: [] };
-    // Use the matricule (id) as the document ID in Firestore for easy lookup
-    await setDoc(doc(db, 'students', studentWithId.id), studentWithId);
+    const docRef = doc(collection(db, 'students'));
+    const studentWithId: Student = { ...studentData, id: docRef.id, academicHistory: [] };
+    await setDoc(docRef, studentWithId);
     return studentWithId;
 }
 
@@ -46,7 +45,7 @@ export async function getFaculty(): Promise<Faculty[]> {
 export async function addFaculty(facultyMember: Omit<Faculty, 'id'>): Promise<Faculty> {
     const docRef = doc(collection(db, 'faculty'));
     const newFaculty = { ...facultyMember, id: docRef.id };
-    await setDoc(docRef, facultyMember);
+    await setDoc(docRef, newFaculty);
     return newFaculty;
 }
 
@@ -68,7 +67,7 @@ export async function getDepartments(): Promise<Department[]> {
 export async function addDepartment(department: Omit<Department, 'id'>): Promise<Department> {
     const docRef = doc(collection(db, 'departments'));
     const newDepartment = { ...department, id: docRef.id };
-    await setDoc(docRef, department);
+    await setDoc(docRef, newDepartment);
     return newDepartment;
 }
 
@@ -106,7 +105,7 @@ export async function getExamGrades(): Promise<ExamGrade[]> {
 export async function addExamGrade(grade: Omit<ExamGrade, 'id'>): Promise<ExamGrade> {
     const docRef = doc(collection(db, 'examGrades'));
     const newGrade = { ...grade, id: docRef.id };
-    await setDoc(docRef, grade);
+    await setDoc(docRef, newGrade);
     return newGrade;
 }
 
@@ -142,7 +141,7 @@ export async function getCourseAssignments(): Promise<CourseAssignment[]> {
 export async function addCourseAssignment(assignment: Omit<CourseAssignment, 'id'>): Promise<CourseAssignment> {
     const docRef = doc(collection(db, 'courseAssignments'));
     const newAssignment = { ...assignment, id: docRef.id };
-    await setDoc(docRef, assignment);
+    await setDoc(docRef, newAssignment);
     return newAssignment;
 }
 
@@ -159,7 +158,7 @@ export async function getSchedule(): Promise<ScheduleEntry[]> {
 export async function addScheduleEntry(entry: Omit<ScheduleEntry, 'id'>): Promise<ScheduleEntry> {
     const docRef = doc(collection(db, 'schedule'));
     const newEntry = { ...entry, id: docRef.id };
-    await setDoc(docRef, entry);
+    await setDoc(docRef, newEntry);
     return newEntry;
 }
 
@@ -176,7 +175,7 @@ export async function getTeacherWorkloads(): Promise<TeacherWorkload[]> {
 export async function addTeacherWorkload(workload: Omit<TeacherWorkload, 'id'>): Promise<TeacherWorkload> {
     const docRef = doc(collection(db, 'teacherWorkload'));
     const newWorkload = { ...workload, id: docRef.id };
-    await setDoc(docRef, workload);
+    await setDoc(docRef, newWorkload);
     return newWorkload;
 }
 
@@ -198,7 +197,7 @@ export async function getTeacherAttendance(): Promise<TeacherAttendance[]> {
 export async function addTeacherAttendance(attendance: Omit<TeacherAttendance, 'id'>): Promise<TeacherAttendance> {
     const docRef = doc(collection(db, 'teacherAttendance'));
     const newAttendance = { ...attendance, id: docRef.id };
-    await setDoc(docRef, attendance);
+    await setDoc(docRef, newAttendance);
 
     // If present, update workload
     if (newAttendance.status === 'Présent') {
@@ -273,7 +272,7 @@ export async function getAccountingTransactions(): Promise<AccountingTransaction
 export async function addAccountingTransaction(transaction: Omit<AccountingTransaction, 'id'>): Promise<AccountingTransaction> {
     const docRef = doc(collection(db, 'accountingTransactions'));
     const newTransaction = { ...transaction, id: docRef.id };
-    await setDoc(docRef, transaction);
+    await setDoc(docRef, newTransaction);
     return newTransaction;
 }
 
