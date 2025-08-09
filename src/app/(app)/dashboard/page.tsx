@@ -1,8 +1,8 @@
 
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
-import { DollarSign, Users, UserSquare, BookOpen } from "lucide-react";
+import { DollarSign, Users, UserSquare, BookOpen, TrendingUp, TrendingDown, Wallet } from "lucide-react";
 import { DashboardCharts } from "@/components/dashboard/charts";
-import { getStudents, getFaculty, getDepartments } from "@/lib/data";
+import { getStudents, getFaculty, getDepartments, getAccountingTransactions, calculerComptabilite } from "@/lib/data";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
@@ -12,11 +12,14 @@ export default async function DashboardPage() {
   const students = await getStudents();
   const faculty = await getFaculty();
   const departments = await getDepartments();
+  const transactions = await getAccountingTransactions();
 
   const totalStudents = students.length;
   const totalFaculty = faculty.length;
   // Nous filtrons les options pour ne compter que les départements parents
-  const totalDepartments = departments.filter(d => !d.id.includes('OPT')).length;
+  const totalDepartments = departments.filter(d => !d.parentId).length;
+  const { revenus, depenses, solde } = calculerComptabilite(transactions);
+
 
   return (
     <div className="flex flex-col gap-6">
@@ -28,7 +31,6 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalStudents}</div>
-            <p className="text-xs text-muted-foreground">+20.1% depuis le mois dernier</p>
           </CardContent>
         </Card>
         <Card>
@@ -38,27 +40,24 @@ export default async function DashboardPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">{totalFaculty}</div>
-            <p className="text-xs text-muted-foreground">+5.2% depuis le mois dernier</p>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Départements</CardTitle>
-            <BookOpen className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Revenus Totaux</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{totalDepartments}</div>
-            <p className="text-xs text-muted-foreground">2 nouveaux départements ajoutés</p>
+            <div className="text-2xl font-bold text-green-600">{formatCurrency(revenus)}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Budget Annuel</CardTitle>
-            <DollarSign className="h-4 w-4 text-muted-foreground" />
+            <CardTitle className="text-sm font-medium">Solde Actuel</CardTitle>
+            <Wallet className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{formatCurrency(4523189000)}</div>
-            <p className="text-xs text-muted-foreground">+12% depuis l'année dernière</p>
+            <div className="text-2xl font-bold">{formatCurrency(solde)}</div>
           </CardContent>
         </Card>
       </div>

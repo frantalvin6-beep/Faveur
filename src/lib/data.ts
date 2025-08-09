@@ -382,12 +382,13 @@ export const courses_data: Course[] = [
     },
 ];
 
+export let accountingTransactions: AccountingTransaction[] = [];
+
 export const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'totalAPayer' | 'reste' | 'statut'>[] = [
     { matricule: 'S001', fullName: 'Alice Johnson', level: 'Licence 3', option: 'Intelligence Artificielle (IA)', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 498000 },
     { matricule: 'S002', fullName: 'Bob Smith', level: 'Licence 2', option: 'Électronique', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 250000 },
 ];
 
-export const accountingTransactions: AccountingTransaction[] = [];
 
 export const adminStaff_data: AdminStaff[] = [
     { id: 'ADM01', name: 'Jean Dupont', email: 'jean.dupont@campus.com', position: 'Secrétaire Général', hireDate: '2015-03-01'},
@@ -482,45 +483,59 @@ export function calculerFinanceAdmin(
   return { totalAPayer, reste, statut };
 }
 
+async function deleteCollection(collectionName: string) {
+    const collectionRef = collection(db, collectionName);
+    const snapshot = await getDocs(collectionRef);
+    const batch = writeBatch(db);
+    snapshot.docs.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+}
+
+
 export async function seedDatabase() {
+    const collectionsToDelete = [
+        'students', 'faculty', 'departments', 'courses', 'studentFinances',
+        'adminStaff', 'courseAssignments', 'schedule', 'examGrades', 'teacherWorkload',
+        'teacherAttendance', 'accountingTransactions', 'facultyFinances', 'adminFinances'
+    ];
+
+    for (const collectionName of collectionsToDelete) {
+        await deleteCollection(collectionName);
+    }
+
     const batch = writeBatch(db);
 
-    // Seed students
     students_data.forEach(student => {
         const docRef = doc(db, "students", student.id);
         batch.set(docRef, student);
     });
 
-    // Seed faculty
     faculty_data.forEach(facultyMember => {
         const docRef = doc(db, "faculty", facultyMember.id);
         batch.set(docRef, facultyMember);
     });
 
-    // Seed departments
     departments_data.forEach(department => {
         const docRef = doc(db, "departments", department.id);
         batch.set(docRef, department);
     });
 
-    // Seed courses
     courses_data.forEach(course => {
         const docRef = doc(db, "courses", course.code);
         batch.set(docRef, course);
     });
 
-    // Seed student finances
     studentFinances_data.forEach(finance => {
         const docRef = doc(db, "studentFinances", finance.matricule);
         batch.set(docRef, finance);
     });
 
-    // Seed admin staff
     adminStaff_data.forEach(staff => {
         const docRef = doc(db, "adminStaff", staff.id);
         batch.set(docRef, staff);
     });
 
-    // Commit the batch
     await batch.commit();
 }
