@@ -1,7 +1,11 @@
 
+'use client';
+
+import * as React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { getDepartments } from "@/lib/data";
 import { Users } from "lucide-react";
+import { Skeleton } from '@/components/ui/skeleton';
 
 const filieres = [
     {
@@ -18,9 +22,40 @@ const filieres = [
     }
 ]
 
+export default function RepartitionPage() {
+  const [departments, setDepartments] = React.useState<any[]>([]);
+  const [loading, setLoading] = React.useState(true);
 
-export default async function RepartitionPage() {
-  const departments = await getDepartments();
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const departmentsData = await getDepartments();
+        setDepartments(departmentsData);
+      } catch (error) {
+        console.error("Failed to fetch departments data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  if (loading) {
+    return (
+        <div className="space-y-6">
+            <div>
+                <Skeleton className="h-8 w-72 mb-2" />
+                <Skeleton className="h-4 w-96" />
+            </div>
+            <div className="space-y-8">
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+                <Skeleton className="h-48 w-full" />
+            </div>
+        </div>
+    )
+  }
+
   return (
     <div className="space-y-6">
       <div>
