@@ -1,20 +1,55 @@
 
+'use client';
+
 import * as React from 'react';
 import { getAccountingTransactions, calculerComptabilite, AccountingTransaction } from '@/lib/data';
 import { AccountingTable } from '@/components/accounting/accounting-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
-
+import { Skeleton } from '@/components/ui/skeleton';
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 }
 
-export default async function AccountingPage() {
-  const initialTransactions = await getAccountingTransactions();
-  const sortedTransactions = initialTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-  const { revenus, depenses, solde } = calculerComptabilite(sortedTransactions);
-  
+export default function AccountingPage() {
+  const [transactions, setTransactions] = React.useState<AccountingTransaction[]>([]);
+  const [loading, setLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    async function fetchData() {
+      try {
+        const initialTransactions = await getAccountingTransactions();
+        const sortedTransactions = initialTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+        setTransactions(sortedTransactions);
+      } catch (error) {
+        console.error("Failed to fetch accounting data:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
+  const { revenus, depenses, solde } = calculerComptabilite(transactions);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <div>
+          <Skeleton className="h-8 w-72" />
+          <Skeleton className="h-4 w-96 mt-2" />
+        </div>
+        <div className="grid gap-4 md:grid-cols-3">
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+          <Skeleton className="h-24" />
+        </div>
+        <Skeleton className="h-96 w-full" />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -55,7 +90,7 @@ export default async function AccountingPage() {
       </div>
       
       <AccountingTable 
-        initialData={sortedTransactions} 
+        initialData={transactions} 
       />
     </div>
   );
