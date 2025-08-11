@@ -2,7 +2,7 @@
 
 import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter } from './types';
 import { db } from './firebase';
-import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
+import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, addDoc } from 'firebase/firestore';
 
 
 // --- STUDENT DATA SERVICES ---
@@ -19,9 +19,9 @@ export async function getStudent(id: string): Promise<Student | null> {
 }
 
 export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
-    const docRef = doc(collection(db, 'students'));
+    const docRef = await addDoc(collection(db, 'students'), studentData);
     const studentWithId: Student = { ...studentData, id: docRef.id, academicHistory: [] };
-    await setDoc(docRef, studentWithId);
+    await updateDoc(docRef, { id: docRef.id });
     return studentWithId;
 }
 
@@ -43,9 +43,9 @@ export async function getFaculty(): Promise<Faculty[]> {
 }
 
 export async function addFaculty(facultyMember: Omit<Faculty, 'id'>): Promise<Faculty> {
-    const docRef = doc(collection(db, 'faculty'));
+    const docRef = await addDoc(collection(db, 'faculty'), facultyMember);
     const newFaculty = { ...facultyMember, id: docRef.id };
-    await setDoc(docRef, newFaculty);
+    await updateDoc(docRef, { id: docRef.id });
     return newFaculty;
 }
 
@@ -65,9 +65,9 @@ export async function getDepartments(): Promise<Department[]> {
 }
 
 export async function addDepartment(department: Omit<Department, 'id'>): Promise<Department> {
-    const docRef = doc(collection(db, 'departments'));
+    const docRef = await addDoc(collection(db, 'departments'), department);
     const newDepartment = { ...department, id: docRef.id };
-    await setDoc(docRef, newDepartment);
+    await updateDoc(docRef, { id: docRef.id });
     return newDepartment;
 }
 
@@ -103,9 +103,9 @@ export async function getExamGrades(): Promise<ExamGrade[]> {
 }
 
 export async function addExamGrade(grade: Omit<ExamGrade, 'id'>): Promise<ExamGrade> {
-    const docRef = doc(collection(db, 'examGrades'));
+    const docRef = await addDoc(collection(db, 'examGrades'), grade);
     const newGrade = { ...grade, id: docRef.id };
-    await setDoc(docRef, newGrade);
+    await updateDoc(docRef, { id: docRef.id });
     return newGrade;
 }
 
@@ -139,9 +139,9 @@ export async function getCourseAssignments(): Promise<CourseAssignment[]> {
 }
 
 export async function addCourseAssignment(assignment: Omit<CourseAssignment, 'id'>): Promise<CourseAssignment> {
-    const docRef = doc(collection(db, 'courseAssignments'));
+    const docRef = await addDoc(collection(db, 'courseAssignments'), assignment);
     const newAssignment = { ...assignment, id: docRef.id };
-    await setDoc(docRef, newAssignment);
+    await updateDoc(docRef, { id: docRef.id });
     return newAssignment;
 }
 
@@ -156,9 +156,9 @@ export async function getSchedule(): Promise<ScheduleEntry[]> {
 }
 
 export async function addScheduleEntry(entry: Omit<ScheduleEntry, 'id'>): Promise<ScheduleEntry> {
-    const docRef = doc(collection(db, 'schedule'));
+    const docRef = await addDoc(collection(db, 'schedule'), entry);
     const newEntry = { ...entry, id: docRef.id };
-    await setDoc(docRef, newEntry);
+    await updateDoc(docRef, { id: docRef.id });
     return newEntry;
 }
 
@@ -173,9 +173,9 @@ export async function getTeacherWorkloads(): Promise<TeacherWorkload[]> {
 }
 
 export async function addTeacherWorkload(workload: Omit<TeacherWorkload, 'id'>): Promise<TeacherWorkload> {
-    const docRef = doc(collection(db, 'teacherWorkload'));
+    const docRef = await addDoc(collection(db, 'teacherWorkload'), workload);
     const newWorkload = { ...workload, id: docRef.id };
-    await setDoc(docRef, newWorkload);
+    await updateDoc(docRef, { id: docRef.id });
     return newWorkload;
 }
 
@@ -195,9 +195,9 @@ export async function getTeacherAttendance(): Promise<TeacherAttendance[]> {
 }
 
 export async function addTeacherAttendance(attendance: Omit<TeacherAttendance, 'id'>): Promise<TeacherAttendance> {
-    const docRef = doc(collection(db, 'teacherAttendance'));
+    const docRef = await addDoc(collection(db, 'teacherAttendance'), attendance);
     const newAttendance = { ...attendance, id: docRef.id };
-    await setDoc(docRef, newAttendance);
+    await updateDoc(docRef, { id: docRef.id });
 
     // If present, update workload
     if (newAttendance.status === 'Présent') {
@@ -270,9 +270,9 @@ export async function getAccountingTransactions(): Promise<AccountingTransaction
 }
 
 export async function addAccountingTransaction(transaction: Omit<AccountingTransaction, 'id'>): Promise<AccountingTransaction> {
-    const docRef = doc(collection(db, 'accountingTransactions'));
+    const docRef = await addDoc(collection(db, 'accountingTransactions'), transaction);
     const newTransaction = { ...transaction, id: docRef.id };
-    await setDoc(docRef, newTransaction);
+    await updateDoc(docRef, { id: docRef.id });
     return newTransaction;
 }
 
@@ -316,9 +316,8 @@ export async function updateAdminFinance(matricule: string, data: Partial<AdminF
 
 
 // --- MOCK DATA FOR SEEDING ---
-export const students_data: Student[] = [
+export const students_data: Omit<Student, 'id'>[] = [
   { 
-    id: 'ETU001', 
     name: 'Alice Dubois', 
     email: 'alice.dubois@campus.edu', 
     gender: 'Féminin',
@@ -331,7 +330,6 @@ export const students_data: Student[] = [
     ]
   },
   { 
-    id: 'ETU002', 
     name: 'Bob Leclerc', 
     email: 'bob.leclerc@campus.edu', 
     gender: 'Masculin',
@@ -343,17 +341,17 @@ export const students_data: Student[] = [
   },
 ];
 
-export const faculty_data: Faculty[] = [
-  { id: 'PROF001', name: 'Dr. Alain Turing', email: 'alain.turing@campus.edu', phone: '+237699887766', department: 'Intelligence Artificielle (IA)', position: 'Professeur', specialization: 'Apprentissage Profond', teachingLevels: ['Master', 'Licence'], hireDate: '2018-08-15' },
-  { id: 'PROF002', name: 'Dr. Ada Lovelace', email: 'ada.lovelace@campus.edu', phone: '+237677665544', department: 'Électronique', position: 'Professeur agrégé', specialization: 'Systèmes Embarqués', teachingLevels: ['Licence'], hireDate: '2020-07-20' },
+export const faculty_data: Omit<Faculty, 'id'>[] = [
+  { name: 'Dr. Alain Turing', email: 'alain.turing@campus.edu', phone: '+237699887766', department: 'Intelligence Artificielle (IA)', position: 'Professeur', specialization: 'Apprentissage Profond', teachingLevels: ['Master', 'Licence'], hireDate: '2018-08-15' },
+  { name: 'Dr. Ada Lovelace', email: 'ada.lovelace@campus.edu', phone: '+237677665544', department: 'Électronique', position: 'Professeur agrégé', specialization: 'Systèmes Embarqués', teachingLevels: ['Licence'], hireDate: '2020-07-20' },
 ];
 
-export const departments_data: Department[] = [
-    { id: 'FAC01', name: 'Faculté des Sciences et Technologies', head: 'Pr. Dumbledore', facultyCount: 0, studentCount: 0, creationDate: '2015-01-10' },
-    { id: 'DEP01', name: 'Département IA et Robotique', head: 'Dr. Eva Correia', facultyCount: 0, studentCount: 0, creationDate: '2020-01-15', parentId: 'FAC01' },
-    { id: 'DEP01-OPT01', name: 'Intelligence Artificielle (IA)', head: 'Dr. Eva Correia', facultyCount: 0, studentCount: 0, creationDate: '2020-01-15', parentId: 'DEP01' },
-    { id: 'DEP02', name: 'Département Génie Électrique', head: 'Dr. Marc Dubois', facultyCount: 0, studentCount: 0, creationDate: '2018-05-20', parentId: 'FAC01' },
-    { id: 'DEP02-OPT01', name: 'Électronique', head: 'Dr. Marc Dubois', facultyCount: 0, studentCount: 0, creationDate: '2018-05-20', parentId: 'DEP02' },
+export const departments_data: Omit<Department, 'id'>[] = [
+    { name: 'Faculté des Sciences et Technologies', head: 'Pr. Dumbledore', facultyCount: 0, studentCount: 0, creationDate: '2015-01-10' },
+    { name: 'Département IA et Robotique', head: 'Dr. Eva Correia', facultyCount: 0, studentCount: 0, creationDate: '2020-01-15', parentId: 'FAC01' },
+    { name: 'Intelligence Artificielle (IA)', head: 'Dr. Eva Correia', facultyCount: 0, studentCount: 0, creationDate: '2020-01-15', parentId: 'DEP01' },
+    { name: 'Département Génie Électrique', head: 'Dr. Marc Dubois', facultyCount: 0, studentCount: 0, creationDate: '2018-05-20', parentId: 'FAC01' },
+    { name: 'Électronique', head: 'Dr. Marc Dubois', facultyCount: 0, studentCount: 0, creationDate: '2018-05-20', parentId: 'DEP02' },
 ];
 
 export const courses_data: Course[] = [
@@ -392,9 +390,9 @@ export const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'to
 ];
 
 
-export let adminStaff_data: AdminStaff[] = [
-    { id: 'ADM01', name: 'Jean Dupont', email: 'jean.dupont@campus.com', position: 'Secrétaire Général', hireDate: '2015-03-01'},
-    { id: 'ADM02', name: 'Marie Curie', email: 'marie.curie@campus.com', position: 'Responsable Financier', hireDate: '2018-07-23'},
+export let adminStaff_data: Omit<AdminStaff, 'id'>[] = [
+    { name: 'Jean Dupont', email: 'jean.dupont@campus.com', position: 'Secrétaire Général', hireDate: '2015-03-01'},
+    { name: 'Marie Curie', email: 'marie.curie@campus.com', position: 'Responsable Financier', hireDate: '2018-07-23'},
 ];
 
 export let messages: Message[] = [];
@@ -521,35 +519,43 @@ export async function seedDatabase() {
     console.log("All collections deleted. Starting to write new data...");
     const batch = writeBatch(db);
 
-    students_data.forEach(student => {
-        const docRef = doc(db, "students", student.id);
-        batch.set(docRef, student);
+    const studentDocs = students_data.map(student => {
+        const docRef = doc(collection(db, "students"));
+        batch.set(docRef, { ...student, id: docRef.id });
+        return { ...student, id: docRef.id };
     });
 
-    faculty_data.forEach(facultyMember => {
-        const docRef = doc(db, "faculty", facultyMember.id);
-        batch.set(docRef, facultyMember);
+    const facultyDocs = faculty_data.map(facultyMember => {
+        const docRef = doc(collection(db, "faculty"));
+        batch.set(docRef, { ...facultyMember, id: docRef.id });
+        return { ...facultyMember, id: docRef.id };
     });
-
+    
     departments_data.forEach(department => {
-        const docRef = doc(db, "departments", department.id);
-        batch.set(docRef, department);
+        const docRef = doc(collection(db, "departments"));
+        batch.set(docRef, {...department, id: docRef.id});
     });
 
     courses_data.forEach(course => {
         const docRef = doc(db, "courses", course.code);
-        batch.set(docRef, course);
+        const teacherIds = facultyDocs.filter(f => course.teacherIds?.includes(f.name)).map(f => f.id);
+        batch.set(docRef, {...course, teacherIds});
     });
 
     studentFinances_data.forEach(finance => {
-        const docRef = doc(db, "studentFinances", finance.matricule);
-        batch.set(docRef, finance);
+        const student = studentDocs.find(s => s.name === finance.fullName);
+        if (student) {
+            const docRef = doc(db, "studentFinances", student.id);
+            batch.set(docRef, {...finance, matricule: student.id});
+        }
     });
 
-    adminStaff_data.forEach(staff => {
-        const docRef = doc(db, "adminStaff", staff.id);
-        batch.set(docRef, staff);
+    const adminStaffDocs = adminStaff_data.map(staff => {
+        const docRef = doc(collection(db, "adminStaff"));
+        batch.set(docRef, {...staff, id: docRef.id});
+        return {...staff, id: docRef.id};
     });
+
 
     await batch.commit();
     console.log("Database seeded successfully!");
