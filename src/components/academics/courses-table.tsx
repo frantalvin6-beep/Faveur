@@ -48,10 +48,9 @@ interface ChapterInput {
   estimatedDuration: string;
 }
 
-export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (course: Course) => void, allDepartments: Department[] }) {
+export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (course: Omit<Course, 'code'>) => Promise<void>, allDepartments: Department[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
-  const [code, setCode] = React.useState('');
   const [name, setName] = React.useState('');
   const [department, setDepartment] = React.useState('');
   const [level, setLevel] = React.useState('');
@@ -83,24 +82,25 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
       setChapters(prev => prev.map(c => c.id === id ? { ...c, [field]: value } : c));
   }
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!code || !name || !department || !level || !semester || credits <= 0) {
+    if (!name || !department || !level || !semester || credits <= 0) {
       alert("Veuillez remplir tous les champs obligatoires.");
       return;
     }
 
+    const code = `${name.substring(0, 3).toUpperCase()}${department.substring(0, 2).toUpperCase()}${Math.floor(Math.random() * 900) + 100}`;
+
     const finalChapters: Chapter[] = chapters
       .filter(c => c.title.trim() !== '')
       .map((c, index) => ({
-        id: `CH-${code.toUpperCase()}-${index + 1}`,
+        id: `CH-${code}-${index + 1}`,
         title: c.title,
         estimatedDuration: c.estimatedDuration,
         subChapters: c.subChapters.split('\n').filter(sc => sc.trim() !== '').map(sc => ({ title: sc }))
       }));
 
-    const newCourse: Course = {
-      code: code.toUpperCase(),
+    const newCourse: Omit<Course, 'code'> = {
       name,
       department,
       level,
@@ -109,10 +109,10 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
       chapters: finalChapters,
       teacherIds: teacherIds,
     };
-    onAddCourse(newCourse);
+    
+    await onAddCourse(newCourse);
     setIsOpen(false);
     // Reset form
-    setCode('');
     setName('');
     setDepartment('');
     setLevel('');
@@ -139,11 +139,7 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
         <form onSubmit={handleSubmit} id="add-course-form" className="flex-grow overflow-hidden flex flex-col gap-4">
           <ScrollArea className="flex-grow pr-6 -mr-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1">
-              <div className="space-y-2">
-                <Label htmlFor="code">Code Matière</Label>
-                <Input id="code" value={code} onChange={e => setCode(e.target.value)} placeholder="Ex: MATH101" required />
-              </div>
-              <div className="space-y-2">
+              <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nom de la matière</Label>
                 <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Algèbre Linéaire" required />
               </div>
@@ -152,7 +148,7 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
                 <Select onValueChange={setDepartment} value={department} required>
                   <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                   <SelectContent>
-                    {allDepartments.filter(d => d.id.includes('OPT')).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                    {allDepartments.filter(d => d.parentId).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>

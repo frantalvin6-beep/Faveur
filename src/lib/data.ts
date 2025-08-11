@@ -20,9 +20,9 @@ export async function getStudent(id: string): Promise<Student | null> {
 
 export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
     const docRef = await addDoc(collection(db, 'students'), studentData);
-    const studentWithId: Student = { ...studentData, id: docRef.id, academicHistory: [] };
+    const newStudent: Student = { ...studentData, id: docRef.id, academicHistory: [] };
     await updateDoc(docRef, { id: docRef.id });
-    return studentWithId;
+    return newStudent;
 }
 
 
@@ -82,10 +82,13 @@ export async function getCourses(): Promise<Course[]> {
     return snapshot.docs.map(doc => ({ ...doc.data(), code: doc.id } as Course));
 }
 
-export async function addCourse(course: Course): Promise<Course> {
-    await setDoc(doc(db, 'courses', course.code), course);
-    return course;
+export async function addCourse(courseData: Omit<Course, 'code'>): Promise<Course> {
+    const docRef = await addDoc(collection(db, 'courses'), courseData);
+    const code = docRef.id;
+    await updateDoc(docRef, { code: code });
+    return { ...courseData, code: code };
 }
+
 
 export async function updateCourse(code: string, data: Partial<Course>): Promise<void> {
     await updateDoc(doc(db, 'courses', code), data);

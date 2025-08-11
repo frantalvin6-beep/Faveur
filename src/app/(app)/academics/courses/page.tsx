@@ -38,14 +38,15 @@ export default function CoursesPage() {
         fetchData();
     }, [toast]);
 
-    const handleAddCourse = async (newCourse: Course) => {
+    const handleAddCourse = async (newCourseData: Omit<Course, 'code'>) => {
         try {
-            await addCourse(newCourse);
+            const newCourse = await addCourse(newCourseData);
             setCourses(prev => [...prev, newCourse]);
             toast({ title: 'Matière ajoutée', description: `La matière ${newCourse.name} a été enregistrée.` });
         } catch (error) {
             console.error("Failed to add course:", error);
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter la matière.' });
+            throw error;
         }
     };
 
