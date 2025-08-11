@@ -316,7 +316,7 @@ export async function updateAdminFinance(matricule: string, data: Partial<AdminF
 
 
 // --- MOCK DATA FOR SEEDING ---
-export const students_data: Student[] = [
+export let students_data: Student[] = [
   { 
     id: 'S001', 
     name: 'Alice Johnson', 
@@ -346,19 +346,19 @@ export const students_data: Student[] = [
   },
 ];
 
-export const faculty_data: Faculty[] = [
+export let faculty_data: Faculty[] = [
   { id: 'F001', name: 'Dr. Alan Grant', email: 'alan.g@university.edu', phone: '+1-202-555-0191', department: 'Intelligence Artificielle (IA)', position: 'Professeur', specialization: 'Machine Learning, NLP', teachingLevels: ['Master', 'Doctorat'], hireDate: '2010-08-15' },
   { id: 'F002', name: 'Dr. Ellie Sattler', email: 'ellie.s@university.edu', phone: '+1-202-555-0143', department: 'Électronique', position: 'Professeur agrégé', specialization: 'Systèmes embarqués, IoT', teachingLevels: ['Licence', 'Master'], hireDate: '2015-07-20' },
 ];
 
-export const departments_data: Department[] = [
+export let departments_data: Department[] = [
     { id: 'DEP01', name: 'Département IA et Robotique', head: 'Dr. Eva Correia', facultyCount: 40, studentCount: 450, creationDate: '2020-01-15' },
     { id: 'DEP01-OPT02', name: 'Intelligence Artificielle (IA)', head: 'Dr. Eva Correia', facultyCount: 15, studentCount: 150, creationDate: '2020-01-15', parentId: 'DEP01' },
     { id: 'DEP02', name: 'Département Génie Électrique et Informatique Industrielle', head: 'Dr. Marc Dubois', facultyCount: 55, studentCount: 600, creationDate: '2018-05-20' },
     { id: 'DEP02-OPT01', name: 'Électronique', head: 'Dr. Marc Dubois', facultyCount: 20, studentCount: 200, creationDate: '2018-05-20', parentId: 'DEP02' },
 ];
 
-export const courses_data: Course[] = [
+export let courses_data: Course[] = [
     { 
         code: 'CS101', 
         name: 'Introduction à la Programmation', 
@@ -389,13 +389,13 @@ export const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'to
 ];
 
 
-export const adminStaff_data: AdminStaff[] = [
+export let adminStaff_data: AdminStaff[] = [
     { id: 'ADM01', name: 'Jean Dupont', email: 'jean.dupont@campus.com', position: 'Secrétaire Général', hireDate: '2015-03-01'},
     { id: 'ADM02', name: 'Marie Curie', email: 'marie.curie@campus.com', position: 'Responsable Financier', hireDate: '2018-07-23'},
 ];
 
-export const messages: Message[] = [];
-export const examSchedule: ExamSchedule[] = [];
+export let messages: Message[] = [];
+export let examSchedule: ExamSchedule[] = [];
 
 
 // --- UTILITY FUNCTIONS ---
@@ -483,13 +483,20 @@ export function calculerFinanceAdmin(
 }
 
 async function deleteCollection(collectionName: string) {
-    const collectionRef = collection(db, collectionName);
-    const snapshot = await getDocs(collectionRef);
-    const batch = writeBatch(db);
-    snapshot.docs.forEach(doc => {
-        batch.delete(doc.ref);
-    });
-    await batch.commit();
+    try {
+        const collectionRef = collection(db, collectionName);
+        const snapshot = await getDocs(collectionRef);
+        const batch = writeBatch(db);
+        snapshot.docs.forEach(doc => {
+            batch.delete(doc.ref);
+        });
+        await batch.commit();
+        console.log(`Collection ${collectionName} deleted successfully.`);
+    } catch (error) {
+        console.error(`Error deleting collection ${collectionName}:`, error);
+        // Optionally re-throw or handle the error as needed
+        throw error;
+    }
 }
 
 
@@ -503,6 +510,17 @@ export async function seedDatabase() {
     for (const collectionName of collectionsToDelete) {
         await deleteCollection(collectionName);
     }
+    
+    // Re-initialize local arrays after deletion
+    students_data = [];
+    faculty_data = [];
+    departments_data = [];
+    courses_data = [];
+    accountingTransactions = [];
+    adminStaff_data = [];
+    messages = [];
+    examSchedule = [];
+
 
     const batch = writeBatch(db);
 

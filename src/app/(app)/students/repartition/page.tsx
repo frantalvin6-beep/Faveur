@@ -3,9 +3,10 @@
 
 import * as React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
-import { getDepartments } from "@/lib/data";
+import { getDepartments, getStudents } from "@/lib/data";
 import { Users } from "lucide-react";
 import { Skeleton } from '@/components/ui/skeleton';
+import { Department, Student } from '@/lib/types';
 
 const filieres = [
     {
@@ -14,7 +15,7 @@ const filieres = [
     },
     {
         name: "Filière : Numérique (Industrielle et Technologique)",
-        departments: ["Département Génie Électrique et Informatique Industrielle", "Département Génie Informatique", "Filière Génie Civil"]
+        departments: ["Département Génie Électrique et Informatique Industrielle", "Département Génie Informatique", "Filière Génie Civil", "Électronique"]
     },
     {
         name: "Filière : Digital Business",
@@ -23,22 +24,28 @@ const filieres = [
 ]
 
 export default function RepartitionPage() {
-  const [departments, setDepartments] = React.useState<any[]>([]);
+  const [departments, setDepartments] = React.useState<Department[]>([]);
+  const [students, setStudents] = React.useState<Student[]>([]);
   const [loading, setLoading] = React.useState(true);
 
   React.useEffect(() => {
     async function fetchData() {
       try {
-        const departmentsData = await getDepartments();
+        const [departmentsData, studentsData] = await Promise.all([getDepartments(), getStudents()]);
         setDepartments(departmentsData);
+        setStudents(studentsData);
       } catch (error) {
-        console.error("Failed to fetch departments data:", error);
+        console.error("Failed to fetch data:", error);
       } finally {
         setLoading(false);
       }
     }
     fetchData();
   }, []);
+
+  const getStudentCountForDept = (deptName: string) => {
+    return students.filter(s => s.department === deptName).length;
+  }
 
   if (loading) {
     return (
@@ -73,7 +80,7 @@ export default function RepartitionPage() {
                 </CardHeader>
                 <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     {departments
-                        .filter(d => filiere.departments.includes(d.name))
+                        .filter(d => d.parentId && filiere.departments.includes(d.name))
                         .map((dept) => (
                         <Card key={dept.id}>
                             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -81,7 +88,7 @@ export default function RepartitionPage() {
                                 <Users className="h-4 w-4 text-muted-foreground" />
                             </CardHeader>
                             <CardContent>
-                                <div className="text-2xl font-bold">{dept.studentCount}</div>
+                                <div className="text-2xl font-bold">{getStudentCountForDept(dept.name)}</div>
                                 <p className="text-xs text-muted-foreground">étudiants inscrits</p>
                             </CardContent>
                         </Card>
