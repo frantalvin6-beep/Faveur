@@ -25,8 +25,7 @@ import { Student } from '@/lib/types';
 import { CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-export function StudentTable({ data, onDeleteStudent }: { data: Student[], onDeleteStudent: (id: string) => void }) {
-  const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt implémentée.`);
+export function StudentTable({ data, onDeleteStudent, onEditStudent }: { data: Student[], onDeleteStudent: (id: string) => void, onEditStudent: (id: string) => void }) {
 
   return (
     <>
@@ -72,7 +71,7 @@ export function StudentTable({ data, onDeleteStudent }: { data: Student[], onDel
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => handleEdit(student.id)}>
+                      <DropdownMenuItem onClick={() => onEditStudent(student.id)}>
                         <Edit className="mr-2 h-4 w-4" />
                         Modifier
                       </DropdownMenuItem>

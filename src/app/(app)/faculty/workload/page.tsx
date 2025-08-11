@@ -6,19 +6,15 @@ import { TeacherWorkload, getTeacherWorkloads, addTeacherWorkload, deleteTeacher
 import { TeacherWorkloadTable } from '@/components/faculty/teacher-workload-table';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
-import { useIsMobile } from '@/hooks/use-mobile';
-
 
 export default function TeacherWorkloadPage() {
   const [workloadData, setWorkloadData] = React.useState<TeacherWorkload[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
-  const isMobile = useIsMobile(); // Re-renders on route change
 
   React.useEffect(() => {
     async function fetchData() {
         try {
-            setLoading(true);
             const data = await getTeacherWorkloads();
             setWorkloadData(data);
         } catch (error) {
@@ -29,7 +25,7 @@ export default function TeacherWorkloadPage() {
         }
     }
     fetchData();
-  }, [toast, isMobile]);
+  }, [toast]);
   
   const handleAddWorkload = async (workload: Omit<TeacherWorkload, 'id'>) => {
     // Check if a workload for this teacher and course already exists

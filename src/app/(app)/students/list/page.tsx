@@ -128,7 +128,6 @@ export default function StudentsListPage() {
   useEffect(() => {
     async function fetchData() {
       try {
-        setLoading(true);
         const [studentsData, departmentsData] = await Promise.all([getStudents(), getDepartments()]);
         setStudents(studentsData);
         setDepartments(departmentsData);
@@ -179,8 +178,7 @@ export default function StudentsListPage() {
   };
 
 
-  const handleRename = (deptName: string) => alert(`La fonctionnalité pour renommer "${deptName}" sera bientôt disponible.`);
-  const handleDelete = (deptName: string) => alert(`La fonctionnalité pour supprimer "${deptName}" sera bientôt disponible.`);
+  const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt disponible.`);
 
    const displayedDepartments = departments.filter(dept => {
         // We only want to display options, which have a parentId
@@ -242,22 +240,13 @@ export default function StudentsListPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <CardTitle>{dept.name}</CardTitle>
-                <div className="flex items-center gap-2">
-                    <Button variant="outline" size="icon" onClick={() => handleRename(dept.name)}>
-                        <Edit className="h-4 w-4" />
-                        <span className="sr-only">Renommer</span>
-                    </Button>
-                    <Button variant="destructive" size="icon" onClick={() => handleDelete(dept.name)}>
-                        <Trash2 className="h-4 w-4" />
-                        <span className="sr-only">Supprimer</span>
-                    </Button>
-                </div>
               </div>
             </CardHeader>
             <CardContent>
                 <StudentTable 
                     data={studentsForDept} 
                     onDeleteStudent={handleDeleteStudent}
+                    onEditStudent={handleEdit}
                 />
             </CardContent>
           </Card>

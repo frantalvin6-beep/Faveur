@@ -15,7 +15,6 @@ export default function DepartmentsPage() {
     React.useEffect(() => {
         async function fetchData() {
             try {
-                setLoading(true);
                 const departmentsData = await getDepartments();
                 setDepartments(departmentsData);
             } catch (error) {

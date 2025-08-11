@@ -31,7 +31,6 @@ export default function SyllabusPage() {
     React.useEffect(() => {
         async function fetchData() {
             try {
-                setLoading(true);
                 const coursesData = await getCourses();
                 setCourses(coursesData);
             } catch (error) {

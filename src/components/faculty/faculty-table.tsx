@@ -26,7 +26,7 @@ import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { getDepartments, addFaculty, deleteFaculty } from '@/lib/data';
+import { getDepartments } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 
 
@@ -47,8 +47,10 @@ function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty
       const deps = await getDepartments();
       setDepartments(deps.filter(d => d.id.includes('OPT')));
     }
-    loadDeps();
-  }, []);
+    if (isOpen) {
+      loadDeps();
+    }
+  }, [isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,38 +120,10 @@ function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty
 }
 
 
-export function FacultyTable({ initialData }: { initialData: Faculty[]}) {
+export function FacultyTable({ data, onAddFaculty, onDeleteFaculty }: { data: Faculty[], onAddFaculty: (faculty: Omit<Faculty, 'id'>) => Promise<Faculty>, onDeleteFaculty: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [faculty, setFaculty] = React.useState<Faculty[]>(initialData);
-  const { toast } = useToast();
-
-  const handleAddFaculty = async (newFacultyMember: Omit<Faculty, 'id'>) => {
-    try {
-      const addedFaculty = await addFaculty(newFacultyMember);
-      setFaculty(prev => [...prev, addedFaculty]);
-      toast({ title: 'Membre ajouté', description: `Le membre du personnel ${addedFaculty.name} a été ajouté.` });
-      return addedFaculty;
-    } catch (error) {
-      console.error("Failed to add faculty:", error);
-      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter le membre du personnel.' });
-      throw error;
-    }
-  };
   
-  const handleDeleteFaculty = async (id: string) => {
-      if (confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ?')) {
-          try {
-              await deleteFaculty(id);
-              setFaculty(prev => prev.filter(f => f.id !== id));
-              toast({ title: 'Membre supprimé' });
-          } catch (error) {
-              console.error("Failed to delete faculty:", error);
-              toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer le membre.' });
-          }
-      }
-  };
-
-  const filteredFaculty = faculty.filter((member) =>
+  const filteredFaculty = data.filter((member) =>
     member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
     member.department.toLowerCase().includes(searchTerm.toLowerCase())
@@ -172,7 +146,7 @@ export function FacultyTable({ initialData }: { initialData: Faculty[]}) {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <AddFacultyForm onAddFaculty={handleAddFaculty} />
+                <AddFacultyForm onAddFaculty={onAddFaculty} />
             </div>
         </div>
       </CardHeader>
@@ -205,7 +179,7 @@ export function FacultyTable({ initialData }: { initialData: Faculty[]}) {
                     <TableCell>{member.specialization}</TableCell>
                     <TableCell>
                         <div className="flex flex-wrap gap-1">
-                            {member.teachingLevels.map(level => (
+                            {member.teachingLevels && member.teachingLevels.map(level => (
                                 <Badge key={level} variant="secondary">{level}</Badge>
                             ))}
                         </div>

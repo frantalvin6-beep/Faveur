@@ -25,7 +25,6 @@ export default function CoursesPage() {
     React.useEffect(() => {
         async function fetchData() {
             try {
-                setLoading(true);
                 const [coursesData, departmentsData] = await Promise.all([getCourses(), getDepartments()]);
                 setCourses(coursesData);
                 setDepartments(departmentsData);

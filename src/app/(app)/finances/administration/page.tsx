@@ -16,7 +16,6 @@ export default function AdminFinancesPage() {
   React.useEffect(() => {
     async function fetchData() {
         try {
-            setLoading(true);
             const [financesData, staffData] = await Promise.all([
                 getAdminFinances(),
                 getAdminStaff(),

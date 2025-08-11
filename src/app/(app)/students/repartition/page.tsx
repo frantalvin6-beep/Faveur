@@ -7,6 +7,7 @@ import { getDepartments, getStudents } from "@/lib/data";
 import { Users } from "lucide-react";
 import { Skeleton } from '@/components/ui/skeleton';
 import { Department, Student } from '@/lib/types';
+import { useToast } from '@/hooks/use-toast';
 
 const filieres = [
     {
@@ -27,6 +28,7 @@ export default function RepartitionPage() {
   const [departments, setDepartments] = React.useState<Department[]>([]);
   const [students, setStudents] = React.useState<Student[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { toast } = useToast();
 
   React.useEffect(() => {
     async function fetchData() {
@@ -36,12 +38,13 @@ export default function RepartitionPage() {
         setStudents(studentsData);
       } catch (error) {
         console.error("Failed to fetch data:", error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données de répartition.' });
       } finally {
         setLoading(false);
       }
     }
     fetchData();
-  }, []);
+  }, [toast]);
 
   const getStudentCountForDept = (deptName: string) => {
     return students.filter(s => s.department === deptName).length;
@@ -93,6 +96,9 @@ export default function RepartitionPage() {
                             </CardContent>
                         </Card>
                     ))}
+                     {departments.filter(d => d.parentId && filiere.departments.includes(d.name)).length === 0 && (
+                        <p className="text-muted-foreground col-span-full">Aucun département de cette filière n'a d'étudiants pour le moment.</p>
+                     )}
                 </CardContent>
             </Card>
         ))}

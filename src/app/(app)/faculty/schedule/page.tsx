@@ -146,7 +146,6 @@ export default function FacultySchedulePage() {
   React.useEffect(() => {
       async function fetchData() {
           try {
-              setLoading(true);
               const scheduleData = await getSchedule();
               setSchedule(scheduleData);
           } catch (error) {

@@ -136,7 +136,6 @@ export default function GradesPage() {
   useEffect(() => {
     async function fetchData() {
         try {
-            setLoading(true);
             const [gradesData, studentsData, coursesData] = await Promise.all([
                 getExamGrades(),
                 getStudents(),

@@ -21,7 +21,6 @@ export default function CourseAssignmentsPage() {
   React.useEffect(() => {
     async function fetchData() {
       try {
-        setLoading(true);
         const [data, coursesData, facultyData] = await Promise.all([
           getCourseAssignments(),
           getCourses(),
