@@ -15,7 +15,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Student, 'id'>) => void }) {
+function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Student) => void }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [departments, setDepartments] = React.useState<Department[]>([]);
   const [name, setName] = React.useState('');
@@ -35,14 +35,14 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Stude
     }
   }, [isOpen]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !department) {
       alert("Veuillez remplir tous les champs.");
       return;
     }
-
-    onAddStudent({
+    
+    const studentData: Omit<Student, 'id'> = {
       name,
       email,
       gender,
@@ -51,14 +51,20 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Stude
       gpa: 0,
       enrollmentDate: new Date().toISOString().split('T')[0],
       academicHistory: [],
-    });
+    };
 
-    setIsOpen(false);
-    // Reset form
-    setName('');
-    setEmail('');
-    setDepartment('');
-    setYear(1);
+    try {
+      const newStudent = await addStudent(studentData);
+      onAddStudent(newStudent);
+      setIsOpen(false);
+      // Reset form
+      setName('');
+      setEmail('');
+      setDepartment('');
+      setYear(1);
+    } catch (error) {
+       console.error(error);
+    }
   };
 
   return (
@@ -153,15 +159,9 @@ export default function StudentsListPage() {
     return studentsInDept;
   };
   
-  const handleAddStudent = async (studentData: Omit<Student, 'id'>) => {
-    try {
-      const newStudent = await addStudent(studentData);
-      setStudents(prev => [...prev, newStudent]);
-      toast({ title: "Étudiant ajouté", description: `L'étudiant ${newStudent.name} a été ajouté avec succès.` });
-    } catch(error) {
-      console.error(error);
-      toast({ variant: 'destructive', title: 'Erreur', description: "Impossible d'ajouter l'étudiant." });
-    }
+  const handleAddStudent = (newStudent: Student) => {
+    setStudents(prev => [...prev, newStudent]);
+    toast({ title: "Étudiant ajouté", description: `L'étudiant ${newStudent.name} a été ajouté avec succès.` });
   };
 
   const handleDeleteStudent = async (id: string) => {

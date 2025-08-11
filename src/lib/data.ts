@@ -316,76 +316,79 @@ export async function updateAdminFinance(matricule: string, data: Partial<AdminF
 
 
 // --- MOCK DATA FOR SEEDING ---
-export let students_data: Student[] = [
+export const students_data: Student[] = [
   { 
-    id: 'S001', 
-    name: 'Alice Johnson', 
-    email: 'alice.j@university.edu', 
+    id: 'ETU001', 
+    name: 'Alice Dubois', 
+    email: 'alice.dubois@campus.edu', 
     gender: 'Féminin',
     department: 'Intelligence Artificielle (IA)', 
     year: 3, 
-    gpa: 3.8, 
+    gpa: 15.5, 
     enrollmentDate: '2021-09-01',
     academicHistory: [
-      { semester: 'Semestre 1', year: 2021, courses: [{name: 'Algo 1', grade: 18, coefficient: 3}, {name: 'Maths 1', grade: 17, coefficient: 2}], gpa: 17.6, decision: 'Admis' },
-      { semester: 'Semestre 2', year: 2022, courses: [{name: 'Algo 2', grade: 16, coefficient: 3}, {name: 'Web 1', grade: 18, coefficient: 2}], gpa: 16.8, decision: 'Admis' },
+      { semester: 'Semestre 1', year: 2021, courses: [{name: 'Algorithmique 1', grade: 16, coefficient: 3}, {name: 'Mathématiques Discrètes', grade: 15, coefficient: 2}], gpa: 15.6, decision: 'Admis' },
     ]
   },
   { 
-    id: 'S002', 
-    name: 'Bob Smith', 
-    email: 'bob.s@university.edu', 
+    id: 'ETU002', 
+    name: 'Bob Leclerc', 
+    email: 'bob.leclerc@campus.edu', 
     gender: 'Masculin',
     department: 'Électronique', 
     year: 2, 
-    gpa: 3.5, 
+    gpa: 13.2, 
     enrollmentDate: '2022-09-01',
-    academicHistory: [
-        { semester: 'Semestre 1', year: 2022, courses: [{name: 'Electronique 1', grade: 15, coefficient: 4}, {name: 'Automatique', grade: 14, coefficient: 3}], gpa: 14.57, decision: 'Admis' },
-    ]
+    academicHistory: []
   },
 ];
 
-export let faculty_data: Faculty[] = [
-  { id: 'F001', name: 'Dr. Alan Grant', email: 'alan.g@university.edu', phone: '+1-202-555-0191', department: 'Intelligence Artificielle (IA)', position: 'Professeur', specialization: 'Machine Learning, NLP', teachingLevels: ['Master', 'Doctorat'], hireDate: '2010-08-15' },
-  { id: 'F002', name: 'Dr. Ellie Sattler', email: 'ellie.s@university.edu', phone: '+1-202-555-0143', department: 'Électronique', position: 'Professeur agrégé', specialization: 'Systèmes embarqués, IoT', teachingLevels: ['Licence', 'Master'], hireDate: '2015-07-20' },
+export const faculty_data: Faculty[] = [
+  { id: 'PROF001', name: 'Dr. Alain Turing', email: 'alain.turing@campus.edu', phone: '+237699887766', department: 'Intelligence Artificielle (IA)', position: 'Professeur', specialization: 'Apprentissage Profond', teachingLevels: ['Master', 'Licence'], hireDate: '2018-08-15' },
+  { id: 'PROF002', name: 'Dr. Ada Lovelace', email: 'ada.lovelace@campus.edu', phone: '+237677665544', department: 'Électronique', position: 'Professeur agrégé', specialization: 'Systèmes Embarqués', teachingLevels: ['Licence'], hireDate: '2020-07-20' },
 ];
 
-export let departments_data: Department[] = [
-    { id: 'DEP01', name: 'Département IA et Robotique', head: 'Dr. Eva Correia', facultyCount: 40, studentCount: 450, creationDate: '2020-01-15' },
-    { id: 'DEP01-OPT02', name: 'Intelligence Artificielle (IA)', head: 'Dr. Eva Correia', facultyCount: 15, studentCount: 150, creationDate: '2020-01-15', parentId: 'DEP01' },
-    { id: 'DEP02', name: 'Département Génie Électrique et Informatique Industrielle', head: 'Dr. Marc Dubois', facultyCount: 55, studentCount: 600, creationDate: '2018-05-20' },
-    { id: 'DEP02-OPT01', name: 'Électronique', head: 'Dr. Marc Dubois', facultyCount: 20, studentCount: 200, creationDate: '2018-05-20', parentId: 'DEP02' },
+export const departments_data: Department[] = [
+    { id: 'FAC01', name: 'Faculté des Sciences et Technologies', head: 'Pr. Dumbledore', facultyCount: 0, studentCount: 0, creationDate: '2015-01-10' },
+    { id: 'DEP01', name: 'Département IA et Robotique', head: 'Dr. Eva Correia', facultyCount: 0, studentCount: 0, creationDate: '2020-01-15', parentId: 'FAC01' },
+    { id: 'DEP01-OPT01', name: 'Intelligence Artificielle (IA)', head: 'Dr. Eva Correia', facultyCount: 0, studentCount: 0, creationDate: '2020-01-15', parentId: 'DEP01' },
+    { id: 'DEP02', name: 'Département Génie Électrique', head: 'Dr. Marc Dubois', facultyCount: 0, studentCount: 0, creationDate: '2018-05-20', parentId: 'FAC01' },
+    { id: 'DEP02-OPT01', name: 'Électronique', head: 'Dr. Marc Dubois', facultyCount: 0, studentCount: 0, creationDate: '2018-05-20', parentId: 'DEP02' },
 ];
 
-export let courses_data: Course[] = [
+export const courses_data: Course[] = [
     { 
-        code: 'CS101', 
-        name: 'Introduction à la Programmation', 
-        department: 'Programmation', 
-        level: 'Licence 1', 
-        semester: 'Semestre 1', 
+        code: 'IA301', 
+        name: 'Réseaux de Neurones', 
+        department: 'Intelligence Artificielle (IA)', 
+        level: 'Licence 3', 
+        semester: 'Semestre 5', 
         credits: 5,
-        chapters: [],
-        teacherIds: ['F003']
+        chapters: [
+            { id: 'CH-IA301-1', title: 'Introduction aux Perceptrons', subChapters: [{title: 'Perceptron Simple'}, {title: 'Perceptron Multi-couches'}], estimatedDuration: '4h'},
+            { id: 'CH-IA301-2', title: 'Rétropropagation du Gradient', subChapters: [{title: 'Descente de gradient'}, {title: 'Fonctions d\'activation'}], estimatedDuration: '6h'}
+        ],
+        teacherIds: ['PROF001']
     },
     { 
-        code: 'AI201', 
-        name: 'Fondamentaux de l\'IA', 
-        department: 'Intelligence Artificielle (IA)', 
+        code: 'ELN202', 
+        name: 'Circuits Logiques', 
+        department: 'Électronique', 
         level: 'Licence 2', 
         semester: 'Semestre 3', 
         credits: 4,
-        chapters: [],
-        teacherIds: ['F001']
+        chapters: [
+            { id: 'CH-ELN202-1', title: 'Portes Logiques', subChapters: [{title: 'AND, OR, NOT'}, {title: 'XOR, NAND, NOR'}], estimatedDuration: '3h'},
+        ],
+        teacherIds: ['PROF002']
     },
 ];
 
 export let accountingTransactions: AccountingTransaction[] = [];
 
 export const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'totalAPayer' | 'reste' | 'statut'>[] = [
-    { matricule: 'S001', fullName: 'Alice Johnson', level: 'Licence 3', option: 'Intelligence Artificielle (IA)', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 498000 },
-    { matricule: 'S002', fullName: 'Bob Smith', level: 'Licence 2', option: 'Électronique', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 250000 },
+    { matricule: 'ETU001', fullName: 'Alice Dubois', level: 'Licence 3', option: 'Intelligence Artificielle (IA)', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 498000 },
+    { matricule: 'ETU002', fullName: 'Bob Leclerc', level: 'Licence 2', option: 'Électronique', inscription: 50000, semester: 'Impair', fournitures: 20000, support: 10000, bourseType: 'Non boursier', reduction: 0, scolariteBase: 400000, latrine: 3000, session: 15000, rattrapage: 0, avance: 250000 },
 ];
 
 
@@ -486,6 +489,10 @@ async function deleteCollection(collectionName: string) {
     try {
         const collectionRef = collection(db, collectionName);
         const snapshot = await getDocs(collectionRef);
+        if (snapshot.empty) {
+            console.log(`Collection ${collectionName} is already empty.`);
+            return;
+        }
         const batch = writeBatch(db);
         snapshot.docs.forEach(doc => {
             batch.delete(doc.ref);
@@ -494,7 +501,6 @@ async function deleteCollection(collectionName: string) {
         console.log(`Collection ${collectionName} deleted successfully.`);
     } catch (error) {
         console.error(`Error deleting collection ${collectionName}:`, error);
-        // Optionally re-throw or handle the error as needed
         throw error;
     }
 }
@@ -507,21 +513,12 @@ export async function seedDatabase() {
         'teacherAttendance', 'accountingTransactions', 'facultyFinances', 'adminFinances'
     ];
 
+    console.log("Starting database seed process...");
     for (const collectionName of collectionsToDelete) {
         await deleteCollection(collectionName);
     }
     
-    // Re-initialize local arrays after deletion
-    students_data = [];
-    faculty_data = [];
-    departments_data = [];
-    courses_data = [];
-    accountingTransactions = [];
-    adminStaff_data = [];
-    messages = [];
-    examSchedule = [];
-
-
+    console.log("All collections deleted. Starting to write new data...");
     const batch = writeBatch(db);
 
     students_data.forEach(student => {
@@ -555,4 +552,5 @@ export async function seedDatabase() {
     });
 
     await batch.commit();
+    console.log("Database seeded successfully!");
 }
