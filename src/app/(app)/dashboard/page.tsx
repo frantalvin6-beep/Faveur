@@ -9,6 +9,8 @@ import { getStudents, getFaculty, getDepartments, getAccountingTransactions, cal
 import type { Faculty } from "@/lib/types";
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
+
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 }

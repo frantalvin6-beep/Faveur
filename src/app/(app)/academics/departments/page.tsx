@@ -7,6 +7,8 @@ import { DepartmentsTable } from '@/components/academics/departments-table';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
+
 export default function DepartmentsPage() {
     const [departments, setDepartments] = React.useState<Department[]>([]);
     const [loading, setLoading] = React.useState(true);

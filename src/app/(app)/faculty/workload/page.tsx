@@ -7,6 +7,8 @@ import { TeacherWorkloadTable } from '@/components/faculty/teacher-workload-tabl
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
+
 export default function TeacherWorkloadPage() {
   const [workloadData, setWorkloadData] = React.useState<TeacherWorkload[]>([]);
   const [loading, setLoading] = React.useState(true);

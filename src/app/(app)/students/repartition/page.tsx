@@ -9,6 +9,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { Department, Student } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
+export const dynamic = 'force-dynamic';
+
 const filieres = [
     {
         name: "Filière : IA & Business",

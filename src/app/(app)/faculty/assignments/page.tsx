@@ -10,6 +10,8 @@ import { CourseAssignmentsTable } from '@/components/faculty/course-assignments-
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
+
 export default function CourseAssignmentsPage() {
   const router = useRouter();
   const [assignments, setAssignments] = React.useState<CourseAssignment[]>([]);

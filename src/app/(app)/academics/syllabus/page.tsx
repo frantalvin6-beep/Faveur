@@ -9,6 +9,8 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
+
 interface ChapterRowData extends Chapter {
   courseCode: string;
   courseName: string;

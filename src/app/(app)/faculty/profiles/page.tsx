@@ -8,6 +8,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Faculty } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
+
 export default function FacultyProfilesPage() {
   const [faculty, setFaculty] = React.useState<Faculty[]>([]);
   const [loading, setLoading] = React.useState(true);
