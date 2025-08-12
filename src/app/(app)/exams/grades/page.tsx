@@ -300,12 +300,12 @@ export default function GradesPage() {
           {groupedGrades[departmentName].map((session, index) => (
             <Card key={`${session.courseCode}-${session.examType}-${index}`}>
               <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
                     <div>
                         <CardTitle>{session.courseName} - {session.examType}</CardTitle>
                         <CardDescription>Enseignant: {session.teacherName} | {session.grades.length} notes saisies</CardDescription>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex-shrink-0">
                          <AddGradeForm examSession={session} department={departmentName} onAddGrade={handleAddGrade} allStudents={allStudents} allCourses={allCourses} />
                     </div>
                 </div>
