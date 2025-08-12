@@ -252,7 +252,7 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
                                       id={`subchapters-${index}`} 
                                       value={chapter.subChapters} 
                                       onChange={e => handleChapterChange(chapter.id, 'subChapters', e.target.value)}
-                                      placeholder="Leçon 1.1&#10;Leçon 1.2"
+                                      placeholder="Leçon 1.1\nLeçon 1.2"
                                       rows={3}
                                   />
                               </div>
