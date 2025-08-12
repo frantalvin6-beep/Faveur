@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Faculty } from '@/lib/types';
 
+export const dynamic = 'force-dynamic';
 
 export default function FacultyFinancesPage() {
   const [facultyFinances, setFacultyFinances] = React.useState<FacultyFinance[]>([]);

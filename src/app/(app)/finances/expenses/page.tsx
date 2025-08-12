@@ -8,6 +8,7 @@ import { AccountingTransaction } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
 
 export default function AdminExpensesPage() {
   const [expenses, setExpenses] = React.useState<AccountingTransaction[]>([]);

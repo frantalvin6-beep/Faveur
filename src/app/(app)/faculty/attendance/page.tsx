@@ -6,6 +6,8 @@ import { getTeacherAttendance } from '@/lib/data';
 import { AttendanceTable } from '@/components/faculty/attendance-table';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
+
 export default function AttendancePage() {
   const [attendanceData, setAttendanceData] = React.useState<any[]>([]);
   const [loading, setLoading] = React.useState(true);

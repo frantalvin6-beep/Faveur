@@ -7,6 +7,8 @@ import { AdminFinancesTable } from '@/components/finances/admin-finances-table';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
+export const dynamic = 'force-dynamic';
+
 export default function AdminFinancesPage() {
   const [adminFinances, setAdminFinances] = React.useState<AdminFinance[]>([]);
   const [adminStaff, setAdminStaff] = React.useState<AdminStaff[]>([]);
