@@ -98,10 +98,6 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
 
     const handleSave = (item: ExamGrade, field: 'grade' | 'coefficient', newValue: number) => {
         onGradeUpdate({ ...item, [field]: newValue });
-        toast({
-            title: "Note mise à jour",
-            description: `La modification pour ${item.studentName} a été enregistrée.`
-        });
     };
 
   return (

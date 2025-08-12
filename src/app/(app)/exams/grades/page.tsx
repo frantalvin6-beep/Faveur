@@ -137,7 +137,7 @@ export default function GradesPage() {
   
   const fetchData = useCallback(async () => {
       try {
-          setLoading(true);
+          // setLoading(true) is only for the initial load
           const [gradesData, studentsData, coursesData] = await Promise.all([
               getExamGrades(),
               getStudents(),
@@ -155,17 +155,19 @@ export default function GradesPage() {
   }, []);
 
   useEffect(() => {
+    setLoading(true);
     fetchData();
   }, [fetchData]);
 
-  const handleAddGrade = async () => {
-    await fetchData(); // Refetch all data
+  const handleAddGrade = (newGrade: ExamGrade) => {
+    setGrades(prev => [newGrade, ...prev]);
   };
   
   const handleGradeUpdate = async (updatedGrade: ExamGrade) => {
     try {
         await updateExamGrade(updatedGrade.id, updatedGrade);
-        await fetchData(); // Refetch
+        setGrades(prev => prev.map(g => g.id === updatedGrade.id ? updatedGrade : g));
+        toast({ title: "Note mise à jour", description: `La note de ${updatedGrade.studentName} a été enregistrée.` });
     } catch (error) {
         console.error(error);
         toast({ variant: "destructive", title: "Erreur", description: "Impossible de mettre à jour la note." });
@@ -176,8 +178,8 @@ export default function GradesPage() {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
         try {
             await deleteExamGrade(gradeId);
+            setGrades(prev => prev.filter(g => g.id !== gradeId));
             toast({ variant: 'default', title: 'Note supprimée' });
-            await fetchData(); // Refetch
         } catch (error) {
             console.error(error);
             toast({ variant: "destructive", title: "Erreur", description: "Impossible de supprimer la note." });
