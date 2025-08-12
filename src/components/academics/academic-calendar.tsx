@@ -17,7 +17,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Plus, Trash2, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -34,9 +34,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
 
 const eventStyles = {
-  event: "bg-primary/20 text-primary-foreground border-primary/30 hover:bg-primary/30",
-  exam: "bg-destructive/20 text-destructive-foreground border-destructive/30 hover:bg-destructive/30",
-  holiday: "bg-accent/30 text-accent-foreground border-accent/40 hover:bg-accent/40",
+  event: "bg-primary/80 text-primary-foreground border-primary/90 hover:bg-primary",
+  exam: "bg-destructive/80 text-destructive-foreground border-destructive/90 hover:bg-destructive",
+  holiday: "bg-accent/80 text-accent-foreground border-accent/90 hover:bg-accent",
 };
 
 export function AcademicCalendar() {
@@ -168,8 +168,8 @@ export function AcademicCalendar() {
                 const isCurrentMonthDay = format(day, 'M') === format(currentMonth, 'M');
                 return (
                   <div key={day.toString()} className={cn(
-                      "p-1 border-b border-r relative group transition-colors duration-150",
-                      isCurrentMonthDay ? "hover:bg-accent/5" : "bg-muted/30 text-muted-foreground"
+                      "p-1 border-b border-r relative group transition-colors duration-150 overflow-y-auto",
+                       isCurrentMonthDay ? "hover:bg-accent/5" : "bg-muted/30 text-muted-foreground"
                   )}>
                       <span className={cn(
                           "font-medium cursor-pointer",
