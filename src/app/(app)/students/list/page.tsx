@@ -144,10 +144,16 @@ export default function StudentsListPage() {
   const getStudentsForDepartment = (departmentName: string): Student[] => {
     let studentsInDept = students.filter(student => student.department === departmentName);
     if (searchTerm) {
+        const lowercasedFilter = searchTerm.toLowerCase();
+        // If the search term matches the department name, we don't filter the students further
+        if (departmentName.toLowerCase().includes(lowercasedFilter)) {
+            return studentsInDept;
+        }
+        // Otherwise, filter students by name, id, or email
         studentsInDept = studentsInDept.filter((student) =>
-            student.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            student.email.toLowerCase().includes(searchTerm.toLowerCase())
+            student.name.toLowerCase().includes(lowercasedFilter) ||
+            student.id.toLowerCase().includes(lowercasedFilter) ||
+            student.email.toLowerCase().includes(lowercasedFilter)
         );
     }
     return studentsInDept;
@@ -155,12 +161,7 @@ export default function StudentsListPage() {
   
   const handleAddStudent = async (studentData: Omit<Student, 'id' | 'gpa' | 'academicHistory'>) => {
     try {
-        const finalStudentData = {
-          ...studentData,
-          gpa: 0,
-          academicHistory: [],
-        }
-        const newStudent = await addStudent(finalStudentData);
+        const newStudent = await addStudent(studentData);
         toast({ title: "Étudiant ajouté", description: `L'étudiant ${newStudent.name} a été ajouté avec succès.` });
         await fetchData(); // Refetch
     } catch (error) {
@@ -182,34 +183,32 @@ export default function StudentsListPage() {
     }
   };
 
-
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt disponible.`);
 
-   const displayedDepartments = departments.filter(dept => {
-        if (!dept.parentId) return false; // On affiche seulement les options
+  const faculties = departments.filter(d => !d.parentId);
+  const options = departments.filter(d => d.parentId);
+  const lowercasedFilter = searchTerm.toLowerCase();
 
-        const studentsInDept = getStudentsForDepartment(dept.name);
-        const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
-        
-        if (!searchTerm) {
-            return students.some(s => s.department === dept.name);
-        }
-        
-        return searchMatchInDeptName || studentsInDept.length > 0;
-    });
+  const displayedFaculties = faculties.filter(faculty => {
+      if (!searchTerm) return true;
+      const facultyNameMatch = faculty.name.toLowerCase().includes(lowercasedFilter);
+      const facultyOptions = options.filter(opt => opt.parentId === faculty.id);
+      const optionMatch = facultyOptions.some(opt => {
+          const optionNameMatch = opt.name.toLowerCase().includes(lowercasedFilter);
+          const studentMatch = getStudentsForDepartment(opt.name).length > 0;
+          return optionNameMatch || studentMatch;
+      });
+      return facultyNameMatch || optionMatch;
+  });
 
   if (loading) {
       return (
           <div className="space-y-6">
               <div className="flex items-center justify-between">
-                  <div>
-                      <Skeleton className="h-8 w-72" />
-                      <Skeleton className="h-4 w-96 mt-2" />
-                  </div>
+                  <div><Skeleton className="h-8 w-72" /><Skeleton className="h-4 w-96 mt-2" /></div>
                   <Skeleton className="h-10 w-72" />
               </div>
-              <Skeleton className="h-64 w-full" />
-              <Skeleton className="h-64 w-full" />
+              <Skeleton className="h-64 w-full" /><Skeleton className="h-64 w-full" />
           </div>
       );
   }
@@ -218,48 +217,69 @@ export default function StudentsListPage() {
     <div className="space-y-6">
        <div className="flex items-center justify-between">
          <div>
-            <h1 className="text-3xl font-bold">Liste des Étudiants par Option</h1>
-            <p className="text-muted-foreground">Consultez et gérez les étudiants regroupés par leur option ou département.</p>
+            <h1 className="text-3xl font-bold">Liste des Étudiants par Faculté et Option</h1>
+            <p className="text-muted-foreground">Consultez et gérez les étudiants regroupés par leur faculté et option.</p>
          </div>
          <div className="flex items-center gap-2">
             <Input
-                placeholder="Rechercher un étudiant ou une option..."
+                placeholder="Rechercher (faculté, option, étudiant...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
-            <AddStudentDialog onAddStudent={handleAddStudent} allDepartments={departments.filter(d => d.parentId)} />
+            <AddStudentDialog onAddStudent={handleAddStudent} allDepartments={options} />
         </div>
        </div>
 
-      {displayedDepartments.map((dept) => {
-        const studentsForDept = getStudentsForDepartment(dept.name);
-        
-        // Ce contrôle supplémentaire n'est plus nécessaire grâce à la logique dans `displayedDepartments`
-        // if (searchTerm && studentsForDept.length === 0 && !dept.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-        //     return null;
-        // }
+       <div className="space-y-8">
+            {displayedFaculties.map((faculty) => {
+                const facultyOptions = options.filter(opt => opt.parentId === faculty.id).filter(opt => {
+                    if (!searchTerm) return true;
+                    const optionNameMatch = opt.name.toLowerCase().includes(lowercasedFilter);
+                    const studentMatch = getStudentsForDepartment(opt.name).length > 0;
+                    return optionNameMatch || studentMatch || faculty.name.toLowerCase().includes(lowercasedFilter);
+                });
 
-        return (
-          <Card key={dept.id}>
-            <CardHeader>
-              <CardTitle>{dept.name}</CardTitle>
-            </CardHeader>
-            <CardContent>
-                <StudentTable 
-                    data={studentsForDept} 
-                    onDeleteStudent={handleDeleteStudent}
-                    onEditStudent={handleEdit}
-                />
-            </CardContent>
-          </Card>
-        )
-      })}
-       {displayedDepartments.length === 0 && !loading && (
+                if (facultyOptions.length === 0) return null;
+
+                return (
+                    <Card key={faculty.id} className="bg-muted/20">
+                        <CardHeader>
+                            <CardTitle className="text-2xl">{faculty.name}</CardTitle>
+                            <CardDescription>Responsable: {faculty.head}</CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {facultyOptions.map(option => {
+                                const studentsForOption = getStudentsForDepartment(option.name);
+                                if (studentsForOption.length === 0 && searchTerm && !option.name.toLowerCase().includes(lowercasedFilter)) {
+                                    return null;
+                                }
+                                return (
+                                    <Card key={option.id}>
+                                        <CardHeader>
+                                            <CardTitle className="text-xl">{option.name}</CardTitle>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <StudentTable
+                                                data={studentsForOption}
+                                                onDeleteStudent={handleDeleteStudent}
+                                                onEditStudent={handleEdit}
+                                            />
+                                        </CardContent>
+                                    </Card>
+                                )
+                            })}
+                        </CardContent>
+                    </Card>
+                )
+            })}
+        </div>
+
+       {displayedFaculties.length === 0 && !loading && (
             <Card>
                 <CardContent>
                     <p className="text-muted-foreground text-center py-8">
-                        {searchTerm ? "Aucun département ou étudiant ne correspond à votre recherche." : "Aucun étudiant à afficher. Commencez par en ajouter un."}
+                        {searchTerm ? "Aucune faculté, option ou étudiant ne correspond à votre recherche." : "Aucun étudiant à afficher. Commencez par en ajouter un."}
                     </p>
                 </CardContent>
             </Card>
