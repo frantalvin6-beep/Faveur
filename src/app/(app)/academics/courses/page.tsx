@@ -24,27 +24,29 @@ export default function CoursesPage() {
     const [searchTerm, setSearchTerm] = React.useState('');
     const { toast } = useToast();
 
-    React.useEffect(() => {
-        async function fetchData() {
-            try {
-                const [coursesData, departmentsData] = await Promise.all([getCourses(), getDepartments()]);
-                setCourses(coursesData);
-                setDepartments(departmentsData);
-            } catch (error) {
-                console.error("Failed to fetch data:", error);
-                toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
-            } finally {
-                setLoading(false);
-            }
+    const fetchCoursesAndDepartments = React.useCallback(async () => {
+        try {
+            setLoading(true);
+            const [coursesData, departmentsData] = await Promise.all([getCourses(), getDepartments()]);
+            setCourses(coursesData);
+            setDepartments(departmentsData);
+        } catch (error) {
+            console.error("Failed to fetch data:", error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
+        } finally {
+            setLoading(false);
         }
-        fetchData();
     }, [toast]);
+
+    React.useEffect(() => {
+        fetchCoursesAndDepartments();
+    }, [fetchCoursesAndDepartments]);
 
     const handleAddCourse = async (newCourseData: Omit<Course, 'code'>) => {
         try {
             const newCourse = await addCourse(newCourseData);
-            setCourses(prev => [...prev, newCourse]);
             toast({ title: 'Matière ajoutée', description: `La matière ${newCourse.name} a été enregistrée.` });
+            await fetchCoursesAndDepartments(); // Refetch
         } catch (error) {
             console.error("Failed to add course:", error);
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter la matière.' });
@@ -56,8 +58,8 @@ export default function CoursesPage() {
         if (confirm("Êtes-vous sûr de vouloir supprimer cette matière ?")) {
             try {
                 await deleteCourse(code);
-                setCourses(prev => prev.filter(c => c.code !== code));
                 toast({ title: 'Matière supprimée' });
+                await fetchCoursesAndDepartments(); // Refetch
             } catch (error) {
                 console.error("Failed to delete course:", error);
                 toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer la matière.' });
@@ -68,14 +70,13 @@ export default function CoursesPage() {
     const handleUpdateCourse = async (code: string, updatedData: Partial<Course>) => {
         try {
             await updateCourse(code, updatedData);
-            setCourses(prev => prev.map(c => c.code === code ? {...c, ...updatedData} : c));
             toast({ title: 'Matière mise à jour' });
+            await fetchCoursesAndDepartments(); // Refetch
         } catch (error) {
             console.error("Failed to update course:", error);
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour la matière.' });
         }
     };
-
 
     const groupedCourses = React.useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();

@@ -14,26 +14,28 @@ export default function DepartmentsPage() {
     const [loading, setLoading] = React.useState(true);
     const { toast } = useToast();
 
-    React.useEffect(() => {
-        async function fetchData() {
-            try {
-                const departmentsData = await getDepartments();
-                setDepartments(departmentsData);
-            } catch (error) {
-                console.error("Failed to fetch departments:", error);
-                toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les départements.' });
-            } finally {
-                setLoading(false);
-            }
+    const fetchDepartments = React.useCallback(async () => {
+        try {
+            setLoading(true);
+            const departmentsData = await getDepartments();
+            setDepartments(departmentsData);
+        } catch (error) {
+            console.error("Failed to fetch departments:", error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les départements.' });
+        } finally {
+            setLoading(false);
         }
-        fetchData();
     }, [toast]);
+
+    React.useEffect(() => {
+        fetchDepartments();
+    }, [fetchDepartments]);
 
     const handleAddDepartment = async (deptData: Omit<Department, 'id'>) => {
         try {
             const newDepartment = await addDepartment(deptData);
-            setDepartments(prev => [...prev, newDepartment]);
             toast({ title: 'Département ajouté', description: `Le département ${newDepartment.name} a été créé.` });
+            await fetchDepartments(); // Refetch
         } catch (error) {
             console.error("Failed to add department:", error);
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter le département.' });
@@ -44,8 +46,8 @@ export default function DepartmentsPage() {
         if (confirm('Êtes-vous sûr de vouloir supprimer ce département ?')) {
             try {
                 await deleteDepartment(id);
-                setDepartments(prev => prev.filter(d => d.id !== id));
                 toast({ title: 'Département supprimé' });
+                await fetchDepartments(); // Refetch
             } catch (error) {
                 console.error("Failed to delete department:", error);
                 toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer le département.' });

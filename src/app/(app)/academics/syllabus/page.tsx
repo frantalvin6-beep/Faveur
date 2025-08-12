@@ -30,26 +30,28 @@ export default function SyllabusPage() {
     const [searchTerm, setSearchTerm] = React.useState('');
     const { toast } = useToast();
 
-    React.useEffect(() => {
-        async function fetchData() {
-            try {
-                const coursesData = await getCourses();
-                setCourses(coursesData);
-            } catch (error) {
-                console.error("Failed to fetch courses:", error);
-                toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
-            } finally {
-                setLoading(false);
-            }
+    const fetchCourses = React.useCallback(async () => {
+        try {
+            setLoading(true);
+            const coursesData = await getCourses();
+            setCourses(coursesData);
+        } catch (error) {
+            console.error("Failed to fetch courses:", error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
+        } finally {
+            setLoading(false);
         }
-        fetchData();
     }, [toast]);
+
+    React.useEffect(() => {
+        fetchCourses();
+    }, [fetchCourses]);
 
     const handleCourseUpdate = async (updatedCourse: Course) => {
         try {
             await updateCourse(updatedCourse.code, updatedCourse);
-            setCourses(prev => prev.map(c => c.code === updatedCourse.code ? updatedCourse : c));
             toast({ title: 'Syllabus mis à jour', description: `Les chapitres pour ${updatedCourse.name} ont été enregistrés.` });
+            await fetchCourses();
         } catch (error) {
             console.error("Failed to update course:", error);
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour le syllabus.' });

@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { getDepartments, getStudents } from "@/lib/data";
 import { Users } from "lucide-react";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -35,6 +35,7 @@ export default function RepartitionPage() {
   React.useEffect(() => {
     async function fetchData() {
       try {
+        setLoading(true);
         const [departmentsData, studentsData] = await Promise.all([getDepartments(), getStudents()]);
         setDepartments(departmentsData);
         setStudents(studentsData);

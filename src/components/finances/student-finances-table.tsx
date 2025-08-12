@@ -22,25 +22,13 @@ import {
 import { StudentFinance } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-  DialogClose,
-  DialogTrigger,
-} from '@/components/ui/dialog';
-import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
-import { calculerFinance, updateStudentFinance, accountingTransactions } from '@/lib/data';
 import { useToast } from '@/hooks/use-toast';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { Packer, Document, Paragraph, TextRun, Table as DocxTable, TableRow as DocxTableRow, TableCell as DocxTableCell, WidthType, AlignmentType } from 'docx';
 import { saveAs } from 'file-saver';
 import * as XLSX from 'xlsx';
-
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
@@ -149,6 +137,8 @@ export function StudentFinancesTableWrapper({ initialData, onUpdateStudent }: { 
         return;
     }
     const filename = `export-finances-${getGroupName()}`;
+    const exportData = getDetailedExportData();
+    const headers = detailedExportHeaders;
 
     if (format === 'excel') {
         const worksheet = XLSX.utils.json_to_sheet(initialData);
@@ -156,7 +146,7 @@ export function StudentFinancesTableWrapper({ initialData, onUpdateStudent }: { 
         XLSX.utils.book_append_sheet(workbook, worksheet, "Finances Étudiants");
         XLSX.writeFile(workbook, `${filename}.xlsx`);
     } else if (format === 'csv') {
-        const csvContent = [ detailedExportHeaders.join(','), ...getDetailedExportData().map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')) ].join('\n');
+        const csvContent = [ headers.join(','), ...exportData.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(',')) ].join('\n');
         const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
         saveAs(blob, `${filename}.csv`);
     } else if (format === 'pdf') {
@@ -165,8 +155,8 @@ export function StudentFinancesTableWrapper({ initialData, onUpdateStudent }: { 
         doc.text(groupName, 14, 15);
         autoTable(doc, {
           startY: 20,
-          head: [detailedExportHeaders],
-          body: getDetailedExportData().map(row => row.map(cell => String(cell))),
+          head: [headers],
+          body: exportData.map(row => row.map(cell => String(cell))),
         });
         doc.save(`${filename}.pdf`);
     } else if (format === 'word') {
@@ -174,8 +164,8 @@ export function StudentFinancesTableWrapper({ initialData, onUpdateStudent }: { 
        const table = new DocxTable({
             width: { size: 100, type: WidthType.PERCENTAGE },
             rows: [
-                new DocxTableRow({ tableHeader: true, children: detailedExportHeaders.map(header => new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, size: 14 })], alignment: AlignmentType.CENTER })], })) }),
-                ...getDetailedExportData().map(rowData => new DocxTableRow({ children: rowData.map(cellData => new DocxTableCell({ children: [new Paragraph({ text: String(cellData), size: 14 })],})),})),
+                new DocxTableRow({ tableHeader: true, children: headers.map(header => new DocxTableCell({ children: [new Paragraph({ children: [new TextRun({ text: header, bold: true, size: 14 })], alignment: AlignmentType.CENTER })], })) }),
+                ...exportData.map(rowData => new DocxTableRow({ children: rowData.map(cellData => new DocxTableCell({ children: [new Paragraph({ text: String(cellData), size: 14 })],})),})),
             ],
         });
        const doc = new Document({ sections: [{ properties: {}, children: [ new Paragraph({ children: [new TextRun({ text: groupName, bold: true, size: 28 })], alignment: AlignmentType.CENTER }), new Paragraph(""), table,],}],});

@@ -5,7 +5,7 @@ import * as React from 'react';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { ArrowLeft } from 'lucide-react';
-import { CourseAssignment, getCourseAssignments, addCourseAssignment, deleteCourseAssignment, getCourses, getFaculty } from '@/lib/data';
+import { CourseAssignment, getCourseAssignments, addCourseAssignment, deleteCourseAssignment, getCourses, getFaculty, Course, Faculty } from '@/lib/data';
 import { CourseAssignmentsTable } from '@/components/faculty/course-assignments-table';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -15,37 +15,39 @@ export const dynamic = 'force-dynamic';
 export default function CourseAssignmentsPage() {
   const router = useRouter();
   const [assignments, setAssignments] = React.useState<CourseAssignment[]>([]);
-  const [courses, setCourses] = React.useState<any[]>([]);
-  const [faculty, setFaculty] = React.useState<any[]>([]);
+  const [courses, setCourses] = React.useState<Course[]>([]);
+  const [faculty, setFaculty] = React.useState<Faculty[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
 
-  React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const [data, coursesData, facultyData] = await Promise.all([
-          getCourseAssignments(),
-          getCourses(),
-          getFaculty()
-        ]);
-        setAssignments(data);
-        setCourses(coursesData);
-        setFaculty(facultyData);
-      } catch (error) {
-        console.error(error);
-        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les attributions.' });
-      } finally {
-        setLoading(false);
-      }
+  const fetchData = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const [data, coursesData, facultyData] = await Promise.all([
+        getCourseAssignments(),
+        getCourses(),
+        getFaculty()
+      ]);
+      setAssignments(data);
+      setCourses(coursesData);
+      setFaculty(facultyData);
+    } catch (error) {
+      console.error(error);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les attributions.' });
+    } finally {
+      setLoading(false);
     }
-    fetchData();
   }, [toast]);
+
+  React.useEffect(() => {
+    fetchData();
+  }, [fetchData]);
   
   const handleAddAssignment = async (assignment: Omit<CourseAssignment, 'id'>) => {
     try {
-        const newAssignment = await addCourseAssignment(assignment);
-        setAssignments(prev => [...prev, newAssignment]);
+        await addCourseAssignment(assignment);
         toast({ title: 'Attribution ajoutée' });
+        await fetchData(); // Refetch
     } catch(error) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter l\'attribution.' });
@@ -56,8 +58,8 @@ export default function CourseAssignmentsPage() {
       if (confirm('Êtes-vous sûr de vouloir supprimer cette attribution ?')) {
           try {
               await deleteCourseAssignment(id);
-              setAssignments(prev => prev.filter(a => a.id !== id));
               toast({ title: 'Attribution supprimée' });
+              await fetchData(); // Refetch
           } catch (error) {
               console.error(error);
               toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer l\'attribution.' });

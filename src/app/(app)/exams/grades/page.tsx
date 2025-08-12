@@ -1,14 +1,14 @@
 
 'use client'
 
-import { useState, useMemo, useEffect } from 'react';
-import { getDepartments, getExamGrades, getStudents, getCourses, addExamGrade, deleteExamGrade, updateExamGrade, Course, Student } from '@/lib/data';
+import { useState, useMemo, useEffect, useCallback } from 'react';
+import { getExamGrades, getStudents, getCourses, addExamGrade, deleteExamGrade, updateExamGrade, Course, Student } from '@/lib/data';
 import { GradesTable } from '@/components/exams/grades-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { ExamGrade } from '@/lib/types';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, Trash2, Edit } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -135,35 +135,37 @@ export default function GradesPage() {
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
-  useEffect(() => {
-    async function fetchData() {
-        try {
-            const [gradesData, studentsData, coursesData] = await Promise.all([
-                getExamGrades(),
-                getStudents(),
-                getCourses()
-            ]);
-            setGrades(gradesData);
-            setAllStudents(studentsData);
-            setAllCourses(coursesData);
-        } catch (error) {
-            console.error(error);
-            toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les données." });
-        } finally {
-            setLoading(false);
-        }
-    }
-    fetchData();
+  const fetchData = useCallback(async () => {
+      try {
+          setLoading(true);
+          const [gradesData, studentsData, coursesData] = await Promise.all([
+              getExamGrades(),
+              getStudents(),
+              getCourses()
+          ]);
+          setGrades(gradesData);
+          setAllStudents(studentsData);
+          setAllCourses(coursesData);
+      } catch (error) {
+          console.error(error);
+          toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les données." });
+      } finally {
+          setLoading(false);
+      }
   }, []);
 
-  const handleAddGrade = (newGrade: ExamGrade) => {
-    setGrades(prev => [...prev, newGrade]);
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleAddGrade = async () => {
+    await fetchData(); // Refetch all data
   };
   
   const handleGradeUpdate = async (updatedGrade: ExamGrade) => {
     try {
         await updateExamGrade(updatedGrade.id, updatedGrade);
-        setGrades(prev => prev.map(g => g.id === updatedGrade.id ? updatedGrade : g));
+        await fetchData(); // Refetch
     } catch (error) {
         console.error(error);
         toast({ variant: "destructive", title: "Erreur", description: "Impossible de mettre à jour la note." });
@@ -174,8 +176,8 @@ export default function GradesPage() {
     if (confirm("Êtes-vous sûr de vouloir supprimer cette note ?")) {
         try {
             await deleteExamGrade(gradeId);
-            setGrades(prev => prev.filter(g => g.id !== gradeId));
-            toast({ variant: 'destructive', title: 'Note supprimée' });
+            toast({ variant: 'default', title: 'Note supprimée' });
+            await fetchData(); // Refetch
         } catch (error) {
             console.error(error);
             toast({ variant: "destructive", title: "Erreur", description: "Impossible de supprimer la note." });

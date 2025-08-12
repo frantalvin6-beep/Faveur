@@ -14,32 +14,33 @@ export default function TeacherWorkloadPage() {
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
 
-  React.useEffect(() => {
-    async function fetchData() {
-        try {
-            const data = await getTeacherWorkloads();
-            setWorkloadData(data);
-        } catch (error) {
-            console.error(error);
-            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
-        } finally {
-            setLoading(false);
-        }
+  const fetchWorkloads = React.useCallback(async () => {
+    try {
+        setLoading(true);
+        const data = await getTeacherWorkloads();
+        setWorkloadData(data);
+    } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
+    } finally {
+        setLoading(false);
     }
-    fetchData();
   }, [toast]);
+
+  React.useEffect(() => {
+    fetchWorkloads();
+  }, [fetchWorkloads]);
   
   const handleAddWorkload = async (workload: Omit<TeacherWorkload, 'id'>) => {
-    // Check if a workload for this teacher and course already exists
     if (workloadData.some(w => w.teacherId === workload.teacherId && w.courseName === workload.courseName)) {
         toast({ variant: 'destructive', title: 'Erreur', description: 'Une charge horaire pour cet enseignant et ce cours existe déjà.' });
         return;
     }
 
     try {
-        const newWorkload = await addTeacherWorkload(workload);
-        setWorkloadData(prev => [...prev, newWorkload]);
+        await addTeacherWorkload(workload);
         toast({ title: 'Charge horaire ajoutée' });
+        await fetchWorkloads(); // Refetch
     } catch (error) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter la charge horaire.' });
@@ -50,8 +51,8 @@ export default function TeacherWorkloadPage() {
       if(confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
           try {
               await deleteTeacherWorkload(id);
-              setWorkloadData(prev => prev.filter(w => w.id !== id));
               toast({ title: 'Charge horaire supprimée' });
+              await fetchWorkloads(); // Refetch
           } catch(error) {
               console.error(error);
               toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer la charge horaire.' });

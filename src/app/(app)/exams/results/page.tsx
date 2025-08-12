@@ -5,8 +5,7 @@ import * as React from 'react';
 import { getStudents, getCourses, getExamGrades } from '@/lib/data';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Student, ExamGrade, Course } from '@/lib/types';
-import { processStudentResults, ProcessedStudent, GroupedResults } from '@/lib/results-processor';
+import { ProcessedStudent, GroupedResults, processStudentResults } from '@/lib/results-processor';
 import { ResultsTable } from '@/components/exams/results-table';
 import { SummaryTable } from '@/components/exams/summary-table';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -23,6 +22,7 @@ export default function ResultsPage() {
   React.useEffect(() => {
     async function fetchData() {
         try {
+            setLoading(true);
             const [students, grades, courses] = await Promise.all([
                 getStudents(),
                 getExamGrades(),

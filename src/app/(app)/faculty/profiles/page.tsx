@@ -15,28 +15,28 @@ export default function FacultyProfilesPage() {
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
 
+  const fetchFaculty = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const facultyData = await getFaculty();
+      setFaculty(facultyData);
+    } catch (error) {
+      console.error("Failed to fetch faculty data:", error);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données du personnel.' });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const facultyData = await getFaculty();
-        setFaculty(facultyData);
-      } catch (error) {
-        console.error("Failed to fetch faculty data:", error);
-        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données du personnel.' });
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, [toast]);
+    fetchFaculty();
+  }, [fetchFaculty]);
 
   const handleAddFaculty = async (newFacultyMember: Omit<Faculty, 'id'>) => {
     try {
       const addedFaculty = await addFaculty(newFacultyMember);
-      setFaculty(prev => [...prev, addedFaculty]);
       toast({ title: 'Membre ajouté', description: `Le membre du personnel ${addedFaculty.name} a été ajouté.` });
-      return addedFaculty;
+      await fetchFaculty(); // Refetch
     } catch (error) {
       console.error("Failed to add faculty:", error);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter le membre du personnel.' });
@@ -48,8 +48,8 @@ export default function FacultyProfilesPage() {
       if (confirm('Êtes-vous sûr de vouloir supprimer ce membre du personnel ?')) {
           try {
               await deleteFaculty(id);
-              setFaculty(prev => prev.filter(f => f.id !== id));
               toast({ title: 'Membre supprimé' });
+              await fetchFaculty(); // Refetch
           } catch (error) {
               console.error("Failed to delete faculty:", error);
               toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer le membre.' });

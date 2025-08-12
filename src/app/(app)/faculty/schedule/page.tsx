@@ -20,10 +20,8 @@ interface GroupedSchedule {
   [key: string]: ScheduleEntry[];
 }
 
-function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: Omit<ScheduleEntry, 'id'>) => void }) {
+function AddScheduleEntryForm({ onAddEntry, courses, faculty }: { onAddEntry: (entry: Omit<ScheduleEntry, 'id'>) => void, courses: Course[], faculty: Faculty[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
-  const [allCourses, setAllCourses] = React.useState<Course[]>([]);
   
   const [teacherId, setTeacherId] = React.useState('');
   const [courseCode, setCourseCode] = React.useState('');
@@ -32,23 +30,12 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: Omit<Schedul
   const [endTime, setEndTime] = React.useState('');
   const [location, setLocation] = React.useState('');
   
-  const teacherCourses = allCourses.filter(c => c.teacherIds?.includes(teacherId));
-  const selectedCourse = allCourses.find(c => c.code === courseCode);
-
-  React.useEffect(() => {
-    async function loadData() {
-      const [facultyData, coursesData] = await Promise.all([getFaculty(), getCourses()]);
-      setAllFaculty(facultyData);
-      setAllCourses(coursesData);
-    }
-    if (isOpen) {
-      loadData();
-    }
-  }, [isOpen]);
+  const teacherCourses = courses.filter(c => c.teacherIds?.includes(teacherId));
+  const selectedCourse = courses.find(c => c.code === courseCode);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    const teacher = allFaculty.find(f => f.id === teacherId);
+    const teacher = faculty.find(f => f.id === teacherId);
 
     if (!teacher || !selectedCourse || !dayOfWeek || !startTime || !endTime || !location) {
       alert("Veuillez remplir tous les champs.");
@@ -98,7 +85,7 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: Omit<Schedul
               <Label htmlFor="teacher">Enseignant</Label>
               <Select onValueChange={setTeacherId} value={teacherId}>
                 <SelectTrigger id="teacher"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                <SelectContent>{allFaculty.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
+                <SelectContent>{faculty.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
              <div className="space-y-2">
@@ -140,30 +127,40 @@ function AddScheduleEntryForm({ onAddEntry }: { onAddEntry: (entry: Omit<Schedul
 
 export default function FacultySchedulePage() {
   const [schedule, setSchedule] = React.useState<ScheduleEntry[]>([]);
+  const [courses, setCourses] = React.useState<Course[]>([]);
+  const [faculty, setFaculty] = React.useState<Faculty[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
   const { toast } = useToast();
 
-  React.useEffect(() => {
-      async function fetchData() {
-          try {
-              const scheduleData = await getSchedule();
-              setSchedule(scheduleData);
-          } catch (error) {
-              console.error("Failed to fetch schedule:", error);
-              toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger l\'emploi du temps.' });
-          } finally {
-              setLoading(false);
-          }
-      }
-      fetchData();
+  const fetchData = React.useCallback(async () => {
+    try {
+        setLoading(true);
+        const [scheduleData, coursesData, facultyData] = await Promise.all([
+            getSchedule(),
+            getCourses(),
+            getFaculty()
+        ]);
+        setSchedule(scheduleData);
+        setCourses(coursesData);
+        setFaculty(facultyData);
+    } catch (error) {
+        console.error("Failed to fetch data:", error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
+    } finally {
+        setLoading(false);
+    }
   }, [toast]);
+
+  React.useEffect(() => {
+      fetchData();
+  }, [fetchData]);
 
   const handleAddEntry = async (newEntryData: Omit<ScheduleEntry, 'id'>) => {
     try {
-        const newEntry = await addScheduleEntry(newEntryData);
-        setSchedule(prev => [...prev, newEntry]);
+        await addScheduleEntry(newEntryData);
         toast({ title: 'Cours planifié', description: 'Le cours a été ajouté à l\'emploi du temps.' });
+        await fetchData(); // Refetch
     } catch (error) {
         console.error("Failed to add schedule entry:", error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de planifier le cours.' });
@@ -174,15 +171,14 @@ export default function FacultySchedulePage() {
       if (confirm('Êtes-vous sûr de vouloir supprimer cette entrée ?')) {
           try {
               await deleteScheduleEntry(id);
-              setSchedule(prev => prev.filter(s => s.id !== id));
               toast({ title: 'Entrée supprimée' });
+              await fetchData(); // Refetch
           } catch (error) {
               console.error("Failed to delete entry:", error);
               toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer l\'entrée.' });
           }
       }
   };
-
 
   const groupedSchedules = React.useMemo(() => {
     return schedule.reduce((acc, entry) => {
@@ -235,7 +231,7 @@ export default function FacultySchedulePage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
-            <AddScheduleEntryForm onAddEntry={handleAddEntry} />
+            <AddScheduleEntryForm onAddEntry={handleAddEntry} courses={courses} faculty={faculty} />
          </div>
        </div>
       

@@ -7,7 +7,7 @@ import { getStudents, getDepartments, Student, Department, addStudent, deleteStu
 import { StudentTable } from '@/components/students/student-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Edit, Trash2, PlusCircle } from 'lucide-react';
+import { PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
@@ -17,7 +17,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export const dynamic = 'force-dynamic';
 
-function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Student) => void }) {
+function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Student, 'id'>) => Promise<void> }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [departments, setDepartments] = React.useState<Department[]>([]);
   const [name, setName] = React.useState('');
@@ -25,12 +25,13 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Student) =
   const [gender, setGender] = React.useState<'Masculin' | 'Féminin'>('Masculin');
   const [department, setDepartment] = React.useState('');
   const [year, setYear] = React.useState(1);
+  const { toast } = useToast();
+
 
   React.useEffect(() => {
     if (isOpen) {
       async function fetchDepartments() {
         const departmentsData = await getDepartments();
-        // S'assurer que seules les options (pas les départements parents) sont sélectionnables
         setDepartments(departmentsData.filter(d => d.parentId));
       }
       fetchDepartments();
@@ -40,7 +41,7 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Student) =
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !department) {
-      alert("Veuillez remplir tous les champs.");
+      toast({variant: 'destructive', title: "Erreur", description: "Veuillez remplir tous les champs."});
       return;
     }
     
@@ -56,8 +57,7 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Student) =
     };
 
     try {
-      const newStudent = await addStudent(studentData);
-      onAddStudent(newStudent);
+      await onAddStudent(studentData);
       setIsOpen(false);
       // Reset form
       setName('');
@@ -66,6 +66,7 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Student) =
       setYear(1);
     } catch (error) {
        console.error(error);
+       // Toast will be shown in the parent component
     }
   };
 
@@ -133,21 +134,23 @@ export default function StudentsListPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const [studentsData, departmentsData] = await Promise.all([getStudents(), getDepartments()]);
-        setStudents(studentsData);
-        setDepartments(departmentsData);
-      } catch (error) {
-        console.error("Failed to fetch data:", error);
-        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
-      } finally {
-        setLoading(false);
-      }
+  const fetchData = React.useCallback(async () => {
+    try {
+      setLoading(true);
+      const [studentsData, departmentsData] = await Promise.all([getStudents(), getDepartments()]);
+      setStudents(studentsData);
+      setDepartments(departmentsData);
+    } catch (error) {
+      console.error("Failed to fetch data:", error);
+      toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
+    } finally {
+      setLoading(false);
     }
-    fetchData();
   }, [toast]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
   
   const getStudentsForDepartment = (departmentName: string): Student[] => {
     let studentsInDept = students.filter(student => student.department === departmentName);
@@ -161,17 +164,23 @@ export default function StudentsListPage() {
     return studentsInDept;
   };
   
-  const handleAddStudent = (newStudent: Student) => {
-    setStudents(prev => [...prev, newStudent]);
-    toast({ title: "Étudiant ajouté", description: `L'étudiant ${newStudent.name} a été ajouté avec succès.` });
+  const handleAddStudent = async (studentData: Omit<Student, 'id'>) => {
+    try {
+        const newStudent = await addStudent(studentData);
+        toast({ title: "Étudiant ajouté", description: `L'étudiant ${newStudent.name} a été ajouté avec succès.` });
+        await fetchData(); // Refetch
+    } catch (error) {
+       console.error(error);
+       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter l\'étudiant.' });
+    }
   };
 
   const handleDeleteStudent = async (id: string) => {
     if(confirm('Êtes-vous sûr de vouloir supprimer cet étudiant ?')) {
         try {
             await deleteStudent(id);
-            setStudents(currentStudents => currentStudents.filter(s => s.id !== id));
             toast({ title: "Étudiant supprimé", description: "L'étudiant a été retiré de la base de données." });
+            await fetchData(); // Refetch
         } catch (error) {
             console.error(error);
             toast({ variant: 'destructive', title: 'Erreur', description: "Impossible de supprimer l'étudiant." });
@@ -183,7 +192,6 @@ export default function StudentsListPage() {
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt disponible.`);
 
    const displayedDepartments = departments.filter(dept => {
-        // We only want to display options, which have a parentId
         if (!dept.parentId) return false;
 
         const studentsInDept = getStudentsForDepartment(dept.name);
