@@ -168,7 +168,7 @@ export function AcademicCalendar() {
                 const isCurrentMonthDay = format(day, 'M') === format(currentMonth, 'M');
                 return (
                   <div key={day.toString()} className={cn(
-                      "h-40 p-2 border-b border-r flex flex-col relative group transition-colors duration-150 overflow-y-auto",
+                      "p-2 border-b border-r flex flex-col relative group transition-colors duration-150 overflow-y-auto min-h-[10rem]",
                       isCurrentMonthDay ? "hover:bg-accent/5" : "bg-muted/30 text-muted-foreground"
                   )}>
                       <span className={cn(
