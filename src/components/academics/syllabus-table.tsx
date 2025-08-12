@@ -15,7 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '../ui/button';
 import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from '../ui/dropdown-menu';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -45,11 +45,19 @@ function EditChapterForm({ chapter, onChapterUpdate, children }: { chapter: Chap
         setIsOpen(false);
     };
 
+    // Make sure to sync state if the prop changes
+    React.useEffect(() => {
+        setTitle(chapter.title);
+        setSubChapters(chapter.subChapters?.map(sc => sc.title).join('\n') || '');
+        setEstimatedDuration(chapter.estimatedDuration || '');
+    }, [chapter]);
+
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
+            <DialogTrigger asChild>
                 {children}
-            </DropdownMenuTrigger>
+            </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
                     <DialogTitle>Modifier le chapitre</DialogTitle>
@@ -97,7 +105,7 @@ export function SyllabusTable({ data, onChapterUpdate, onChapterDelete }: { data
         <TableBody>
           {data.length > 0 ? data.map((item) => {
             return (
-                <TableRow key={item.id}>
+                <TableRow key={`${item.courseCode}-${item.id}`}>
                 <TableCell className="font-mono">{item.id}</TableCell>
                 <TableCell>
                     <div className="font-medium">{item.courseName}</div>
@@ -127,12 +135,12 @@ export function SyllabusTable({ data, onChapterUpdate, onChapterDelete }: { data
                         <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Actions</DropdownMenuLabel>
                              <EditChapterForm chapter={item} onChapterUpdate={onChapterUpdate}>
-                                <div className="relative flex cursor-default select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none transition-colors focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">
+                                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
                                     <Edit className="mr-2 h-4 w-4" />
                                     <span>Modifier</span>
-                                </div>
+                                </DropdownMenuItem>
                             </EditChapterForm>
-                            <DropdownMenuItem onClick={() => onChapterDelete(item.courseCode, item.id)} className="text-destructive">
+                            <DropdownMenuItem onClick={() => onChapterDelete(item.courseCode, item.id)} className="text-destructive focus:text-destructive">
                                 <Trash2 className="mr-2 h-4 w-4" /> Supprimer
                             </DropdownMenuItem>
                         </DropdownMenuContent>
