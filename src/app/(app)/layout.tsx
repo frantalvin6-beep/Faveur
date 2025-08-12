@@ -52,7 +52,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { SheetTitle } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -116,7 +115,7 @@ const navItems = [
   { href: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
-export default function AppLayout({ children }: { children: React.ReactNode }) {
+function AppLayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { isMobile } = useSidebar();
 
@@ -125,75 +124,75 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
 
   return (
-    <SidebarProvider>
-      <Sidebar collapsible="icon">
-        <SidebarHeader>
-          <Link href="/dashboard" className="flex items-center gap-2">
-            <Package2 className="h-6 w-6" />
-            <span className="text-lg font-semibold">S.G.ENIA 2.0</span>
-          </Link>
-          {isMobile && <SheetTitle className="sr-only">Menu Mobile</SheetTitle>}
-        </SidebarHeader>
-        <SidebarContent>
-          <SidebarMenu>
-            {navItems.map((item) => (
-              item.subItems ? (
-                <Collapsible key={item.id} className="w-full" defaultOpen={isSubItemActive(item.subItems)}>
-                  <CollapsibleTrigger asChild>
-                     <SidebarMenuItem>
-                        <SidebarMenuButton
-                            className="w-full justify-start"
-                            tooltip={item.label}
-                            isActive={isSubItemActive(item.subItems)}
-                        >
-                            <item.icon className="h-4 w-4" />
-                            <span>{item.label}</span>
-                        </SidebarMenuButton>
-                     </SidebarMenuItem>
-                  </CollapsibleTrigger>
-                  <CollapsibleContent>
-                    <SidebarMenuSub>
-                        {item.subItems.map((subItem) => (
-                             <SidebarMenuItem key={subItem.href}>
-                                <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                                  <Link href={subItem.href}>
-                                      <subItem.icon className="h-4 w-4" />
-                                      <span>{subItem.label}</span>
-                                  </Link>
-                                </SidebarMenuSubButton>
-                             </SidebarMenuItem>
-                        ))}
-                    </SidebarMenuSub>
-                  </CollapsibleContent>
-                </Collapsible>
-              ) : (
-                <SidebarMenuItem key={item.href}>
-                  <Link href={item.href!} passHref>
-                    <SidebarMenuButton
-                      isActive={pathname.startsWith(item.href!)}
-                      tooltip={item.label}
-                      className="w-full justify-start"
-                    >
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.label}</span>
-                    </SidebarMenuButton>
-                  </Link>
-                </SidebarMenuItem>
-              )
-            ))}
-          </SidebarMenu>
-        </SidebarContent>
-      </Sidebar>
-      <SidebarInset>
-        <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-card px-4 sm:px-6 md:justify-end">
-          <SidebarTrigger className="md:hidden"/>
-          <UserMenu />
-        </header>
-        <main className="flex-1 p-4 sm:p-6 bg-background">
-          {children}
-        </main>
-      </SidebarInset>
-    </SidebarProvider>
+      <>
+        <Sidebar collapsible="icon">
+          <SidebarHeader>
+            <Link href="/dashboard" className="flex items-center gap-2">
+              <Package2 className="h-6 w-6" />
+              <span className="text-lg font-semibold">S.G.ENIA 2.0</span>
+            </Link>
+            {isMobile && <SheetTitle className="sr-only">Menu Mobile</SheetTitle>}
+          </SidebarHeader>
+          <SidebarContent>
+            <SidebarMenu>
+              {navItems.map((item) => (
+                item.subItems ? (
+                  <Collapsible key={item.id} className="w-full" defaultOpen={isSubItemActive(item.subItems)}>
+                    <CollapsibleTrigger asChild>
+                       <SidebarMenuItem>
+                          <SidebarMenuButton
+                              className="w-full justify-start"
+                              tooltip={item.label}
+                              isActive={isSubItemActive(item.subItems)}
+                          >
+                              <item.icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                          </SidebarMenuButton>
+                       </SidebarMenuItem>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <SidebarMenuSub>
+                          {item.subItems.map((subItem) => (
+                               <SidebarMenuItem key={subItem.href}>
+                                  <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
+                                    <Link href={subItem.href}>
+                                        <subItem.icon className="h-4 w-4" />
+                                        <span>{subItem.label}</span>
+                                    </Link>
+                                  </SidebarMenuSubButton>
+                               </SidebarMenuItem>
+                          ))}
+                      </SidebarMenuSub>
+                    </CollapsibleContent>
+                  </Collapsible>
+                ) : (
+                  <SidebarMenuItem key={item.href}>
+                    <Link href={item.href!} passHref>
+                      <SidebarMenuButton
+                        isActive={pathname.startsWith(item.href!)}
+                        tooltip={item.label}
+                        className="w-full justify-start"
+                      >
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.label}</span>
+                      </SidebarMenuButton>
+                    </Link>
+                  </SidebarMenuItem>
+                )
+              ))}
+            </SidebarMenu>
+          </SidebarContent>
+        </Sidebar>
+        <SidebarInset>
+          <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-card px-4 sm:px-6 md:justify-end">
+            <SidebarTrigger className="md:hidden"/>
+            <UserMenu />
+          </header>
+          <main className="flex-1 p-4 sm:p-6 bg-background">
+            {children}
+          </main>
+        </SidebarInset>
+      </>
   );
 }
 
@@ -222,5 +221,13 @@ function UserMenu() {
         </Link>
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <SidebarProvider>
+      <AppLayoutContent>{children}</AppLayoutContent>
+    </SidebarProvider>
   );
 }
