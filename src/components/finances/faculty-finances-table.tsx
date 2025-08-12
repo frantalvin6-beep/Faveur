@@ -58,9 +58,15 @@ function getStatusBadgeVariant(status: FacultyFinance['statut']) {
   }
 }
 
-function UpdatePaymentForm({ finance, onUpdate }: { finance: FacultyFinance, onUpdate: (updatedFinance: FacultyFinance) => void }) {
+function UpdatePaymentForm({ finance, onUpdate, children }: { finance: FacultyFinance, onUpdate: (updatedFinance: FacultyFinance) => void, children: React.ReactNode }) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [montantPaye, setMontantPaye] = React.useState(finance.montantPaye);
+
+    React.useEffect(() => {
+        if (isOpen) {
+            setMontantPaye(finance.montantPaye);
+        }
+    }, [isOpen, finance.montantPaye]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -81,12 +87,9 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: FacultyFinance, onU
     
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Mettre à jour le paiement
-                </DropdownMenuItem>
-            </DropdownMenuTrigger>
+            <DialogTrigger asChild>
+                 {children}
+            </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Mettre à jour le paiement pour {finance.fullName}</DialogTitle>
@@ -102,7 +105,7 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: FacultyFinance, onU
                             <Input id="current-paid" value={formatCurrency(finance.montantPaye)} disabled />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="new-paid">Nouveau Montant Payé</Label>
+                            <Label htmlFor="new-paid">Nouveau Montant Total Payé</Label>
                             <Input id="new-paid" type="number" value={montantPaye} onChange={(e) => setMontantPaye(Number(e.target.value))} />
                         </div>
                     </div>
@@ -332,7 +335,12 @@ export function FacultyFinancesTable({ data, allFaculty, onAddFinance, onUpdateF
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                         <UpdatePaymentForm finance={f} onUpdate={onUpdateFinance} />
+                         <UpdatePaymentForm finance={f} onUpdate={onUpdateFinance}>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Mettre à jour le paiement
+                            </DropdownMenuItem>
+                         </UpdatePaymentForm>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>

@@ -59,7 +59,6 @@ export default function FacultyFinancesPage() {
 
     try {
         await updateFacultyFinance(updatedFinance.teacherId, updatedFinance);
-        setFacultyFinances(prev => prev.map(f => f.teacherId === updatedFinance.teacherId ? updatedFinance : f));
         
         if (paymentAmount > 0) {
             const newTransaction: Omit<AccountingTransaction, 'id'> = {
@@ -78,6 +77,9 @@ export default function FacultyFinancesPage() {
                 description: `Une dépense de ${paymentAmount.toLocaleString()} FCFA pour ${updatedFinance.fullName} a été ajoutée à la comptabilité.`,
             });
         }
+        await refetchData(); // Refetch to get latest calculated values
+        toast({title: "Mise à jour réussie", description: `La fiche de paie de ${updatedFinance.fullName} a été mise à jour.`})
+
     } catch (error) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour la paie.' });
@@ -86,13 +88,12 @@ export default function FacultyFinancesPage() {
   
   const handleAddFinance = async (newFinance: FacultyFinance) => {
     if (facultyFinances.some(f => f.teacherId === newFinance.teacherId)) {
-        alert('Une fiche de paie pour cet enseignant existe déjà.');
+        toast({variant: 'destructive', title: 'Erreur', description: 'Une fiche de paie pour cet enseignant existe déjà.'});
         return;
     }
     
     try {
         await addFacultyFinance(newFinance);
-        setFacultyFinances(prev => [...prev, newFinance]);
         
         if (newFinance.montantPaye > 0) {
             const newTransaction: Omit<AccountingTransaction, 'id'> = {
@@ -111,6 +112,9 @@ export default function FacultyFinancesPage() {
                 description: `Une dépense de ${newFinance.montantPaye.toLocaleString()} FCFA pour ${newFinance.fullName} a été ajoutée à la comptabilité.`,
             });
         }
+        await refetchData(); // Refetch
+        toast({title: "Initialisation réussie", description: `La fiche de paie de ${newFinance.fullName} a été créée.`})
+
     } catch (error) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'initialiser la paie.' });
