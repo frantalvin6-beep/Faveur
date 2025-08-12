@@ -181,15 +181,14 @@ function AddTransactionForm({ onAddTransaction }: { onAddTransaction: (entry: Om
 }
 
 
-export function AccountingTable({ initialData }: { initialData: AccountingTransaction[] }) {
+export function AccountingTable({ initialData, onDataChange }: { initialData: AccountingTransaction[], onDataChange: (data: AccountingTransaction[]) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
-  const [transactions, setTransactions] = React.useState(initialData);
   const { toast } = useToast();
   
   const handleAddTransaction = async (newTransactionData: Omit<AccountingTransaction, 'id'>) => {
     try {
         const newTransaction = await addAccountingTransaction(newTransactionData);
-        setTransactions(prev => [newTransaction, ...prev]);
+        onDataChange([newTransaction, ...initialData]);
         toast({ title: 'Transaction ajoutée' });
         return newTransaction;
     } catch (error) {
@@ -203,7 +202,7 @@ export function AccountingTable({ initialData }: { initialData: AccountingTransa
     if (confirm("Êtes-vous sûr de vouloir supprimer cette transaction ?")) {
       try {
         await deleteAccountingTransaction(id);
-        setTransactions(prev => prev.filter(t => t.id !== id));
+        onDataChange(initialData.filter(t => t.id !== id));
         toast({ variant: 'destructive', title: 'Transaction supprimée' });
       } catch (error) {
         console.error(error);
@@ -212,7 +211,7 @@ export function AccountingTable({ initialData }: { initialData: AccountingTransa
     }
   };
 
-  const filteredData = transactions.filter((item) =>
+  const filteredData = initialData.filter((item) =>
     Object.values(item).some(val => 
         String(val).toLowerCase().includes(searchTerm.toLowerCase())
     )

@@ -7,6 +7,7 @@ import { AccountingTable } from '@/components/accounting/accounting-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { TrendingUp, TrendingDown, Wallet } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useToast } from '@/hooks/use-toast';
 
 export const dynamic = 'force-dynamic';
 
@@ -17,21 +18,24 @@ function formatCurrency(amount: number) {
 export default function AccountingPage() {
   const [transactions, setTransactions] = React.useState<AccountingTransaction[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const { toast } = useToast();
+
+  const fetchData = React.useCallback(async () => {
+    try {
+      const initialTransactions = await getAccountingTransactions();
+      const sortedTransactions = initialTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      setTransactions(sortedTransactions);
+    } catch (error) {
+      console.error("Failed to fetch accounting data:", error);
+       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données comptables.' });
+    } finally {
+      setLoading(false);
+    }
+  }, [toast]);
 
   React.useEffect(() => {
-    async function fetchData() {
-      try {
-        const initialTransactions = await getAccountingTransactions();
-        const sortedTransactions = initialTransactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
-        setTransactions(sortedTransactions);
-      } catch (error) {
-        console.error("Failed to fetch accounting data:", error);
-      } finally {
-        setLoading(false);
-      }
-    }
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const { revenus, depenses, solde } = calculerComptabilite(transactions);
 
@@ -57,7 +61,7 @@ export default function AccountingPage() {
       <div>
         <h1 className="text-3xl font-bold">Comptabilité Générale</h1>
         <p className="text-muted-foreground">
-          Suivi des flux financiers de l'université.
+          Suivi centralisé de tous les flux financiers de l'université.
         </p>
       </div>
 
@@ -93,6 +97,7 @@ export default function AccountingPage() {
       
       <AccountingTable 
         initialData={transactions} 
+        onDataChange={setTransactions}
       />
     </div>
   );
