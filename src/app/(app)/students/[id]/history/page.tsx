@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter, notFound } from 'next/navigation'
+import { useRouter, notFound, useParams } from 'next/navigation'
 import { Student, AcademicRecord, CourseRecord, getStudent, updateStudent, getCourses, Course } from '@/lib/data'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -212,15 +212,19 @@ function GradeEntryForm({ student, onAddRecord, allCourses }: { student: Student
   )
 }
 
-export default function StudentHistoryPage({ params }: { params: { id: string } }) {
+export default function StudentHistoryPage() {
   const [student, setStudent] = useState<Student | null>(null);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const router = useRouter();
+  const params = useParams();
+  const studentId = Array.isArray(params.id) ? params.id[0] : params.id;
 
   useEffect(() => {
+      if (!studentId) return;
+
       async function fetchData() {
           try {
-              const studentData = await getStudent(params.id);
+              const studentData = await getStudent(studentId);
               if (studentData) {
                   setStudent(studentData);
               } else {
@@ -234,7 +238,7 @@ export default function StudentHistoryPage({ params }: { params: { id: string } 
           }
       }
       fetchData();
-  }, [params.id]);
+  }, [studentId]);
 
   if (!student) {
       return (
