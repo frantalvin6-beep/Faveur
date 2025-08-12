@@ -34,9 +34,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '../ui/skeleton';
 
 const eventStyles = {
-  event: "bg-primary/10 text-primary border-primary/20",
-  exam: "bg-destructive/10 text-destructive border-destructive/20",
-  holiday: "bg-accent/20 text-accent-foreground border-accent/30",
+  event: "bg-primary/20 text-primary-foreground border-primary/30 hover:bg-primary/30",
+  exam: "bg-destructive/20 text-destructive-foreground border-destructive/30 hover:bg-destructive/30",
+  holiday: "bg-accent/30 text-accent-foreground border-accent/40 hover:bg-accent/40",
 };
 
 export function AcademicCalendar() {
@@ -168,7 +168,7 @@ export function AcademicCalendar() {
                 const isCurrentMonthDay = format(day, 'M') === format(currentMonth, 'M');
                 return (
                   <div key={day.toString()} className={cn(
-                      "h-32 p-2 border-b border-r flex flex-col relative group transition-colors duration-150 overflow-y-auto",
+                      "h-40 p-2 border-b border-r flex flex-col relative group transition-colors duration-150 overflow-y-auto",
                       isCurrentMonthDay ? "hover:bg-accent/5" : "bg-muted/30 text-muted-foreground"
                   )}>
                       <span className={cn(
@@ -177,9 +177,9 @@ export function AcademicCalendar() {
                       )} onClick={() => isCurrentMonthDay && handleDayClick(day)}>
                           {format(day, 'd')}
                       </span>
-                      <div className="space-y-1 mt-1">
+                      <div className="space-y-1 mt-1 flex-grow">
                           {eventsOnDay.map(event => (
-                              <div key={event.id} onClick={() => handleDeleteEvent(event.id)} className={cn("p-1 rounded-md text-xs border truncate cursor-pointer", eventStyles[event.type])}>
+                              <div key={event.id} onClick={() => handleDeleteEvent(event.id)} className={cn("p-1.5 rounded-md text-sm border cursor-pointer break-words", eventStyles[event.type])}>
                                 {event.event}
                               </div>
                           ))}
