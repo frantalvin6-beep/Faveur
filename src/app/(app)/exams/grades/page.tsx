@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { getExamGrades, getStudents, getCourses, addExamGrade, deleteExamGrade, updateExamGrade, Course, Student, getFaculty, Faculty } from '@/lib/data';
+import { getExamGrades, getStudents, getCourses, addExamGrade, deleteExamGrade, updateExamGrade, Course, Student, getFaculty, Faculty, Department, getDepartments } from '@/lib/data';
 import { GradesTable } from '@/components/exams/grades-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,13 +23,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
 
-export const dynamic = 'force-dynamic';
-
-interface GroupedGrades {
-  [groupKey: string]: ExamGrade[];
-}
-
-function AddGradeForm({ onAddGrade, allStudents, allCourses, allFaculty }: { onAddGrade: (grade: Omit<ExamGrade, 'id'>) => Promise<void>, allStudents: Student[], allCourses: Course[], allFaculty: Faculty[] }) {
+function AddGradeForm({ 
+    onAddGrade, 
+    allStudents, 
+    allCourses, 
+    allFaculty,
+    allDepartments 
+}: { 
+    onAddGrade: (grade: Omit<ExamGrade, 'id'>) => Promise<void>, 
+    allStudents: Student[], 
+    allCourses: Course[], 
+    allFaculty: Faculty[],
+    allDepartments: Department[]
+}) {
     const [isOpen, setIsOpen] = useState(false);
     
     // Form state
@@ -169,28 +175,31 @@ export default function GradesPage() {
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
   const [allFaculty, setAllFaculty] = useState<Faculty[]>([]);
+  const [allDepartments, setAllDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
   const fetchData = useCallback(async () => {
       try {
-          const [gradesData, studentsData, coursesData, facultyData] = await Promise.all([
+          const [gradesData, studentsData, coursesData, facultyData, departmentsData] = await Promise.all([
               getExamGrades(),
               getStudents(),
               getCourses(),
               getFaculty(),
+              getDepartments(),
           ]);
           setGrades(gradesData);
           setAllStudents(studentsData);
           setAllCourses(coursesData);
           setAllFaculty(facultyData);
+          setAllDepartments(departmentsData.filter(d => d.parentId));
       } catch (error) {
           console.error(error);
           toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les données." });
       } finally {
           setLoading(false);
       }
-  }, []);
+  }, [toast]);
 
   useEffect(() => {
     setLoading(true);
@@ -253,7 +262,7 @@ export default function GradesPage() {
           }
           acc[groupKey].push(grade);
           return acc;
-      }, {} as GroupedGrades);
+      }, {} as { [key: string]: ExamGrade[] });
 
       // Sort grades within each group by date
       for(const key in groups) {
@@ -296,7 +305,13 @@ export default function GradesPage() {
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="max-w-sm"
                 />
-                <AddGradeForm onAddGrade={handleAddGrade} allStudents={allStudents} allCourses={allCourses} allFaculty={allFaculty} />
+                <AddGradeForm 
+                    onAddGrade={handleAddGrade} 
+                    allStudents={allStudents} 
+                    allCourses={allCourses} 
+                    allFaculty={allFaculty} 
+                    allDepartments={allDepartments}
+                />
             </div>
         </div>
 
