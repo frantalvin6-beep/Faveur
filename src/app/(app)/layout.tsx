@@ -116,16 +116,16 @@ const navItems = [
   { href: '/settings', icon: Settings, label: 'Paramètres' },
 ];
 
-function AppLayoutContent({ children }: { children: React.ReactNode }) {
-  const pathname = usePathname();
-  const { isMobile } = useSidebar();
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+    const pathname = usePathname();
+    const { isMobile } = useSidebar();
 
-  const isSubItemActive = (subItems: any[]) => {
-    return subItems.some(item => pathname.startsWith(item.href));
-  }
+    const isSubItemActive = (subItems: any[]) => {
+        return subItems.some(item => pathname.startsWith(item.href));
+    }
 
   return (
-    <>
+    <SidebarProvider>
       <Sidebar collapsible="icon">
         <SidebarHeader>
           <Link href="/dashboard" className="flex items-center gap-2">
@@ -193,17 +193,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           {children}
         </main>
       </SidebarInset>
-    </>
-  );
-}
-
-export default function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <SidebarProvider>
-      <AppLayoutContent>{children}</AppLayoutContent>
     </SidebarProvider>
   );
 }
+
 
 function UserMenu() {
   return (
