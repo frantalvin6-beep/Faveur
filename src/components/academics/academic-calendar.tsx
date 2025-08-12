@@ -108,7 +108,7 @@ export function AcademicCalendar() {
       }
     }
   };
-
+  
   const handleDeleteEvent = async (eventId: string) => {
     if (confirm("Êtes-vous sûr de vouloir supprimer cet événement ?")) {
       try {
@@ -121,7 +121,7 @@ export function AcademicCalendar() {
       }
     }
   };
-
+  
   if (loading) {
     return (
         <Card>
@@ -168,7 +168,7 @@ export function AcademicCalendar() {
                 const isCurrentMonthDay = format(day, 'M') === format(currentMonth, 'M');
                 return (
                   <div key={day.toString()} className={cn(
-                      "p-1 border-b border-r relative group transition-colors duration-150 min-h-[8rem]",
+                      "p-1 border-b border-r relative group transition-colors duration-150",
                       isCurrentMonthDay ? "hover:bg-accent/5" : "bg-muted/30 text-muted-foreground"
                   )}>
                       <span className={cn(
