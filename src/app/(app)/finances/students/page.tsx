@@ -23,7 +23,8 @@ export default function StudentFinancesPage() {
         getDepartments()
       ]);
       setStudentFinances(finances);
-      setDepartments(depts);
+      // We only need the options (departments with a parent) for the form
+      setDepartments(depts.filter(d => d.parentId)); 
     } catch (error) {
       console.error("Failed to fetch student finances data:", error);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les finances des étudiants.' });
@@ -65,18 +66,18 @@ export default function StudentFinancesPage() {
     }
   };
   
-  const handleUpdateStudent = async (updatedStudent: StudentFinance, newAdvance: number) => {
-    const originalStudent = studentFinances.find(s => s.matricule === updatedStudent.matricule);
+  const handleUpdateStudent = async (updatedStudentData: StudentFinance, newAdvance: number) => {
+    const originalStudent = studentFinances.find(s => s.matricule === updatedStudentData.matricule);
     const paymentAmount = newAdvance - (originalStudent?.avance || 0);
 
     try {
-        await updateStudentFinance(updatedStudent.matricule, { avance: newAdvance });
+        await updateStudentFinance(updatedStudentData.matricule, updatedStudentData);
         
         if (paymentAmount > 0) {
             const newTransaction: Omit<AccountingTransaction, 'id'> = {
                 date: new Date().toISOString().split('T')[0],
                 type: 'Revenu',
-                sourceBeneficiary: updatedStudent.fullName,
+                sourceBeneficiary: updatedStudentData.fullName,
                 category: 'Frais scolarité',
                 amount: paymentAmount,
                 paymentMethod: 'Espèces', // Or derive from context
@@ -86,10 +87,18 @@ export default function StudentFinancesPage() {
             await addAccountingTransaction(newTransaction);
             toast({
                 title: "Transaction enregistrée",
-                description: `Un revenu de ${paymentAmount.toLocaleString()} FCFA pour ${updatedStudent.fullName} a été ajouté à la comptabilité.`,
+                description: `Un revenu de ${paymentAmount.toLocaleString()} FCFA pour ${updatedStudentData.fullName} a été ajouté à la comptabilité.`,
+            });
+        } else if (paymentAmount < 0) {
+             toast({
+                title: "Correction de paiement",
+                description: `Le paiement de ${updatedStudentData.fullName} a été ajusté. Pensez à vérifier la comptabilité générale.`,
             });
         }
+
         await fetchData(); // Refetch
+        toast({title: "Mise à jour réussie", description: `La fiche de ${updatedStudentData.fullName} a été mise à jour.`})
+
     } catch (error) {
         console.error("Failed to update student finance:", error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour les finances de l\'étudiant.' });
