@@ -11,7 +11,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Edit, Trash2, User, BookOpen, X } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Edit, Trash2, User, BookOpen, X, Check } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,7 +37,6 @@ import { getFaculty } from '@/lib/data';
 import { Textarea } from '../ui/textarea';
 import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
-import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '../ui/scroll-area';
 
@@ -268,9 +267,8 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
 }
 
 
-export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDeleteCourse: (code: string) => void }) {
+export function CoursesTable({ data, onDeleteCourse, onUpdateCourse }: { data: Course[], onDeleteCourse: (code: string) => void, onUpdateCourse: (code: string, data: Partial<Course>) => void }) {
   const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
-  const handleEdit = (code: string) => alert(`Modification de ${code} bientôt disponible.`);
 
   React.useEffect(() => {
     async function fetchFaculty() {
@@ -279,6 +277,15 @@ export function CoursesTable({ data, onDeleteCourse }: { data: Course[], onDelet
     }
     fetchFaculty();
   }, []);
+
+  const handleEdit = (code: string) => {
+    // For simplicity, we'll prompt for the new name. 
+    // A real app would use a dialog/form.
+    const newName = prompt(`Entrez le nouveau nom pour la matière ${code}:`);
+    if (newName) {
+      onUpdateCourse(code, { name: newName });
+    }
+  };
 
   return (
     <div className="rounded-md border">

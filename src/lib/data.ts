@@ -21,7 +21,7 @@ export async function getStudent(id: string): Promise<Student | null> {
 export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
     const docRef = await addDoc(collection(db, 'students'), studentData);
     const newStudent: Student = { ...studentData, id: docRef.id, academicHistory: [] };
-    await updateDoc(docRef, { id: docRef.id });
+    // The ID is now correctly set from the docRef. No need for a separate update.
     return newStudent;
 }
 
@@ -45,7 +45,6 @@ export async function getFaculty(): Promise<Faculty[]> {
 export async function addFaculty(facultyMember: Omit<Faculty, 'id'>): Promise<Faculty> {
     const docRef = await addDoc(collection(db, 'faculty'), facultyMember);
     const newFaculty = { ...facultyMember, id: docRef.id };
-    await updateDoc(docRef, { id: docRef.id });
     return newFaculty;
 }
 
@@ -67,7 +66,6 @@ export async function getDepartments(): Promise<Department[]> {
 export async function addDepartment(department: Omit<Department, 'id'>): Promise<Department> {
     const docRef = await addDoc(collection(db, 'departments'), department);
     const newDepartment = { ...department, id: docRef.id };
-    await updateDoc(docRef, { id: docRef.id });
     return newDepartment;
 }
 
@@ -83,16 +81,22 @@ export async function getCourses(): Promise<Course[]> {
 }
 
 export async function addCourse(courseData: Omit<Course, 'code'>): Promise<Course> {
-    const docRef = await addDoc(collection(db, 'courses'), courseData);
-    const code = docRef.id;
-    await updateDoc(docRef, { code: code });
-    return { ...courseData, code: code };
+    // Generate a more robust code
+    const baseCode = `${courseData.name.substring(0, 3).toUpperCase()}${courseData.level.charAt(0)}${courseData.level.slice(-1)}`;
+    const randomSuffix = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const newCode = `${baseCode}-${randomSuffix}`;
+
+    const docRef = doc(db, 'courses', newCode);
+    await setDoc(docRef, courseData);
+    return { ...courseData, code: newCode };
 }
 
 
 export async function updateCourse(code: string, data: Partial<Course>): Promise<void> {
-    await updateDoc(doc(db, 'courses', code), data);
+    const courseRef = doc(db, 'courses', code);
+    await updateDoc(courseRef, data);
 }
+
 
 export async function deleteCourse(code: string): Promise<void> {
     await deleteDoc(doc(db, 'courses', code));
@@ -108,7 +112,6 @@ export async function getExamGrades(): Promise<ExamGrade[]> {
 export async function addExamGrade(grade: Omit<ExamGrade, 'id'>): Promise<ExamGrade> {
     const docRef = await addDoc(collection(db, 'examGrades'), grade);
     const newGrade = { ...grade, id: docRef.id };
-    await updateDoc(docRef, { id: docRef.id });
     return newGrade;
 }
 
@@ -144,7 +147,6 @@ export async function getCourseAssignments(): Promise<CourseAssignment[]> {
 export async function addCourseAssignment(assignment: Omit<CourseAssignment, 'id'>): Promise<CourseAssignment> {
     const docRef = await addDoc(collection(db, 'courseAssignments'), assignment);
     const newAssignment = { ...assignment, id: docRef.id };
-    await updateDoc(docRef, { id: docRef.id });
     return newAssignment;
 }
 
@@ -161,7 +163,6 @@ export async function getSchedule(): Promise<ScheduleEntry[]> {
 export async function addScheduleEntry(entry: Omit<ScheduleEntry, 'id'>): Promise<ScheduleEntry> {
     const docRef = await addDoc(collection(db, 'schedule'), entry);
     const newEntry = { ...entry, id: docRef.id };
-    await updateDoc(docRef, { id: docRef.id });
     return newEntry;
 }
 
@@ -178,7 +179,6 @@ export async function getTeacherWorkloads(): Promise<TeacherWorkload[]> {
 export async function addTeacherWorkload(workload: Omit<TeacherWorkload, 'id'>): Promise<TeacherWorkload> {
     const docRef = await addDoc(collection(db, 'teacherWorkload'), workload);
     const newWorkload = { ...workload, id: docRef.id };
-    await updateDoc(docRef, { id: docRef.id });
     return newWorkload;
 }
 
@@ -200,7 +200,6 @@ export async function getTeacherAttendance(): Promise<TeacherAttendance[]> {
 export async function addTeacherAttendance(attendance: Omit<TeacherAttendance, 'id'>): Promise<TeacherAttendance> {
     const docRef = await addDoc(collection(db, 'teacherAttendance'), attendance);
     const newAttendance = { ...attendance, id: docRef.id };
-    await updateDoc(docRef, { id: docRef.id });
 
     // If present, update workload
     if (newAttendance.status === 'Présent') {
@@ -275,7 +274,6 @@ export async function getAccountingTransactions(): Promise<AccountingTransaction
 export async function addAccountingTransaction(transaction: Omit<AccountingTransaction, 'id'>): Promise<AccountingTransaction> {
     const docRef = await addDoc(collection(db, 'accountingTransactions'), transaction);
     const newTransaction = { ...transaction, id: docRef.id };
-    await updateDoc(docRef, { id: docRef.id });
     return newTransaction;
 }
 

@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { getCourses, getDepartments, addCourse, deleteCourse, Course, Department } from '@/lib/data';
+import { getCourses, getDepartments, addCourse, deleteCourse, Course, Department, updateCourse } from '@/lib/data';
 import { CoursesTable, AddCourseForm } from '@/components/academics/courses-table';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -64,6 +64,18 @@ export default function CoursesPage() {
             }
         }
     }
+    
+    const handleUpdateCourse = async (code: string, updatedData: Partial<Course>) => {
+        try {
+            await updateCourse(code, updatedData);
+            setCourses(prev => prev.map(c => c.code === code ? {...c, ...updatedData} : c));
+            toast({ title: 'Matière mise à jour' });
+        } catch (error) {
+            console.error("Failed to update course:", error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de mettre à jour la matière.' });
+        }
+    };
+
 
     const groupedCourses = React.useMemo(() => {
         const lowercasedFilter = searchTerm.toLowerCase();
@@ -139,6 +151,7 @@ export default function CoursesPage() {
                                 <CoursesTable 
                                     data={groupedCourses[department][level]}
                                     onDeleteCourse={handleDeleteCourse}
+                                    onUpdateCourse={handleUpdateCourse}
                                 />
                             </CardContent>
                         </Card>
