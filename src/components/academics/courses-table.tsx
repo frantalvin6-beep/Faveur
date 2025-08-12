@@ -146,12 +146,11 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-4xl max-h-[90vh] flex flex-col">
-        <DialogHeader>
+        <DialogHeader className="flex-shrink-0">
           <DialogTitle>Nouvelle Matière</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} id="add-course-form" className="flex-grow overflow-hidden flex flex-col gap-4">
-          <ScrollArea className="flex-grow pr-6 -mr-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 px-1">
+        <form onSubmit={handleSubmit} id="add-course-form" className="flex-grow overflow-y-auto px-1">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
               <div className="space-y-2 md:col-span-2">
                 <Label htmlFor="name">Nom de la matière</Label>
                 <Input id="name" value={name} onChange={e => setName(e.target.value)} placeholder="Ex: Algèbre Linéaire" required />
@@ -221,9 +220,8 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
                       </PopoverContent>
                   </Popover>
               </div>
-            </div>
             
-            <div className="mt-4 px-1">
+            <div className="mt-4 md:col-span-2">
                  <Label className="text-base font-medium mb-2 block">Chapitres et Leçons</Label>
                     <div className="space-y-4">
                         {chapters.map((chapter, index) => (
@@ -269,8 +267,8 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
                       Ajouter un chapitre
                     </Button>
             </div>
-          </ScrollArea>
-          <DialogFooter className="pt-4 flex-shrink-0">
+          </div>
+          <DialogFooter className="pt-4 flex-shrink-0 bg-background border-t">
               <DialogClose asChild><Button type="button" variant="secondary" onClick={resetForm}>Annuler</Button></DialogClose>
               <Button type="submit">Enregistrer</Button>
           </DialogFooter>
