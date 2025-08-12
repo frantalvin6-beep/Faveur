@@ -63,7 +63,7 @@ export default function AdminFinancesPage() {
                 amount: paymentAmount,
                 paymentMethod: 'Virement bancaire',
                 description: `Paiement salaire personnel administratif`,
-                responsible: 'DRH'
+                responsible: 'DAF'
             };
             await addAccountingTransaction(newTransaction);
             toast({
@@ -95,7 +95,7 @@ export default function AdminFinancesPage() {
                 amount: newFinance.montantPaye,
                 paymentMethod: 'Virement bancaire',
                 description: `Paiement initial salaire personnel administratif`,
-                responsible: 'DRH'
+                responsible: 'DAF'
             };
             await addAccountingTransaction(newTransaction);
             toast({

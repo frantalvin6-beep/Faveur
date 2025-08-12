@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -33,62 +34,71 @@ import {
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { useToast } from '@/hooks/use-toast';
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat('fr-FR').format(amount) + ' FCFA';
 }
 
 const expenseCategories = [
-    'Fournitures', 
-    'Maintenance', 
-    'Construction',
-    'Frais de surveillance',
-    'Services professionnels',
-    'Marketing et communication',
-    'Événements',
-    'Déplacements',
+    'Fournitures de bureau', 
+    'Maintenance & Réparations', 
+    'Construction & Rénovation',
+    'Marketing & Communication',
+    'Événements & Conférences',
+    'Déplacements & Missions',
+    'Services Professionnels (Consultants, Avocats)',
+    'Factures (Eau, Électricité, Internet)',
+    'Impôts & Taxes',
     'Autres'
 ];
 const paymentMethods = ['Espèces', 'Virement bancaire', 'Chèque'];
 
-function AddExpenseForm({ onAddExpense }: { onAddExpense: (entry: AccountingTransaction) => void }) {
+function AddExpenseForm({ onAddExpense }: { onAddExpense: (entry: Omit<AccountingTransaction, 'id' | 'type'>) => Promise<void> }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [date, setDate] = React.useState(new Date().toISOString().split('T')[0]);
   const [beneficiary, setBeneficiary] = React.useState('');
   const [category, setCategory] = React.useState('');
-  const [amount, setAmount] = React.useState(0);
+  const [amount, setAmount] = React.useState<number | ''>('');
   const [paymentMethod, setPaymentMethod] = React.useState<AccountingTransaction['paymentMethod']>('Espèces');
   const [description, setDescription] = React.useState('');
   const [responsible, setResponsible] = React.useState('');
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const resetForm = () => {
+      setDate(new Date().toISOString().split('T')[0]);
+      setBeneficiary('');
+      setCategory('');
+      setAmount('');
+      setPaymentMethod('Espèces');
+      setDescription('');
+      setResponsible('');
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!date || !beneficiary || !category || amount <= 0 || !paymentMethod || !responsible) {
-      alert("Veuillez remplir tous les champs obligatoires.");
+    if (!date || !beneficiary || !category || amount === '' || amount <= 0 || !paymentMethod || !responsible) {
+      toast({variant: 'destructive', title: 'Erreur', description: "Veuillez remplir tous les champs obligatoires."});
       return;
     }
 
-    const newTransaction: AccountingTransaction = {
-      id: `TRN-EXP-${Date.now()}`,
+    const newTransaction: Omit<AccountingTransaction, 'id' | 'type'> = {
       date,
-      type: 'Dépense',
       sourceBeneficiary: beneficiary,
       category,
-      amount,
+      amount: Number(amount),
       paymentMethod,
       description,
       responsible,
     };
 
-    onAddExpense(newTransaction);
-    setIsOpen(false);
-    // Reset form
-    setBeneficiary('');
-    setCategory('');
-    setAmount(0);
-    setPaymentMethod('Espèces');
-    setDescription('');
-    setResponsible('');
+    try {
+        await onAddExpense(newTransaction);
+        setIsOpen(false);
+        resetForm();
+    } catch (error) {
+        // Le toast d'erreur est déjà géré dans le composant parent
+    }
   };
 
   return (
@@ -155,7 +165,7 @@ function AddExpenseForm({ onAddExpense }: { onAddExpense: (entry: AccountingTran
 }
 
 
-export function ExpensesTable({ data, onAddExpense, onDeleteExpense }: { data: AccountingTransaction[], onAddExpense: (entry: AccountingTransaction) => void, onDeleteExpense: (id: string) => void }) {
+export function ExpensesTable({ data, onAddExpense, onDeleteExpense }: { data: AccountingTransaction[], onAddExpense: (entry: Omit<AccountingTransaction, 'id'|'type'>) => Promise<void>, onDeleteExpense: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredData = data.filter((item) =>

@@ -58,9 +58,13 @@ function getStatusBadgeVariant(status: AdminFinance['statut']) {
   }
 }
 
-function UpdatePaymentForm({ finance, onUpdate }: { finance: AdminFinance, onUpdate: (updatedFinance: AdminFinance) => void }) {
+function UpdatePaymentForm({ finance, onUpdate, children }: { finance: AdminFinance, onUpdate: (updatedFinance: AdminFinance) => void, children: React.ReactNode }) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [montantPaye, setMontantPaye] = React.useState(finance.montantPaye);
+
+    React.useEffect(() => {
+        setMontantPaye(finance.montantPaye);
+    }, [finance, isOpen]);
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -79,12 +83,9 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: AdminFinance, onUpd
     
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
-            <DropdownMenuTrigger asChild>
-                 <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
-                    <Edit className="mr-2 h-4 w-4" />
-                    Mettre à jour le paiement
-                </DropdownMenuItem>
-            </DropdownMenuTrigger>
+            <DialogTrigger asChild>
+                {children}
+            </DialogTrigger>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Mettre à jour le paiement pour {finance.fullName}</DialogTitle>
@@ -100,7 +101,7 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: AdminFinance, onUpd
                             <Input id="current-paid" value={formatCurrency(finance.montantPaye)} disabled />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="new-paid">Nouveau Montant Payé</Label>
+                            <Label htmlFor="new-paid">Nouveau Montant Total Payé</Label>
                             <Input id="new-paid" type="number" value={montantPaye} onChange={(e) => setMontantPaye(Number(e.target.value))} />
                         </div>
                     </div>
@@ -114,7 +115,7 @@ function UpdatePaymentForm({ finance, onUpdate }: { finance: AdminFinance, onUpd
     )
 }
 
-function AddAdminFinanceForm({ onAdd, allStaff }: { onAdd: (finance: AdminFinance) => void, allStaff: AdminStaff[] }) {
+function AddAdminFinanceForm({ onAdd, allStaff, existingMatricules }: { onAdd: (finance: AdminFinance) => void, allStaff: AdminStaff[], existingMatricules: string[] }) {
     const [isOpen, setIsOpen] = React.useState(false);
     
     const [matricule, setMatricule] = React.useState('');
@@ -122,6 +123,8 @@ function AddAdminFinanceForm({ onAdd, allStaff }: { onAdd: (finance: AdminFinanc
     const [indemniteTransport, setIndemniteTransport] = React.useState(0);
     const [autresAvantages, setAutresAvantages] = React.useState(0);
     const [montantPaye, setMontantPaye] = React.useState(0);
+    
+    const availableStaff = allStaff.filter(s => !existingMatricules.includes(s.id));
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -156,7 +159,7 @@ function AddAdminFinanceForm({ onAdd, allStaff }: { onAdd: (finance: AdminFinanc
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button>
+                <Button disabled={availableStaff.length === 0}>
                     <PlusCircle className="mr-2 h-4 w-4" />
                     Initialiser la paie
                 </Button>
@@ -172,13 +175,13 @@ function AddAdminFinanceForm({ onAdd, allStaff }: { onAdd: (finance: AdminFinanc
                                 <Label>Personnel</Label>
                                 <Select onValueChange={setMatricule} value={matricule}>
                                     <SelectTrigger><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                                    <SelectContent>{allStaff.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.position})</SelectItem>)}</SelectContent>
+                                    <SelectContent>{availableStaff.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.position})</SelectItem>)}</SelectContent>
                                 </Select>
                             </div>
                             <div className="space-y-2"><Label>Salaire Mensuel</Label><Input type="number" value={salaireMensuel} onChange={(e) => setSalaireMensuel(Number(e.target.value))} /></div>
                             <div className="space-y-2"><Label>Indemnité Transport</Label><Input type="number" value={indemniteTransport} onChange={(e) => setIndemniteTransport(Number(e.target.value))} /></div>
                             <div className="space-y-2"><Label>Autres Avantages</Label><Input type="number" value={autresAvantages} onChange={(e) => setAutresAvantages(Number(e.target.value))} /></div>
-                            <div className="space-y-2"><Label>Montant déjà payé</Label><Input type="number" value={montantPaye} onChange={(e) => setMontantPaye(Number(e.target.value))} /></div>
+                            <div className="space-y-2"><Label>Montant déjà payé (Avance)</Label><Input type="number" value={montantPaye} onChange={(e) => setMontantPaye(Number(e.target.value))} /></div>
                         </div>
                     </div>
                     <DialogFooter className="pt-4 flex-shrink-0">
@@ -272,7 +275,7 @@ export function AdminFinancesTable({ data, adminStaff, onAddFinance, onUpdateFin
                 <DropdownMenuItem onClick={() => handleExport('word')}><FileType className="mr-2 h-4 w-4" />Exporter en Word</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <AddAdminFinanceForm onAdd={onAddFinance} allStaff={adminStaff} />
+            <AddAdminFinanceForm onAdd={onAddFinance} allStaff={adminStaff} existingMatricules={data.map(d => d.matricule)} />
           </div>
         </div>
       </CardHeader>
@@ -318,7 +321,12 @@ export function AdminFinancesTable({ data, adminStaff, onAddFinance, onUpdateFin
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                         <UpdatePaymentForm finance={f} onUpdate={onUpdateFinance} />
+                         <UpdatePaymentForm finance={f} onUpdate={onUpdateFinance}>
+                             <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Mettre à jour le paiement
+                            </DropdownMenuItem>
+                         </UpdatePaymentForm>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </TableCell>
