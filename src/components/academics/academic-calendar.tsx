@@ -17,7 +17,7 @@ import {
 import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Plus, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -73,7 +73,7 @@ export function AcademicCalendar() {
     end: endOfWeek(endOfMonth(firstDayCurrentMonth), { locale: fr }),
   });
   
-  const weekdays = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
+  const weekdays = ['Lundi', 'Mardi', 'Mercredi', 'Jeu', 'Vendredi', 'Samedi', 'Dimanche'];
 
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
@@ -152,7 +152,7 @@ export function AcademicCalendar() {
         </div>
 
         <div className="overflow-x-auto rounded-lg border">
-            <table className="w-full table-fixed">
+            <table className="w-full min-w-[800px] table-fixed">
                 <thead>
                     <tr>
                         {weekdays.map(day => (
