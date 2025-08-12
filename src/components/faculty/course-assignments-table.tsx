@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { CourseAssignment, Faculty, Course } from '@/lib/types';
+import { CourseAssignment, Faculty, Course, TeacherWorkload } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -34,9 +34,11 @@ import {
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToast } from '@/hooks/use-toast';
 
-function AddAssignmentForm({ onAddAssignment, courses, faculty }: { onAddAssignment: (assignment: Omit<CourseAssignment, 'id'>) => void, courses: Course[], faculty: Faculty[] }) {
+function AddAssignmentForm({ onAddAssignment, courses, faculty, assignments }: { onAddAssignment: (assignment: Omit<CourseAssignment, 'id'>) => Promise<void>, courses: Course[], faculty: Faculty[], assignments: CourseAssignment[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
+  const { toast } = useToast();
   
   const [teacherId, setTeacherId] = React.useState('');
   const [courseCode, setCourseCode] = React.useState('');
@@ -47,8 +49,13 @@ function AddAssignmentForm({ onAddAssignment, courses, faculty }: { onAddAssignm
     const course = courses.find(c => c.code === courseCode);
     
     if (!teacher || !course) {
-      alert("Veuillez sélectionner un enseignant et un cours valides.");
+      toast({variant: "destructive", title: "Erreur", description: "Veuillez sélectionner un enseignant et un cours valides."});
       return;
+    }
+    
+    if (assignments.some(a => a.teacherId === teacherId && a.courseCode === courseCode)) {
+        toast({variant: "destructive", title: "Erreur", description: "Ce cours est déjà attribué à cet enseignant."});
+        return;
     }
 
     const newAssignment: Omit<CourseAssignment, 'id'> = {
@@ -118,7 +125,7 @@ function AddAssignmentForm({ onAddAssignment, courses, faculty }: { onAddAssignm
 }
 
 
-export function CourseAssignmentsTable({ data, courses, faculty, onAddAssignment, onDeleteAssignment }: { data: CourseAssignment[], courses: Course[], faculty: Faculty[], onAddAssignment: (assignment: Omit<CourseAssignment, 'id'>) => void, onDeleteAssignment: (id: string) => void }) {
+export function CourseAssignmentsTable({ data, courses, faculty, workloads, onAddAssignment, onDeleteAssignment }: { data: CourseAssignment[], courses: Course[], faculty: Faculty[], workloads: TeacherWorkload[], onAddAssignment: (assignment: Omit<CourseAssignment, 'id'>) => Promise<void>, onDeleteAssignment: (id: string) => void }) {
   const [searchTerm, setSearchTerm] = React.useState('');
 
   const filteredAssignments = data.filter((item) =>
@@ -145,7 +152,7 @@ export function CourseAssignmentsTable({ data, courses, faculty, onAddAssignment
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <AddAssignmentForm onAddAssignment={onAddAssignment} courses={courses} faculty={faculty} />
+                <AddAssignmentForm onAddAssignment={onAddAssignment} courses={courses} faculty={faculty} assignments={data} />
             </div>
         </div>
       </CardHeader>
@@ -159,51 +166,54 @@ export function CourseAssignmentsTable({ data, courses, faculty, onAddAssignment
                 <TableHead>Département</TableHead>
                 <TableHead>Niveau</TableHead>
                 <TableHead>Semestre</TableHead>
-                <TableHead className="whitespace-nowrap">Volume Horaire</TableHead>
+                <TableHead className="whitespace-nowrap">Volume Horaire Planifié</TableHead>
                 <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
             </TableHeader>
             <TableBody>
-                {filteredAssignments.length > 0 ? filteredAssignments.map((item) => (
-                <TableRow key={item.id}>
-                    <TableCell className="font-medium">
-                        <div>{item.teacherName}</div>
-                        <div className="text-xs text-muted-foreground">{item.teacherId}</div>
-                    </TableCell>
-                    <TableCell>
-                        <div>{item.courseName}</div>
-                        <div className="text-xs text-muted-foreground">{item.courseCode}</div>
-                    </TableCell>
-                    <TableCell><Badge variant="outline">{item.department}</Badge></TableCell>
-                    <TableCell>{item.level}</TableCell>
-                    <TableCell>{item.semester}</TableCell>
-                    <TableCell>{item.hourlyVolume}h</TableCell>
-                    <TableCell className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                            <span className="sr-only">Ouvrir le menu</span>
-                            <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleEdit(item.id)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Modifier
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDeleteAssignment(item.id)}
-                            className="text-destructive focus:text-destructive"
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Supprimer
-                        </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                    </TableCell>
-                </TableRow>
-                )) : (
+                {filteredAssignments.length > 0 ? filteredAssignments.map((item) => {
+                  const workload = workloads.find(w => w.teacherId === item.teacherId && w.courseName === item.courseName);
+                  return (
+                    <TableRow key={item.id}>
+                        <TableCell className="font-medium">
+                            <div>{item.teacherName}</div>
+                            <div className="text-xs text-muted-foreground">{item.teacherId}</div>
+                        </TableCell>
+                        <TableCell>
+                            <div>{item.courseName}</div>
+                            <div className="text-xs text-muted-foreground">{item.courseCode}</div>
+                        </TableCell>
+                        <TableCell><Badge variant="outline">{item.department}</Badge></TableCell>
+                        <TableCell>{item.level}</TableCell>
+                        <TableCell>{item.semester}</TableCell>
+                        <TableCell>{workload?.plannedHours ?? item.hourlyVolume}h</TableCell>
+                        <TableCell className="text-right">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" className="h-8 w-8 p-0">
+                                <span className="sr-only">Ouvrir le menu</span>
+                                <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleEdit(item.id)}>
+                                <Edit className="mr-2 h-4 w-4" />
+                                Modifier
+                            </DropdownMenuItem>
+                            <DropdownMenuItem
+                                onClick={() => onDeleteAssignment(item.id)}
+                                className="text-destructive focus:text-destructive"
+                            >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Supprimer
+                            </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                        </TableCell>
+                    </TableRow>
+                  )
+                }) : (
                     <TableRow>
                         <TableCell colSpan={7} className="h-24 text-center">
                             Aucun résultat trouvé.

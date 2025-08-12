@@ -13,7 +13,8 @@ const timeSlots = [
   '14:00', '15:00', '16:00', '17:00', '18:00',
 ];
 
-const daysOfWeek: Exclude<ScheduleEntry['dayOfWeek'], 'Dimanche'>[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+const daysOfWeek: Exclude<ScheduleEntry['dayOfWeek'], 'Dimanche' | undefined>[] = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi', 'Samedi'];
+
 
 // Helper function to convert time string "HH:MM" to a number (e.g., 8.5 for "08:30")
 const timeToNumber = (time: string) => {
@@ -54,6 +55,14 @@ export function ScheduleGrid({ schedule, onDelete }: { schedule: ScheduleEntry[]
       }
     }
   });
+  
+  if (schedule.length === 0) {
+    return (
+        <div className="text-center text-muted-foreground p-8 border rounded-md">
+            Aucun cours planifié pour ce groupe.
+        </div>
+    )
+  }
   
   return (
     <div className="rounded-md border relative w-full overflow-auto">

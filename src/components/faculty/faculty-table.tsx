@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { PlusCircle, MoreHorizontal, Edit, Trash2, Check, User } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -27,8 +27,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogC
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { getDepartments } from '@/lib/data';
-import { useToast } from '@/hooks/use-toast';
+import { Popover, PopoverContent, PopoverTrigger } from '../ui/popover';
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from '../ui/command';
+import { cn } from '@/lib/utils';
 
+
+const teachingLevelOptions: Faculty['teachingLevels'] = ['Licence', 'Master', 'Doctorat'];
 
 function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty, 'id'>) => Promise<Faculty> }) {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -40,12 +44,13 @@ function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty
   const [department, setDepartment] = React.useState('');
   const [position, setPosition] = React.useState<Faculty['position']>('Chargé de cours');
   const [specialization, setSpecialization] = React.useState('');
-  const [teachingLevels, setTeachingLevels] = React.useState<Faculty['teachingLevels'][]>([]);
+  const [teachingLevels, setTeachingLevels] = React.useState<Faculty['teachingLevels']>([]);
+  const [isLevelPopoverOpen, setIsLevelPopoverOpen] = React.useState(false);
 
   React.useEffect(() => {
     async function loadDeps() {
       const deps = await getDepartments();
-      setDepartments(deps.filter(d => d.id.includes('OPT')));
+      setDepartments(deps.filter(d => d.parentId)); // Only options
     }
     if (isOpen) {
       loadDeps();
@@ -68,6 +73,9 @@ function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty
     setEmail('');
     setPhone('');
     setDepartment('');
+    setTeachingLevels([]);
+    setPosition('Chargé de cours');
+    setSpecialization('');
   };
 
   return (
@@ -88,7 +96,7 @@ function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty
             <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></div>
             <div className="space-y-2"><Label>Téléphone</Label><Input value={phone} onChange={e => setPhone(e.target.value)} /></div>
             <div className="space-y-2">
-                <Label>Département</Label>
+                <Label>Département/Option</Label>
                 <Select onValueChange={setDepartment} value={department}>
                     <SelectTrigger><SelectValue placeholder="Sélectionner..."/></SelectTrigger>
                     <SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent>
@@ -107,7 +115,41 @@ function AddFacultyForm({ onAddFaculty }: { onAddFaculty: (faculty: Omit<Faculty
                 </Select>
             </div>
             <div className="space-y-2"><Label>Spécialisation</Label><Input value={specialization} onChange={e => setSpecialization(e.target.value)} /></div>
-
+            
+            <div className="space-y-2 md:col-span-2">
+                <Label>Niveaux d'enseignement</Label>
+                <Popover open={isLevelPopoverOpen} onOpenChange={setIsLevelPopoverOpen}>
+                      <PopoverTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start font-normal">
+                              {teachingLevels.length > 0 ? teachingLevels.join(', ') : "Sélectionner les niveaux"}
+                          </Button>
+                      </PopoverTrigger>
+                      <PopoverContent className="p-0" align="start">
+                          <Command>
+                              <CommandInput placeholder="Rechercher..." />
+                              <CommandList>
+                                  <CommandEmpty>Aucun niveau trouvé.</CommandEmpty>
+                                  <CommandGroup>
+                                  {teachingLevelOptions.map((level) => (
+                                      <CommandItem
+                                          key={level}
+                                          onSelect={() => {
+                                              const newSelection = teachingLevels.includes(level)
+                                                  ? teachingLevels.filter((l) => l !== level)
+                                                  : [...teachingLevels, level];
+                                              setTeachingLevels(newSelection);
+                                          }}
+                                      >
+                                          <Check className={cn("mr-2 h-4 w-4", teachingLevels.includes(level) ? "opacity-100" : "opacity-0")} />
+                                          <span>{level}</span>
+                                      </CommandItem>
+                                  ))}
+                                  </CommandGroup>
+                              </CommandList>
+                          </Command>
+                      </PopoverContent>
+                  </Popover>
+            </div>
           </div>
           <DialogFooter>
             <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>

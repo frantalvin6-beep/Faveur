@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { getSchedule, addScheduleEntry, getFaculty, getCourses, Faculty, Course, ScheduleEntry, deleteScheduleEntry } from '@/lib/data';
+import { getSchedule, addScheduleEntry, getFaculty, getCourses, Faculty, Course, ScheduleEntry, deleteScheduleEntry, getCourseAssignments, CourseAssignment } from '@/lib/data';
 import { ScheduleGrid } from '@/components/faculty/schedule-grid';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -20,24 +20,24 @@ interface GroupedSchedule {
   [key: string]: ScheduleEntry[];
 }
 
-function AddScheduleEntryForm({ onAddEntry, courses, faculty }: { onAddEntry: (entry: Omit<ScheduleEntry, 'id'>) => void, courses: Course[], faculty: Faculty[] }) {
+function AddScheduleEntryForm({ onAddEntry, assignments, faculty }: { onAddEntry: (entry: Omit<ScheduleEntry, 'id'>) => void, assignments: CourseAssignment[], faculty: Faculty[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
   
   const [teacherId, setTeacherId] = React.useState('');
-  const [courseCode, setCourseCode] = React.useState('');
+  const [assignmentId, setAssignmentId] = React.useState('');
   const [dayOfWeek, setDayOfWeek] = React.useState<ScheduleEntry['dayOfWeek']>('Lundi');
   const [startTime, setStartTime] = React.useState('');
   const [endTime, setEndTime] = React.useState('');
   const [location, setLocation] = React.useState('');
   
-  const teacherCourses = courses.filter(c => c.teacherIds?.includes(teacherId));
-  const selectedCourse = courses.find(c => c.code === courseCode);
+  const teacherAssignments = assignments.filter(c => c.teacherId === teacherId);
+  const selectedAssignment = assignments.find(c => c.id === assignmentId);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const teacher = faculty.find(f => f.id === teacherId);
 
-    if (!teacher || !selectedCourse || !dayOfWeek || !startTime || !endTime || !location) {
+    if (!teacher || !selectedAssignment || !dayOfWeek || !startTime || !endTime || !location) {
       alert("Veuillez remplir tous les champs.");
       return;
     }
@@ -45,20 +45,20 @@ function AddScheduleEntryForm({ onAddEntry, courses, faculty }: { onAddEntry: (e
     const newEntry: Omit<ScheduleEntry, 'id'> = {
       teacherId,
       teacherName: teacher.name,
-      courseName: selectedCourse.name,
-      courseCode: selectedCourse.code,
+      courseName: selectedAssignment.courseName,
+      courseCode: selectedAssignment.courseCode,
       dayOfWeek,
       startTime,
       endTime,
       location,
-      level: selectedCourse.level,
-      semester: selectedCourse.semester,
+      level: selectedAssignment.level,
+      semester: selectedAssignment.semester,
     };
     onAddEntry(newEntry);
     setIsOpen(false);
     // Reset form
     setTeacherId('');
-    setCourseCode('');
+    setAssignmentId('');
     setDayOfWeek('Lundi');
     setStartTime('');
     setEndTime('');
@@ -83,16 +83,16 @@ function AddScheduleEntryForm({ onAddEntry, courses, faculty }: { onAddEntry: (e
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
             <div className="space-y-2">
               <Label htmlFor="teacher">Enseignant</Label>
-              <Select onValueChange={setTeacherId} value={teacherId}>
+              <Select onValueChange={(val) => { setTeacherId(val); setAssignmentId('')}} value={teacherId}>
                 <SelectTrigger id="teacher"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                 <SelectContent>{faculty.map(f => <SelectItem key={f.id} value={f.id}>{f.name}</SelectItem>)}</SelectContent>
               </Select>
             </div>
              <div className="space-y-2">
-                <Label htmlFor="course">Matière</Label>
-                <Select onValueChange={setCourseCode} value={courseCode} disabled={!teacherId}>
+                <Label htmlFor="course">Matière Attribuée</Label>
+                <Select onValueChange={setAssignmentId} value={assignmentId} disabled={!teacherId}>
                     <SelectTrigger id="course"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
-                    <SelectContent>{teacherCourses.map(c => <SelectItem key={c.code} value={c.code}>{c.name} ({c.level})</SelectItem>)}</SelectContent>
+                    <SelectContent>{teacherAssignments.map(c => <SelectItem key={c.id} value={c.id}>{c.courseName} ({c.level})</SelectItem>)}</SelectContent>
                 </Select>
              </div>
              <div className="space-y-2">
@@ -127,7 +127,7 @@ function AddScheduleEntryForm({ onAddEntry, courses, faculty }: { onAddEntry: (e
 
 export default function FacultySchedulePage() {
   const [schedule, setSchedule] = React.useState<ScheduleEntry[]>([]);
-  const [courses, setCourses] = React.useState<Course[]>([]);
+  const [assignments, setAssignments] = React.useState<CourseAssignment[]>([]);
   const [faculty, setFaculty] = React.useState<Faculty[]>([]);
   const [loading, setLoading] = React.useState(true);
   const [searchTerm, setSearchTerm] = React.useState('');
@@ -136,13 +136,13 @@ export default function FacultySchedulePage() {
   const fetchData = React.useCallback(async () => {
     try {
         setLoading(true);
-        const [scheduleData, coursesData, facultyData] = await Promise.all([
+        const [scheduleData, assignmentsData, facultyData] = await Promise.all([
             getSchedule(),
-            getCourses(),
+            getCourseAssignments(),
             getFaculty()
         ]);
         setSchedule(scheduleData);
-        setCourses(coursesData);
+        setAssignments(assignmentsData);
         setFaculty(facultyData);
     } catch (error) {
         console.error("Failed to fetch data:", error);
@@ -164,6 +164,7 @@ export default function FacultySchedulePage() {
     } catch (error) {
         console.error("Failed to add schedule entry:", error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de planifier le cours.' });
+        throw error;
     }
   };
   
@@ -231,7 +232,7 @@ export default function FacultySchedulePage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
-            <AddScheduleEntryForm onAddEntry={handleAddEntry} courses={courses} faculty={faculty} />
+            <AddScheduleEntryForm onAddEntry={handleAddEntry} assignments={assignments} faculty={faculty} />
          </div>
        </div>
       
