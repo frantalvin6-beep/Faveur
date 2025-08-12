@@ -168,7 +168,7 @@ export function AcademicCalendar() {
                 const isCurrentMonthDay = format(day, 'M') === format(currentMonth, 'M');
                 return (
                   <div key={day.toString()} className={cn(
-                      "p-1 border-b border-r relative group transition-colors duration-150",
+                      "p-1 border-b border-r relative group transition-colors duration-150 overflow-y-auto",
                        isCurrentMonthDay ? "hover:bg-accent/5" : "bg-muted/30 text-muted-foreground"
                   )}>
                       <span className={cn(
@@ -179,7 +179,7 @@ export function AcademicCalendar() {
                       </span>
                       <div className="space-y-1 mt-1">
                           {eventsOnDay.map(event => (
-                              <div key={event.id} onClick={() => handleDeleteEvent(event.id)} className={cn("py-0.5 px-1.5 rounded-md text-xs border cursor-pointer break-words", eventStyles[event.type])}>
+                              <div key={event.id} onClick={() => handleDeleteEvent(event.id)} className={cn("py-0.5 px-1.5 rounded-md text-sm border cursor-pointer", eventStyles[event.type])}>
                                 {event.event}
                               </div>
                           ))}
