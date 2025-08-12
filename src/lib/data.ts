@@ -1,6 +1,6 @@
 
 
-import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter } from './types';
+import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter, AcademicEvent, EventType } from './types';
 import { db } from './firebase';
 import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, addDoc } from 'firebase/firestore';
 
@@ -101,6 +101,22 @@ export async function updateCourse(code: string, data: Partial<Course>): Promise
 export async function deleteCourse(code: string): Promise<void> {
     await deleteDoc(doc(db, 'courses', code));
 }
+
+// --- ACADEMIC CALENDAR SERVICES ---
+export async function getAcademicEvents(): Promise<AcademicEvent[]> {
+    const snapshot = await getDocs(collection(db, 'academicEvents'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AcademicEvent));
+}
+
+export async function addAcademicEvent(event: Omit<AcademicEvent, 'id'>): Promise<AcademicEvent> {
+    const docRef = await addDoc(collection(db, 'academicEvents'), event);
+    return { ...event, id: docRef.id };
+}
+
+export async function deleteAcademicEvent(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'academicEvents', id));
+}
+
 
 // --- EXAM GRADES SERVICES ---
 
@@ -509,7 +525,8 @@ export async function seedDatabase() {
     const collectionsToDelete = [
         'students', 'faculty', 'departments', 'courses', 'studentFinances',
         'adminStaff', 'courseAssignments', 'schedule', 'examGrades', 'teacherWorkload',
-        'teacherAttendance', 'accountingTransactions', 'facultyFinances', 'adminFinances'
+        'teacherAttendance', 'accountingTransactions', 'facultyFinances', 'adminFinances',
+        'academicEvents'
     ];
 
     console.log("Starting database seed process...");
@@ -557,7 +574,22 @@ export async function seedDatabase() {
         return {...staff, id: docRef.id};
     });
 
+    const initialAcademicEvents: Omit<AcademicEvent, 'id'>[] = [
+      { date: '2024-09-02', event: 'Rentrée universitaire', type: 'event' as const },
+      { date: '2024-10-28', event: 'Vacances de la Toussaint', type: 'holiday' as const },
+      { date: '2024-11-03', event: 'Fin des vacances de la Toussaint', type: 'holiday' as const },
+      { date: '2024-12-16', event: 'Début des examens', type: 'exam' as const },
+      { date: '2024-12-23', event: 'Vacances de Noël', type: 'holiday' as const },
+    ];
+    initialAcademicEvents.forEach(event => {
+        const docRef = doc(collection(db, "academicEvents"));
+        batch.set(docRef, event);
+    });
+
 
     await batch.commit();
     console.log("Database seeded successfully!");
 }
+
+// Export event type for use in components
+export type { EventType, AcademicEvent };

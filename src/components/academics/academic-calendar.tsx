@@ -1,3 +1,4 @@
+
 'use client';
 
 import * as React from 'react';
@@ -16,7 +17,7 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Trash2, Loader2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -28,29 +29,9 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-
-type EventType = 'event' | 'exam' | 'holiday';
-
-interface AcademicEvent {
-    date: string;
-    event: string;
-    type: EventType;
-}
-
-const initialAcademicEvents: AcademicEvent[] = [
-  { date: '2024-09-02', event: 'Rentrée universitaire', type: 'event' as const },
-  { date: '2024-10-28', event: 'Vacances de la Toussaint', type: 'holiday' as const },
-  { date: '2024-11-03', event: 'Fin des vacances de la Toussaint', type: 'holiday' as const },
-  { date: '2024-12-16', event: 'Début des examens', type: 'exam' as const },
-  { date: '2024-12-23', event: 'Vacances de Noël', type: 'holiday' as const },
-  { date: '2025-01-05', event: 'Fin des vacances de Noël', type: 'holiday' as const },
-  { date: '2025-01-20', event: 'Début du 2ème semestre', type: 'event' as const },
-  { date: '2025-02-17', event: 'Vacances d\'hiver', type: 'holiday' as const },
-  { date: '2025-04-14', event: 'Vacances de printemps', type: 'holiday' as const },
-  { date: '2025-05-01', event: 'Jour férié', type: 'holiday' as const },
-  { date: '2025-05-15', event: 'Fin des cours', type: 'event' as const },
-  { date: '2025-05-26', event: 'Début des examens finaux', type: 'exam' as const },
-];
+import { AcademicEvent, EventType, getAcademicEvents, addAcademicEvent, deleteAcademicEvent } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
+import { Skeleton } from '../ui/skeleton';
 
 const eventStyles = {
   event: "bg-primary/10 text-primary border-primary/20",
@@ -60,11 +41,30 @@ const eventStyles = {
 
 export function AcademicCalendar() {
   const [currentMonth, setCurrentMonth] = React.useState(new Date());
-  const [academicEvents, setAcademicEvents] = React.useState<AcademicEvent[]>(initialAcademicEvents);
+  const [academicEvents, setAcademicEvents] = React.useState<AcademicEvent[]>([]);
+  const [loading, setLoading] = React.useState(true);
   const [isDialogOpen, setIsDialogOpen] = React.useState(false);
   const [selectedDate, setSelectedDate] = React.useState<Date | null>(null);
   const [newEvent, setNewEvent] = React.useState('');
   const [eventType, setEventType] = React.useState<EventType>('event');
+  const { toast } = useToast();
+
+  const fetchEvents = React.useCallback(async () => {
+      try {
+          const events = await getAcademicEvents();
+          setAcademicEvents(events);
+      } catch (error) {
+          console.error(error);
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les événements.' });
+      } finally {
+        setLoading(false);
+      }
+  }, [toast]);
+
+  React.useEffect(() => {
+    fetchEvents();
+  }, [fetchEvents]);
+
 
   const firstDayCurrentMonth = startOfMonth(currentMonth);
 
@@ -78,8 +78,8 @@ export function AcademicCalendar() {
   const goToPreviousMonth = () => setCurrentMonth(subMonths(currentMonth, 1));
   const goToNextMonth = () => setCurrentMonth(addMonths(currentMonth, 1));
 
-  const getEventForDate = (date: Date) => {
-    return academicEvents.find(e => isSameDay(new Date(e.date), date));
+  const getEventsForDate = (date: Date) => {
+    return academicEvents.filter(e => isSameDay(new Date(e.date), date));
   }
   
   const handleDayClick = (day: Date) => {
@@ -87,20 +87,56 @@ export function AcademicCalendar() {
     setIsDialogOpen(true);
   }
 
-  const handleSaveEvent = () => {
+  const handleSaveEvent = async () => {
     if (selectedDate && newEvent) {
-      const newEventObject: AcademicEvent = {
-        date: format(selectedDate, 'yyyy-MM-dd'),
-        event: newEvent,
-        type: eventType,
-      };
-      setAcademicEvents([...academicEvents, newEventObject]);
-      setIsDialogOpen(false);
-      setNewEvent('');
-      setEventType('event');
-      setSelectedDate(null);
+      try {
+          const newEventObject: Omit<AcademicEvent, 'id'> = {
+            date: format(selectedDate, 'yyyy-MM-dd'),
+            event: newEvent,
+            type: eventType,
+          };
+          await addAcademicEvent(newEventObject);
+          toast({ title: 'Événement ajouté' });
+          await fetchEvents(); // Refetch
+          setIsDialogOpen(false);
+          setNewEvent('');
+          setEventType('event');
+          setSelectedDate(null);
+      } catch (error) {
+          console.error(error);
+          toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter l\'événement.' });
+      }
     }
   };
+
+  const handleDeleteEvent = async (eventId: string) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer cet événement ?")) {
+      try {
+        await deleteAcademicEvent(eventId);
+        toast({ title: 'Événement supprimé' });
+        await fetchEvents(); // Refetch
+      } catch (error) {
+        console.error(error);
+        toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de supprimer l\'événement.' });
+      }
+    }
+  };
+
+  if (loading) {
+    return (
+        <Card>
+            <CardHeader>
+                <div className="flex items-center justify-between">
+                    <Skeleton className="h-8 w-80" />
+                    <Skeleton className="h-10 w-64" />
+                </div>
+            </CardHeader>
+            <CardContent>
+                <Skeleton className="h-96 w-full" />
+            </CardContent>
+        </Card>
+    )
+  }
 
   return (
     <>
@@ -109,7 +145,7 @@ export function AcademicCalendar() {
           <div className="flex items-center justify-between">
               <div>
                   <CardTitle>Calendrier académique</CardTitle>
-                  <CardDescription>Cliquez sur une date pour ajouter un événement.</CardDescription>
+                  <CardDescription>Cliquez sur une date pour ajouter un événement, ou sur un événement pour le supprimer.</CardDescription>
               </div>
               <div className="flex items-center gap-2">
                   <Button variant="outline" size="icon" onClick={goToPreviousMonth}>
@@ -128,26 +164,28 @@ export function AcademicCalendar() {
                 <div key={day} className="text-center font-semibold py-2 border-b border-r bg-muted/50">{day}</div>
               ))}
               {daysInMonth.map((day) => {
-                const event = getEventForDate(day);
+                const eventsOnDay = getEventsForDate(day);
                 const isCurrentMonthDay = format(day, 'M') === format(currentMonth, 'M');
                 return (
                   <div key={day.toString()} className={cn(
-                      "h-32 p-2 border-b border-r flex flex-col relative group transition-colors duration-150",
+                      "h-32 p-2 border-b border-r flex flex-col relative group transition-colors duration-150 overflow-y-auto",
                       isCurrentMonthDay ? "hover:bg-accent/5" : "bg-muted/30 text-muted-foreground"
-                  )} onClick={() => isCurrentMonthDay && handleDayClick(day)}>
+                  )}>
                       <span className={cn(
-                          "font-medium",
+                          "font-medium cursor-pointer",
                           isSameDay(day, new Date()) && "text-primary font-bold"
-                      )}>
+                      )} onClick={() => isCurrentMonthDay && handleDayClick(day)}>
                           {format(day, 'd')}
                       </span>
-                      {event && isCurrentMonthDay && (
-                        <div className={cn("mt-1 p-1 rounded-md text-xs border truncate", eventStyles[event.type])}>
-                          {event.event}
-                        </div>
-                      )}
+                      <div className="space-y-1 mt-1">
+                          {eventsOnDay.map(event => (
+                              <div key={event.id} onClick={() => handleDeleteEvent(event.id)} className={cn("p-1 rounded-md text-xs border truncate cursor-pointer", eventStyles[event.type])}>
+                                {event.event}
+                              </div>
+                          ))}
+                      </div>
                       {isCurrentMonthDay && (
-                         <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity">
+                         <Button variant="ghost" size="icon" className="absolute top-1 right-1 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDayClick(day)}>
                             <Plus className="h-4 w-4" />
                          </Button>
                       )}

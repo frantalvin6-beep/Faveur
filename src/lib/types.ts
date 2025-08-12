@@ -1,5 +1,6 @@
 
 
+
 export interface Student {
   id: string;
   name: string;
@@ -225,4 +226,13 @@ export interface AccountingTransaction {
   paymentMethod: 'Espèces' | 'Virement bancaire' | 'Chèque';
   description: string;
   responsible: string;
+}
+
+export type EventType = 'event' | 'exam' | 'holiday';
+
+export interface AcademicEvent {
+    id: string;
+    date: string;
+    event: string;
+    type: EventType;
 }
