@@ -2,7 +2,7 @@
 'use client'
 
 import * as React from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getStudents, getDepartments, Student, Department, addStudent, deleteStudent } from '@/lib/data';
 import { StudentTable } from '@/components/students/student-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -17,9 +17,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export const dynamic = 'force-dynamic';
 
-function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Student, 'id'>) => Promise<void> }) {
+function AddStudentDialog({ onAddStudent, allDepartments }: { onAddStudent: (student: Omit<Student, 'id' | 'gpa' | 'academicHistory'>) => Promise<void>, allDepartments: Department[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
-  const [departments, setDepartments] = React.useState<Department[]>([]);
   const [name, setName] = React.useState('');
   const [email, setEmail] = React.useState('');
   const [gender, setGender] = React.useState<'Masculin' | 'Féminin'>('Masculin');
@@ -27,16 +26,13 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Stude
   const [year, setYear] = React.useState(1);
   const { toast } = useToast();
 
-
-  React.useEffect(() => {
-    if (isOpen) {
-      async function fetchDepartments() {
-        const departmentsData = await getDepartments();
-        setDepartments(departmentsData.filter(d => d.parentId));
-      }
-      fetchDepartments();
-    }
-  }, [isOpen]);
+  const resetForm = () => {
+    setName('');
+    setEmail('');
+    setDepartment('');
+    setYear(1);
+    setGender('Masculin');
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,28 +41,21 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Stude
       return;
     }
     
-    const studentData: Omit<Student, 'id'> = {
+    const studentData = {
       name,
       email,
       gender,
       department,
       year,
-      gpa: 0,
       enrollmentDate: new Date().toISOString().split('T')[0],
-      academicHistory: [],
     };
 
     try {
       await onAddStudent(studentData);
       setIsOpen(false);
-      // Reset form
-      setName('');
-      setEmail('');
-      setDepartment('');
-      setYear(1);
+      resetForm();
     } catch (error) {
-       console.error(error);
-       // Toast will be shown in the parent component
+       // Le toast d'erreur est déjà géré dans le composant parent
     }
   };
 
@@ -107,7 +96,7 @@ function AddStudentDialog({ onAddStudent }: { onAddStudent: (student: Omit<Stude
               <Select onValueChange={setDepartment} value={department} required>
                 <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                 <SelectContent>
-                  {departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                  {allDepartments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </div>
@@ -134,7 +123,7 @@ export default function StudentsListPage() {
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
-  const fetchData = React.useCallback(async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [studentsData, departmentsData] = await Promise.all([getStudents(), getDepartments()]);
@@ -164,9 +153,14 @@ export default function StudentsListPage() {
     return studentsInDept;
   };
   
-  const handleAddStudent = async (studentData: Omit<Student, 'id'>) => {
+  const handleAddStudent = async (studentData: Omit<Student, 'id' | 'gpa' | 'academicHistory'>) => {
     try {
-        const newStudent = await addStudent(studentData);
+        const finalStudentData = {
+          ...studentData,
+          gpa: 0,
+          academicHistory: [],
+        }
+        const newStudent = await addStudent(finalStudentData);
         toast({ title: "Étudiant ajouté", description: `L'étudiant ${newStudent.name} a été ajouté avec succès.` });
         await fetchData(); // Refetch
     } catch (error) {
@@ -192,7 +186,7 @@ export default function StudentsListPage() {
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt disponible.`);
 
    const displayedDepartments = departments.filter(dept => {
-        if (!dept.parentId) return false;
+        if (!dept.parentId) return false; // On affiche seulement les options
 
         const studentsInDept = getStudentsForDepartment(dept.name);
         const searchMatchInDeptName = dept.name.toLowerCase().includes(searchTerm.toLowerCase());
@@ -234,23 +228,22 @@ export default function StudentsListPage() {
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
-            <AddStudentDialog onAddStudent={handleAddStudent} />
+            <AddStudentDialog onAddStudent={handleAddStudent} allDepartments={departments.filter(d => d.parentId)} />
         </div>
        </div>
 
       {displayedDepartments.map((dept) => {
         const studentsForDept = getStudentsForDepartment(dept.name);
         
-        if (searchTerm && studentsForDept.length === 0 && !dept.name.toLowerCase().includes(searchTerm.toLowerCase())) {
-            return null;
-        }
+        // Ce contrôle supplémentaire n'est plus nécessaire grâce à la logique dans `displayedDepartments`
+        // if (searchTerm && studentsForDept.length === 0 && !dept.name.toLowerCase().includes(searchTerm.toLowerCase())) {
+        //     return null;
+        // }
 
         return (
           <Card key={dept.id}>
             <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>{dept.name}</CardTitle>
-              </div>
+              <CardTitle>{dept.name}</CardTitle>
             </CardHeader>
             <CardContent>
                 <StudentTable 

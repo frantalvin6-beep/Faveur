@@ -20,8 +20,9 @@ export async function getStudent(id: string): Promise<Student | null> {
 
 export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
     const docRef = await addDoc(collection(db, 'students'), studentData);
-    const newStudent: Student = { ...studentData, id: docRef.id, academicHistory: [] };
-    // The ID is now correctly set from the docRef. No need for a separate update.
+    const newStudent: Student = { ...studentData, id: docRef.id };
+    // Mettre à jour le document avec son propre ID si nécessaire, mais Firestore le fait déjà.
+    // L'important est de retourner l'objet complet avec l'ID.
     return newStudent;
 }
 

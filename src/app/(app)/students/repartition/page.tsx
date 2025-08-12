@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "@/components/ui/card";
 import { getDepartments, getStudents } from "@/lib/data";
 import { Users } from "lucide-react";
 import { Skeleton } from '@/components/ui/skeleton';
@@ -10,21 +10,6 @@ import { Department, Student } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 
 export const dynamic = 'force-dynamic';
-
-const filieres = [
-    {
-        name: "Filière : IA & Business",
-        departments: ["Département IA et Robotique", "Département Big Data", "Département Intelligence Artificielle (IA)", "Département Programmation", "Département Mécatronique"]
-    },
-    {
-        name: "Filière : Numérique (Industrielle et Technologique)",
-        departments: ["Département Génie Électrique et Informatique Industrielle", "Département Génie Informatique", "Filière Génie Civil", "Électronique"]
-    },
-    {
-        name: "Filière : Digital Business",
-        departments: ["Ressources Humaines axées Digital"]
-    }
-]
 
 export default function RepartitionPage() {
   const [departments, setDepartments] = React.useState<Department[]>([]);
@@ -52,6 +37,10 @@ export default function RepartitionPage() {
   const getStudentCountForDept = (deptName: string) => {
     return students.filter(s => s.department === deptName).length;
   }
+  
+  // Regrouper dynamiquement les options par faculté
+  const faculties = departments.filter(d => !d.parentId);
+  const options = departments.filter(d => d.parentId);
 
   if (loading) {
     return (
@@ -61,7 +50,6 @@ export default function RepartitionPage() {
                 <Skeleton className="h-4 w-96" />
             </div>
             <div className="space-y-8">
-                <Skeleton className="h-48 w-full" />
                 <Skeleton className="h-48 w-full" />
                 <Skeleton className="h-48 w-full" />
             </div>
@@ -74,37 +62,40 @@ export default function RepartitionPage() {
       <div>
         <h1 className="text-3xl font-bold">Répartition des Étudiants</h1>
         <p className="text-muted-foreground">
-          Visualisation de la distribution des étudiants par filière et département.
+          Visualisation de la distribution des étudiants par faculté et par option.
         </p>
       </div>
 
       <div className="space-y-8">
-        {filieres.map((filiere) => (
-            <Card key={filiere.name}>
-                <CardHeader>
-                    <CardTitle>{filiere.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    {departments
-                        .filter(d => d.parentId && filiere.departments.includes(d.name))
-                        .map((dept) => (
-                        <Card key={dept.id}>
-                            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                                <CardTitle className="text-base font-medium">{dept.name}</CardTitle>
-                                <Users className="h-4 w-4 text-muted-foreground" />
-                            </CardHeader>
-                            <CardContent>
-                                <div className="text-2xl font-bold">{getStudentCountForDept(dept.name)}</div>
-                                <p className="text-xs text-muted-foreground">étudiants inscrits</p>
-                            </CardContent>
-                        </Card>
-                    ))}
-                     {departments.filter(d => d.parentId && filiere.departments.includes(d.name)).length === 0 && (
-                        <p className="text-muted-foreground col-span-full">Aucun département de cette filière n'a d'étudiants pour le moment.</p>
-                     )}
-                </CardContent>
-            </Card>
-        ))}
+        {faculties.map((faculty) => {
+            const facultyOptions = options.filter(opt => opt.parentId === faculty.id || departments.find(d => d.id === opt.parentId)?.parentId === faculty.id);
+            return(
+                <Card key={faculty.id}>
+                    <CardHeader>
+                        <CardTitle>{faculty.name}</CardTitle>
+                        <CardDescription>Responsable: {faculty.head}</CardDescription>
+                    </CardHeader>
+                    <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        {facultyOptions.length > 0 ? facultyOptions.map((dept) => (
+                            <Card key={dept.id}>
+                                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                                    <CardTitle className="text-base font-medium">{dept.name}</CardTitle>
+                                    <Users className="h-4 w-4 text-muted-foreground" />
+                                </CardHeader>
+                                <CardContent>
+                                    <div className="text-2xl font-bold">{getStudentCountForDept(dept.name)}</div>
+                                    <p className="text-xs text-muted-foreground">étudiants inscrits</p>
+                                </CardContent>
+                            </Card>
+                        )) : (
+                           <p className="text-muted-foreground col-span-full text-sm">
+                             Aucune option avec des étudiants n'est actuellement rattachée à cette faculté.
+                           </p>
+                        )}
+                    </CardContent>
+                </Card>
+            )
+        })}
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, MoreHorizontal, Edit, Trash2, BookOpen } from 'lucide-react';
+import { MoreHorizontal, Edit, Trash2, BookOpen } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -29,9 +29,7 @@ export function StudentTable({ data, onDeleteStudent, onEditStudent }: { data: S
 
   return (
     <>
-        <div className="flex items-start justify-between mb-4">
-            <CardDescription>Consulter et gérer les dossiers des étudiants.</CardDescription>
-        </div>
+      <CardDescription className="mb-4">Consulter et gérer les dossiers des étudiants.</CardDescription>
       <div className="rounded-md border overflow-x-auto">
         <Table>
           <TableHeader>
