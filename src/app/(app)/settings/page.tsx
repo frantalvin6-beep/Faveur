@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
+import { useToast } from "@/hooks/use-toast";
 
 const roles = [
   { 
@@ -45,7 +46,15 @@ const roles = [
 ];
 
 export default function SettingsPage() {
-  const handleAction = (action: string) => alert(`La fonctionnalité "${action}" sera bientôt disponible.`);
+  const { toast } = useToast();
+  
+  const handleAction = (action: string) => {
+    toast({
+      title: "Fonctionnalité en cours de développement",
+      description: `L'action "${action}" sera bientôt disponible.`,
+    });
+  };
+
 
   return (
     <div className="space-y-6">
