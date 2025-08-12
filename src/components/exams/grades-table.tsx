@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/table';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
+import { MoreHorizontal, Trash2 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,6 +23,7 @@ import {
 import { ExamGrade } from '@/lib/types';
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
+import { Badge } from '../ui/badge';
 
 function getGradeColor(grade: number) {
   if (grade >= 15) return 'text-green-600';
@@ -77,7 +78,7 @@ function EditableCell({ value, onSave }: { value: number, onSave: (newValue: num
     return (
         <div
             onClick={() => setIsEditing(true)}
-            className={cn("font-bold text-lg cursor-pointer rounded-md p-1 hover:bg-muted", getGradeColor(value))}
+            className={cn("font-bold text-base cursor-pointer rounded-md p-1 hover:bg-muted", getGradeColor(value))}
         >
             {value.toFixed(2)}
         </div>
@@ -91,7 +92,7 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
     if (data.length === 0) {
         return (
             <div className="text-center text-muted-foreground py-8">
-                Aucune note saisie pour cette session. Cliquez sur "Saisir une note" pour commencer.
+                Aucune note à afficher.
             </div>
         )
     }
@@ -105,8 +106,11 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
         <Table>
         <TableHeader>
             <TableRow>
-            <TableHead className="whitespace-nowrap">Matricule</TableHead>
-            <TableHead className="whitespace-nowrap">Nom de l'étudiant</TableHead>
+            <TableHead className="whitespace-nowrap">Date</TableHead>
+            <TableHead className="whitespace-nowrap">Étudiant</TableHead>
+            <TableHead className="whitespace-nowrap">Département</TableHead>
+            <TableHead className="whitespace-nowrap">Matière</TableHead>
+            <TableHead className="whitespace-nowrap">Type d'examen</TableHead>
             <TableHead className="text-center whitespace-nowrap">Note / 20</TableHead>
             <TableHead className="text-center whitespace-nowrap">Coeff.</TableHead>
             <TableHead className="text-center whitespace-nowrap">Note pondérée</TableHead>
@@ -116,8 +120,17 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
         <TableBody>
             {data.map((item) => (
             <TableRow key={item.id}>
-                <TableCell className="font-mono text-xs">{item.studentId}</TableCell>
-                <TableCell className="font-medium">{item.studentName}</TableCell>
+                <TableCell>{new Date(item.date).toLocaleDateString()}</TableCell>
+                <TableCell className="font-medium">
+                    <div>{item.studentName}</div>
+                    <div className="text-xs text-muted-foreground font-mono">{item.studentId}</div>
+                </TableCell>
+                <TableCell><Badge variant="outline">{item.department}</Badge></TableCell>
+                <TableCell>
+                    <div>{item.courseName}</div>
+                    <div className="text-xs text-muted-foreground font-mono">{item.courseCode}</div>
+                </TableCell>
+                <TableCell><Badge variant="secondary">{item.examType}</Badge></TableCell>
                 
                 <TableCell className="text-center">
                     <EditableCell 
@@ -161,3 +174,4 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
     </div>
   );
 }
+
