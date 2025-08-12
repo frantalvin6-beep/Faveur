@@ -2,14 +2,18 @@
 'use client';
 
 import * as React from 'react';
+import { useRouter } from 'next/navigation';
 import { TeacherWorkload, getTeacherWorkloads, addTeacherWorkload, deleteTeacherWorkload } from '@/lib/data';
 import { TeacherWorkloadTable } from '@/components/faculty/teacher-workload-table';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import { ArrowLeft } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
 export default function TeacherWorkloadPage() {
+  const router = useRouter();
   const [workloadData, setWorkloadData] = React.useState<TeacherWorkload[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
@@ -71,10 +75,18 @@ export default function TeacherWorkloadPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold">Charge horaire des enseignants</h1>
-      <p className="text-muted-foreground mb-4">
-        Suivi des heures de cours prévues et effectuées par chaque enseignant.
-      </p>
+        <div className="flex items-center gap-4 mb-4">
+            <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => router.back()}>
+                <ArrowLeft className="h-4 w-4" />
+                <span className="sr-only">Retour</span>
+            </Button>
+            <div>
+                <h1 className="text-3xl font-bold">Charge horaire des enseignants</h1>
+                <p className="text-muted-foreground">
+                    Suivi des heures de cours prévues et effectuées par chaque enseignant.
+                </p>
+            </div>
+        </div>
       <TeacherWorkloadTable 
         data={workloadData} 
         onAddWorkload={handleAddWorkload}
