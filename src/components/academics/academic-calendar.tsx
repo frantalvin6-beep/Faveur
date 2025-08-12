@@ -179,7 +179,7 @@ export function AcademicCalendar() {
                       </span>
                       <div className="space-y-1 mt-1">
                           {eventsOnDay.map(event => (
-                              <div key={event.id} onClick={() => handleDeleteEvent(event.id)} className={cn("py-0.5 px-1.5 rounded-md text-xs border cursor-pointer truncate", eventStyles[event.type])}>
+                              <div key={event.id} onClick={() => handleDeleteEvent(event.id)} className={cn("py-0.5 px-1.5 rounded-md text-xs border cursor-pointer", eventStyles[event.type])}>
                                 {event.event}
                               </div>
                           ))}
