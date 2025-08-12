@@ -270,11 +270,11 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
                     </Button>
             </div>
           </ScrollArea>
+          <DialogFooter className="pt-4 flex-shrink-0">
+              <DialogClose asChild><Button type="button" variant="secondary" onClick={resetForm}>Annuler</Button></DialogClose>
+              <Button type="submit">Enregistrer</Button>
+          </DialogFooter>
         </form>
-        <DialogFooter className="pt-4 flex-shrink-0">
-            <DialogClose asChild><Button type="button" variant="secondary" onClick={resetForm}>Annuler</Button></DialogClose>
-            <Button type="submit" form="add-course-form">Enregistrer</Button>
-        </DialogFooter>
       </DialogContent>
     </Dialog>
   );
