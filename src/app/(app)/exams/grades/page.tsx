@@ -2,7 +2,7 @@
 'use client'
 
 import { useState, useMemo, useEffect, useCallback } from 'react';
-import { getExamGrades, getStudents, getCourses, addExamGrade, deleteExamGrade, updateExamGrade, Course, Student } from '@/lib/data';
+import { getExamGrades, getStudents, getCourses, addExamGrade, deleteExamGrade, updateExamGrade, Course, Student, getFaculty, Faculty } from '@/lib/data';
 import { GradesTable } from '@/components/exams/grades-table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,6 @@ import {
   DialogFooter,
   DialogClose,
   DialogTrigger,
-  DialogDescription,
 } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -26,15 +25,20 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export const dynamic = 'force-dynamic';
 
+interface GroupedGrades {
+  [groupKey: string]: ExamGrade[];
+}
 
-function AddGradeForm({ onAddGrade, allStudents, allCourses }: { onAddGrade: (grade: Omit<ExamGrade, 'id'>) => Promise<void>, allStudents: Student[], allCourses: Course[] }) {
+function AddGradeForm({ onAddGrade, allStudents, allCourses, allFaculty }: { onAddGrade: (grade: Omit<ExamGrade, 'id'>) => Promise<void>, allStudents: Student[], allCourses: Course[], allFaculty: Faculty[] }) {
     const [isOpen, setIsOpen] = useState(false);
     
     // Form state
     const [courseCode, setCourseCode] = useState('');
     const [studentId, setStudentId] = useState('');
+    const [teacherId, setTeacherId] = useState('');
     const [examType, setExamType] = useState<'Contrôle' | 'Partiel' | 'Final'>('Contrôle');
     const [grade, setGrade] = useState<number | ''>('');
+    const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
     
     const selectedCourse = allCourses.find(c => c.code === courseCode);
     const studentsInDept = selectedCourse ? allStudents.filter(s => s.department === selectedCourse.department) : [];
@@ -42,33 +46,36 @@ function AddGradeForm({ onAddGrade, allStudents, allCourses }: { onAddGrade: (gr
     const resetForm = () => {
         setCourseCode('');
         setStudentId('');
+        setTeacherId('');
         setExamType('Contrôle');
         setGrade('');
+        setDate(new Date().toISOString().split('T')[0]);
     }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         const student = allStudents.find(s => s.id === studentId);
-        if (!student || !selectedCourse || grade === '') {
-            toast({ variant: 'destructive', title: "Erreur", description: "Veuillez remplir tous les champs." });
+        const teacher = allFaculty.find(f => f.id === teacherId);
+
+        if (!student || !selectedCourse || !teacher || grade === '' || !date) {
+            toast({ variant: 'destructive', title: "Erreur", description: "Veuillez remplir tous les champs obligatoires." });
             return;
         }
         
-        // Find teacher from course assignments (a bit more robust)
-        const teacherName = "N/A"; // This part needs improvement, maybe from courseAssignments
-
         try {
             const newGradeData: Omit<ExamGrade, 'id'> = {
                 studentId,
                 studentName: student.name,
                 courseName: selectedCourse.name,
                 courseCode: selectedCourse.code,
-                teacherName: teacherName, 
+                teacherId: teacher.id,
+                teacherName: teacher.name, 
                 department: student.department,
+                level: selectedCourse.level,
                 examType: examType,
                 grade: Number(grade),
                 coefficient: selectedCourse.credits || 1, 
-                date: new Date().toISOString().split('T')[0],
+                date,
             };
             
             await onAddGrade(newGradeData);
@@ -90,12 +97,12 @@ function AddGradeForm({ onAddGrade, allStudents, allCourses }: { onAddGrade: (gr
                     Saisir une note
                 </Button>
             </DialogTrigger>
-            <DialogContent className="sm:max-w-md">
+            <DialogContent className="sm:max-w-xl">
                 <DialogHeader>
                     <DialogTitle>Saisir une nouvelle note</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit}>
-                    <div className="grid gap-4 py-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
                         <div className="space-y-2">
                            <Label htmlFor="course">Matière</Label>
                             <Select onValueChange={setCourseCode} value={courseCode}>
@@ -113,8 +120,17 @@ function AddGradeForm({ onAddGrade, allStudents, allCourses }: { onAddGrade: (gr
                                     {studentsInDept.length > 0 ? (
                                         studentsInDept.map(s => <SelectItem key={s.id} value={s.id}>{s.name} ({s.id})</SelectItem>)
                                     ) : (
-                                        <div className="px-2 py-1.5 text-sm text-muted-foreground">Sélectionnez une matière pour voir les étudiants.</div>
+                                        <div className="px-2 py-1.5 text-sm text-muted-foreground">Sélectionnez une matière.</div>
                                     )}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="teacher">Enseignant</Label>
+                            <Select onValueChange={setTeacherId} value={teacherId}>
+                                <SelectTrigger id="teacher"><SelectValue placeholder="Sélectionner l'enseignant..." /></SelectTrigger>
+                                <SelectContent>
+                                    {allFaculty.map(t => <SelectItem key={t.id} value={t.id}>{t.name}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -133,6 +149,10 @@ function AddGradeForm({ onAddGrade, allStudents, allCourses }: { onAddGrade: (gr
                             <Label htmlFor="grade">Note / 20</Label>
                             <Input id="grade" type="number" min="0" max="20" step="0.5" value={grade} onChange={e => setGrade(Number(e.target.value))} required />
                         </div>
+                         <div className="space-y-2">
+                            <Label htmlFor="date">Date de l'examen</Label>
+                            <Input id="date" type="date" value={date} onChange={e => setDate(e.target.value)} required />
+                        </div>
                     </div>
                     <DialogFooter>
                         <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
@@ -148,20 +168,22 @@ export default function GradesPage() {
   const [grades, setGrades] = useState<ExamGrade[]>([]);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
   const [allCourses, setAllCourses] = useState<Course[]>([]);
+  const [allFaculty, setAllFaculty] = useState<Faculty[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   
   const fetchData = useCallback(async () => {
       try {
-          // setLoading(true) is only for the initial load
-          const [gradesData, studentsData, coursesData] = await Promise.all([
+          const [gradesData, studentsData, coursesData, facultyData] = await Promise.all([
               getExamGrades(),
               getStudents(),
-              getCourses()
+              getCourses(),
+              getFaculty(),
           ]);
-          setGrades(gradesData.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()));
+          setGrades(gradesData);
           setAllStudents(studentsData);
           setAllCourses(coursesData);
+          setAllFaculty(facultyData);
       } catch (error) {
           console.error(error);
           toast({ variant: "destructive", title: "Erreur", description: "Impossible de charger les données." });
@@ -177,8 +199,8 @@ export default function GradesPage() {
 
   const handleAddGrade = async (newGradeData: Omit<ExamGrade, 'id'>) => {
     try {
-        const newGrade = await addExamGrade(newGradeData);
-        setGrades(prev => [newGrade, ...prev]);
+        await addExamGrade(newGradeData);
+        await fetchData(); // Refetch all data to keep it consistent
     } catch(error) {
         console.error(error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter la note.' });
@@ -210,17 +232,37 @@ export default function GradesPage() {
     }
   };
 
-  const filteredGrades = useMemo(() => {
-      if (!searchTerm) return grades;
-      const lowercasedFilter = searchTerm.toLowerCase();
-      return grades.filter(grade => 
-          grade.studentName.toLowerCase().includes(lowercasedFilter) ||
-          grade.studentId.toLowerCase().includes(lowercasedFilter) ||
-          grade.courseName.toLowerCase().includes(lowercasedFilter) ||
-          grade.department.toLowerCase().includes(lowercasedFilter) ||
-          grade.examType.toLowerCase().includes(lowercasedFilter)
-      );
+  const groupedGrades = useMemo(() => {
+      let dataToGroup = grades;
+      if (searchTerm) {
+          const lowercasedFilter = searchTerm.toLowerCase();
+          dataToGroup = grades.filter(grade => 
+              grade.studentName.toLowerCase().includes(lowercasedFilter) ||
+              grade.studentId.toLowerCase().includes(lowercasedFilter) ||
+              grade.courseName.toLowerCase().includes(lowercasedFilter) ||
+              grade.department.toLowerCase().includes(lowercasedFilter) ||
+              grade.examType.toLowerCase().includes(lowercasedFilter) ||
+              grade.level.toLowerCase().includes(lowercasedFilter)
+          );
+      }
+
+      const groups = dataToGroup.reduce((acc, grade) => {
+          const groupKey = `${grade.department} - ${grade.level}`;
+          if (!acc[groupKey]) {
+              acc[groupKey] = [];
+          }
+          acc[groupKey].push(grade);
+          return acc;
+      }, {} as GroupedGrades);
+
+      // Sort grades within each group by date
+      for(const key in groups) {
+          groups[key].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      }
+      return groups;
   }, [grades, searchTerm]);
+
+  const sortedGroupKeys = Object.keys(groupedGrades).sort();
 
   if (loading) {
     return (
@@ -242,32 +284,46 @@ export default function GradesPage() {
 
   return (
     <div className="space-y-6">
-        <Card>
-            <CardHeader>
-                <div className="flex items-center justify-between">
-                    <div>
-                        <CardTitle>Gestion des notes d'examen</CardTitle>
-                        <CardDescription>Consultez, ajoutez et gérez toutes les notes des étudiants en un seul endroit.</CardDescription>
-                    </div>
-                    <div className="flex items-center gap-2">
-                        <Input
-                            placeholder="Rechercher (étudiant, matière, département...)"
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="max-w-sm"
-                        />
-                        <AddGradeForm onAddGrade={handleAddGrade} allStudents={allStudents} allCourses={allCourses} />
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-                <GradesTable
-                    data={filteredGrades}
-                    onGradeUpdate={handleGradeUpdate}
-                    onGradeDelete={handleGradeDelete}
+        <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+                <h1 className="text-3xl font-bold">Gestion des notes d'examen</h1>
+                <p className="text-muted-foreground">Consultez, ajoutez et gérez toutes les notes des étudiants par groupe.</p>
+            </div>
+            <div className="flex items-center gap-2">
+                <Input
+                    placeholder="Rechercher (étudiant, matière, groupe...)"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="max-w-sm"
                 />
-            </CardContent>
-        </Card>
+                <AddGradeForm onAddGrade={handleAddGrade} allStudents={allStudents} allCourses={allCourses} allFaculty={allFaculty} />
+            </div>
+        </div>
+
+        {sortedGroupKeys.length > 0 ? (
+            sortedGroupKeys.map(groupKey => (
+                <Card key={groupKey}>
+                    <CardHeader>
+                        <CardTitle>{groupKey.replace(' - ', ' | Niveau: ')}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <GradesTable
+                            data={groupedGrades[groupKey]}
+                            onGradeUpdate={handleGradeUpdate}
+                            onGradeDelete={handleGradeDelete}
+                        />
+                    </CardContent>
+                </Card>
+            ))
+        ) : (
+            <Card>
+                <CardContent>
+                    <p className="text-muted-foreground text-center py-8">
+                        {searchTerm ? "Aucun résultat ne correspond à votre recherche." : "Aucune note à afficher. Commencez par en ajouter une."}
+                    </p>
+                </CardContent>
+            </Card>
+        )}
     </div>
   )
 }

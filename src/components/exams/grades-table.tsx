@@ -22,7 +22,6 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { ExamGrade } from '@/lib/types';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { Badge } from '../ui/badge';
 
 function getGradeColor(grade: number) {
@@ -32,14 +31,14 @@ function getGradeColor(grade: number) {
   return 'text-red-600';
 }
 
-function EditableCell({ value, onSave }: { value: number, onSave: (newValue: number) => void }) {
+function EditableCell({ value, onSave, type = 'number' }: { value: number | string, onSave: (newValue: number) => void, type?: 'number' | 'text' }) {
     const [currentValue, setCurrentValue] = React.useState(value);
     const [isEditing, setIsEditing] = React.useState(false);
     const inputRef = React.useRef<HTMLInputElement>(null);
 
     const handleSave = () => {
         if (currentValue !== value) {
-            onSave(currentValue);
+            onSave(Number(currentValue));
         }
         setIsEditing(false);
     };
@@ -54,14 +53,13 @@ function EditableCell({ value, onSave }: { value: number, onSave: (newValue: num
         setCurrentValue(value);
     }, [value]);
 
-
     if (isEditing) {
         return (
             <Input
                 ref={inputRef}
-                type="number"
+                type={type}
                 value={currentValue}
-                onChange={(e) => setCurrentValue(Number(e.target.value))}
+                onChange={(e) => setCurrentValue(type === 'number' ? Number(e.target.value) : e.target.value)}
                 onBlur={handleSave}
                 onKeyDown={(e) => {
                     if (e.key === 'Enter') handleSave();
@@ -78,21 +76,23 @@ function EditableCell({ value, onSave }: { value: number, onSave: (newValue: num
     return (
         <div
             onClick={() => setIsEditing(true)}
-            className={cn("font-bold text-base cursor-pointer rounded-md p-1 hover:bg-muted", getGradeColor(value))}
+            className={cn(
+                "font-medium text-base cursor-pointer rounded-md p-1 hover:bg-muted",
+                type === 'number' && getGradeColor(Number(value))
+            )}
         >
-            {value.toFixed(2)}
+            {type === 'number' && typeof value === 'number' ? value.toFixed(2) : value}
         </div>
     );
 }
 
 
 export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: ExamGrade[], onGradeUpdate: (grade: ExamGrade) => void, onGradeDelete: (id: string) => void }) {
-    const { toast } = useToast();
-
+    
     if (data.length === 0) {
         return (
             <div className="text-center text-muted-foreground py-8">
-                Aucune note à afficher.
+                Aucune note à afficher pour ce groupe.
             </div>
         )
     }
@@ -108,8 +108,8 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
             <TableRow>
             <TableHead className="whitespace-nowrap">Date</TableHead>
             <TableHead className="whitespace-nowrap">Étudiant</TableHead>
-            <TableHead className="whitespace-nowrap">Département</TableHead>
             <TableHead className="whitespace-nowrap">Matière</TableHead>
+            <TableHead className="whitespace-nowrap">Enseignant</TableHead>
             <TableHead className="whitespace-nowrap">Type d'examen</TableHead>
             <TableHead className="text-center whitespace-nowrap">Note / 20</TableHead>
             <TableHead className="text-center whitespace-nowrap">Coeff.</TableHead>
@@ -125,10 +125,12 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
                     <div>{item.studentName}</div>
                     <div className="text-xs text-muted-foreground font-mono">{item.studentId}</div>
                 </TableCell>
-                <TableCell><Badge variant="outline">{item.department}</Badge></TableCell>
                 <TableCell>
                     <div>{item.courseName}</div>
                     <div className="text-xs text-muted-foreground font-mono">{item.courseCode}</div>
+                </TableCell>
+                 <TableCell>
+                    {item.teacherName}
                 </TableCell>
                 <TableCell><Badge variant="secondary">{item.examType}</Badge></TableCell>
                 
@@ -174,4 +176,3 @@ export function GradesTable({ data, onGradeUpdate, onGradeDelete }: { data: Exam
     </div>
   );
 }
-

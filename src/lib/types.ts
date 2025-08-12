@@ -99,8 +99,10 @@ export interface ExamGrade {
   studentName: string;
   courseName: string;
   courseCode: string;
+  teacherId: string;
   teacherName: string;
   department: string;
+  level: string;
   examType: 'Contrôle' | 'Partiel' | 'Final';
   grade: number;
   coefficient: number;
