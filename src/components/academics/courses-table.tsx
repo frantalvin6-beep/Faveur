@@ -50,6 +50,8 @@ interface ChapterInput {
 export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (course: Omit<Course, 'code'>) => Promise<void>, allDepartments: Department[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [allFaculty, setAllFaculty] = React.useState<Faculty[]>([]);
+  
+  // Form State
   const [name, setName] = React.useState('');
   const [department, setDepartment] = React.useState('');
   const [level, setLevel] = React.useState('');
@@ -57,17 +59,34 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
   const [credits, setCredits] = React.useState(0);
   const [chapters, setChapters] = React.useState<ChapterInput[]>([{ id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
   const [teacherIds, setTeacherIds] = React.useState<string[]>([]);
+
+  // Popover state
   const [openTeacherPopover, setOpenTeacherPopover] = React.useState(false);
 
   React.useEffect(() => {
     if (isOpen) {
         async function fetchFaculty() {
-            const facultyData = await getFaculty();
-            setAllFaculty(facultyData);
+            try {
+                const facultyData = await getFaculty();
+                setAllFaculty(facultyData);
+            } catch (error) {
+                console.error("Failed to fetch faculty:", error);
+            }
         }
         fetchFaculty();
     }
   }, [isOpen]);
+  
+  const resetForm = () => {
+    setName('');
+    setDepartment('');
+    setLevel('');
+    setSemester('');
+    setCredits(0);
+    setChapters([{ id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
+    setTeacherIds([]);
+    setOpenTeacherPopover(false);
+  };
 
   const handleAddChapter = () => {
     setChapters(prev => [...prev, { id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
@@ -88,12 +107,10 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
       return;
     }
 
-    const code = `${name.substring(0, 3).toUpperCase()}${department.substring(0, 2).toUpperCase()}${Math.floor(Math.random() * 900) + 100}`;
-
     const finalChapters: Chapter[] = chapters
       .filter(c => c.title.trim() !== '')
       .map((c, index) => ({
-        id: `CH-${code}-${index + 1}`,
+        id: `CH-${name.substring(0,3).toUpperCase()}-${index + 1}`,
         title: c.title,
         estimatedDuration: c.estimatedDuration,
         subChapters: c.subChapters.split('\n').filter(sc => sc.trim() !== '').map(sc => ({ title: sc }))
@@ -109,16 +126,13 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
       teacherIds: teacherIds,
     };
     
-    await onAddCourse(newCourse);
-    setIsOpen(false);
-    // Reset form
-    setName('');
-    setDepartment('');
-    setLevel('');
-    setSemester('');
-    setCredits(0);
-    setChapters([{ id: `ch${Date.now()}`, title: '', subChapters: '', estimatedDuration: '' }]);
-    setTeacherIds([]);
+    try {
+        await onAddCourse(newCourse);
+        setIsOpen(false);
+        resetForm();
+    } catch (error) {
+        // Error toast is shown in the parent component
+    }
   };
 
   const selectedTeachers = allFaculty.filter(f => teacherIds.includes(f.id));
@@ -147,7 +161,7 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
                 <Select onValueChange={setDepartment} value={department} required>
                   <SelectTrigger id="department"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
                   <SelectContent>
-                    {allDepartments.filter(d => d.parentId).map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
+                    {allDepartments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -258,7 +272,7 @@ export function AddCourseForm({ onAddCourse, allDepartments }: { onAddCourse: (c
           </ScrollArea>
         </form>
         <DialogFooter className="pt-4 flex-shrink-0">
-            <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+            <DialogClose asChild><Button type="button" variant="secondary" onClick={resetForm}>Annuler</Button></DialogClose>
             <Button type="submit" form="add-course-form">Enregistrer</Button>
         </DialogFooter>
       </DialogContent>

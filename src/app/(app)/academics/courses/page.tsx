@@ -29,7 +29,7 @@ export default function CoursesPage() {
             setLoading(true);
             const [coursesData, departmentsData] = await Promise.all([getCourses(), getDepartments()]);
             setCourses(coursesData);
-            setDepartments(departmentsData);
+            setDepartments(departmentsData.filter(d => d.parentId)); // Only options can have courses
         } catch (error) {
             console.error("Failed to fetch data:", error);
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
@@ -46,11 +46,11 @@ export default function CoursesPage() {
         try {
             const newCourse = await addCourse(newCourseData);
             toast({ title: 'Matière ajoutée', description: `La matière ${newCourse.name} a été enregistrée.` });
-            await fetchCoursesAndDepartments(); // Refetch
+            await fetchCoursesAndDepartments(); // Refetch to get the latest list
         } catch (error) {
             console.error("Failed to add course:", error);
             toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible d\'ajouter la matière.' });
-            throw error;
+            throw error; // Re-throw to inform the form component
         }
     };
 
