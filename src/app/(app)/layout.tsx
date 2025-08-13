@@ -29,6 +29,7 @@ import {
   UserCircle,
   Trophy,
   UserCog,
+  Megaphone,
 } from 'lucide-react';
 
 import {
@@ -131,6 +132,7 @@ const navItems = [
     ]
   },
   { href: '/accounting', icon: BookCopy, label: 'Comptabilité', roles: ['Promoteur', 'DAF'] },
+  { href: '/marketing', icon: Megaphone, label: 'Marketing', roles: ['Promoteur'] },
   { href: '/settings', icon: Settings, label: 'Paramètres', roles: ['Promoteur'] },
 ];
 
