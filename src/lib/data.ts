@@ -18,11 +18,15 @@ export async function getStudent(id: string): Promise<Student | null> {
     return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Student : null;
 }
 
-export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
-    const docRef = await addDoc(collection(db, 'students'), studentData);
-    const newStudent: Student = { ...studentData, id: docRef.id };
-    // Mettre à jour le document avec son propre ID si nécessaire, mais Firestore le fait déjà.
-    // L'important est de retourner l'objet complet avec l'ID.
+export async function addStudent(studentData: Omit<Student, 'id' | 'gpa' | 'academicHistory'>): Promise<Student> {
+    // Ensure new students have default values for gpa and academicHistory
+    const studentWithDefaults = {
+        ...studentData,
+        gpa: 0,
+        academicHistory: [],
+    };
+    const docRef = await addDoc(collection(db, 'students'), studentWithDefaults);
+    const newStudent: Student = { ...studentWithDefaults, id: docRef.id };
     return newStudent;
 }
 

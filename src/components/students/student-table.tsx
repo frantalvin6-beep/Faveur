@@ -1,4 +1,5 @@
 
+
 'use client';
 
 import * as React from 'react';
@@ -50,7 +51,9 @@ export function StudentTable({ data, onDeleteStudent, onEditStudent }: { data: S
                 <TableCell className="hidden md:table-cell">{student.email}</TableCell>
                 <TableCell><Badge variant="outline">{student.department}</Badge></TableCell>
                 <TableCell className="hidden sm:table-cell">{student.year}</TableCell>
-                <TableCell className="hidden sm:table-cell">{student.gpa.toFixed(2)}</TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {typeof student.gpa === 'number' ? student.gpa.toFixed(2) : 'N/A'}
+                </TableCell>
                 <TableCell>{student.gender}</TableCell>
                 <TableCell className="text-right">
                   <DropdownMenu>
