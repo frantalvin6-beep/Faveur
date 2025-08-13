@@ -89,13 +89,6 @@ function VideoPlayer({ title, src, poster, posterHint }: typeof videos[0]) {
 export default function MarketingPage() {
   return (
     <div className="space-y-12">
-      <div>
-        <h1 className="text-4xl font-bold tracking-tight">Marketing & Communication</h1>
-        <p className="text-lg text-muted-foreground mt-2">
-          Gérez les publications, les événements et les pré-inscriptions pour promouvoir l'université.
-        </p>
-      </div>
-
       <section>
         <h2 className="text-3xl font-semibold mb-6">Publications & Événements</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
