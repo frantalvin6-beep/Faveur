@@ -18,7 +18,7 @@ export async function getStudent(id: string): Promise<Student | null> {
     return docSnap.exists() ? { id: docSnap.id, ...docSnap.data() } as Student : null;
 }
 
-export async function addStudent(studentData: Omit<Student, 'id' | 'gpa' | 'academicHistory'>): Promise<Student> {
+export async function addStudent(studentData: Omit<Student, 'id'>): Promise<Student> {
     // Ensure new students have default values for gpa and academicHistory
     const studentWithDefaults = {
         ...studentData,
@@ -226,6 +226,19 @@ export async function deleteTeacherWorkload(id: string): Promise<void> {
     await deleteDoc(doc(db, 'teacherWorkload', id));
 }
 
+export async function deleteTeacherWorkloadByCourseAndTeacher(courseCode: string, teacherId: string): Promise<void> {
+    const q = query(
+        collection(db, 'teacherWorkload'), 
+        where('courseCode', '==', courseCode), 
+        where('teacherId', '==', teacherId)
+    );
+    const snapshot = await getDocs(q);
+    const batch = writeBatch(db);
+    snapshot.forEach(doc => {
+        batch.delete(doc.ref);
+    });
+    await batch.commit();
+}
 
 // --- TEACHER ATTENDANCE SERVICES ---
 export async function getTeacherAttendance(): Promise<TeacherAttendance[]> {
@@ -337,9 +350,25 @@ export async function getAdminFinances(): Promise<AdminFinance[]> {
     return snapshot.docs.map(doc => doc.data() as AdminFinance);
 }
 
+// --- ADMIN STAFF SERVICES ---
+
 export async function getAdminStaff(): Promise<AdminStaff[]> {
     const snapshot = await getDocs(collection(db, 'adminStaff'));
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as AdminStaff));
+}
+
+export async function addAdminStaff(staffMember: Omit<AdminStaff, 'id'>): Promise<AdminStaff> {
+    const docRef = await addDoc(collection(db, 'adminStaff'), staffMember);
+    const newStaff = { ...staffMember, id: docRef.id };
+    return newStaff;
+}
+
+export async function updateAdminStaff(id: string, data: Partial<AdminStaff>): Promise<void> {
+    await updateDoc(doc(db, 'adminStaff', id), data);
+}
+
+export async function deleteAdminStaff(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'adminStaff', id));
 }
 
 
@@ -428,8 +457,8 @@ export const studentFinancesData: Omit<StudentFinance, 'scolariteCalculee' | 'to
 
 
 export let adminStaff_data: Omit<AdminStaff, 'id'>[] = [
-    { name: 'Jean Dupont', email: 'jean.dupont@campus.com', position: 'Secrétaire Général', hireDate: '2015-03-01'},
-    { name: 'Marie Curie', email: 'marie.curie@campus.com', position: 'Responsable Financier', hireDate: '2018-07-23'},
+    { name: 'Jean Dupont', email: 'jean.dupont@campus.com', role: 'Secrétaire Général', phone: '+33612345678', status: 'Actif', hireDate: '2015-03-01'},
+    { name: 'Marie Curie', email: 'marie.curie@campus.com', role: 'Responsable Financier', phone: '+33612345678', status: 'Actif', hireDate: '2018-07-23'},
 ];
 
 export let messages: Message[] = [];

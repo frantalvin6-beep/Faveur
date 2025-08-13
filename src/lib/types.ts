@@ -1,6 +1,5 @@
 
 
-
 export interface Student {
   id: string;
   name: string;
@@ -213,9 +212,24 @@ export interface FacultyFinance {
 export interface AdminStaff {
   id: string;
   name: string;
+  role: string;
   email: string;
-  position: string;
+  phone: string;
+  status: 'Actif' | 'Suspendu';
   hireDate: string;
+}
+
+export interface AdminFinance {
+  matricule: string;
+  fullName: string;
+  poste: string;
+  salaireMensuel: number;
+  indemniteTransport: number;
+  autresAvantages: number;
+  totalAPayer: number;
+  montantPaye: number;
+  reste: number;
+  statut: 'Finalisé' | 'Non finalisé';
 }
 
 export interface AccountingTransaction {

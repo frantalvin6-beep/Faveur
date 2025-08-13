@@ -28,6 +28,7 @@ import {
   Wallet,
   UserCircle,
   Trophy,
+  UserCog,
 } from 'lucide-react';
 
 import {
@@ -118,6 +119,15 @@ const navItems = [
         { href: '/finances/faculty', label: 'Finances Enseignants', icon: UserSquare, roles: ['Promoteur', 'DAF'] },
         { href: '/finances/administration', label: 'Finances Administration', icon: Briefcase, roles: ['Promoteur', 'DAF'] },
         { href: '/finances/expenses', label: 'Dépenses Administratives', icon: Wallet, roles: ['Promoteur', 'DAF'] },
+    ]
+  },
+  { 
+    id: 'administration',
+    icon: UserCog, 
+    label: 'Administration',
+    roles: ['Promoteur'],
+    subItems: [
+        { href: '/administration/staff', label: 'Personnel Administratif', icon: UserCog, roles: ['Promoteur'] },
     ]
   },
   { href: '/accounting', icon: BookCopy, label: 'Comptabilité', roles: ['Promoteur', 'DAF'] },
