@@ -3,7 +3,7 @@
 
 import React, { createContext, useContext, useState, ReactNode } from 'react';
 
-export type UserRole = 'Promoteur' | 'DAC' | 'DAF' | 'Secrétaire' | 'Surveillant';
+export type UserRole = 'Promoteur' | 'DAC' | 'DAF' | 'Secrétaire' | 'Surveillant' | 'Professeur' | 'Étudiant';
 
 interface AuthContextType {
   userRole: UserRole;

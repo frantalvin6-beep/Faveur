@@ -102,11 +102,11 @@ const navItems = [
     id: 'exams',
     icon: PencilRuler, 
     label: 'Examens et notes',
-    roles: ['Promoteur', 'DAC'],
+    roles: ['Promoteur', 'DAC', 'Professeur', 'Étudiant'],
     subItems: [
-        { href: '/exams/grades', label: 'Saisie des notes', icon: ClipboardCheck, roles: ['Promoteur', 'DAC'] },
+        { href: '/exams/grades', label: 'Saisie des notes', icon: ClipboardCheck, roles: ['Promoteur', 'DAC', 'Professeur'] },
         { href: '/exams/planning', label: 'Planification', icon: CalendarPlus, roles: ['Promoteur', 'DAC'] },
-        { href: '/exams/results', label: 'Résultats Globaux', icon: Trophy, roles: ['Promoteur', 'DAC'] },
+        { href: '/exams/results', label: 'Résultats Globaux', icon: Trophy, roles: ['Promoteur', 'DAC', 'Étudiant'] },
     ]
   },
   { 
@@ -245,6 +245,8 @@ function RoleSelector() {
                     <SelectItem value="DAF">Directeur Financier</SelectItem>
                     <SelectItem value="Secrétaire">Secrétaire</SelectItem>
                     <SelectItem value="Surveillant">Surveillant</SelectItem>
+                    <SelectItem value="Professeur">Professeur</SelectItem>
+                    <SelectItem value="Étudiant">Étudiant</SelectItem>
                 </SelectContent>
             </Select>
         </div>

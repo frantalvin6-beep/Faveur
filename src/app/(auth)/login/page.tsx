@@ -40,6 +40,12 @@ export default function LoginPage() {
         case 'Surveillant':
           router.push('/students/attendance');
           break;
+        case 'Professeur':
+          router.push('/exams/grades');
+          break;
+        case 'Étudiant':
+          router.push('/exams/results');
+          break;
         case 'Promoteur':
         case 'Secrétaire':
         default:

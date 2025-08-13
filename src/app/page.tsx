@@ -4,7 +4,7 @@
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import Link from 'next/link';
-import { Briefcase, Building, DollarSign, GraduationCap, UserCheck, UserCog } from 'lucide-react';
+import { Briefcase, Building, DollarSign, GraduationCap, UserCheck, UserCog, User, ClipboardEdit } from 'lucide-react';
 import type { UserRole } from '@/context/auth-context';
 
 interface RoleInfo {
@@ -16,11 +16,13 @@ interface RoleInfo {
 }
 
 const roles: RoleInfo[] = [
-    { role: 'Promoteur', title: 'Promoteur', description: 'Accès complet à toutes les fonctionnalités de gestion et de configuration.', icon: UserCog, href: '/login?role=Promoteur' },
-    { role: 'DAC', title: 'Directeur Académique', description: 'Gère les facultés, cours, enseignants et résultats académiques.', icon: GraduationCap, href: '/login?role=DAC' },
-    { role: 'DAF', title: 'Directeur Financier', description: 'Supervise la comptabilité, les frais de scolarité et les salaires.', icon: DollarSign, href: '/login?role=DAF' },
-    { role: 'Secrétaire', title: 'Secrétaire', description: 'Gère les dossiers étudiants et le calendrier académique.', icon: Briefcase, href: '/login?role=Secrétaire' },
-    { role: 'Surveillant', title: 'Surveillant', description: 'Contrôle la présence des étudiants et des enseignants.', icon: UserCheck, href: '/login?role=Surveillant' },
+    { role: 'Promoteur', title: 'Portail Promoteur', description: 'Accès complet à toutes les fonctionnalités de gestion et de configuration.', icon: UserCog, href: '/login?role=Promoteur' },
+    { role: 'DAC', title: 'Portail Académique', description: 'Gère les facultés, cours, enseignants et résultats académiques.', icon: GraduationCap, href: '/login?role=DAC' },
+    { role: 'DAF', title: 'Portail Financier', description: 'Supervise la comptabilité, les frais de scolarité et les salaires.', icon: DollarSign, href: '/login?role=DAF' },
+    { role: 'Secrétaire', title: 'Portail Secrétariat', description: 'Gère les dossiers étudiants et le calendrier académique.', icon: Briefcase, href: '/login?role=Secrétaire' },
+    { role: 'Surveillant', title: 'Portail Surveillance', description: 'Contrôle la présence des étudiants et des enseignants.', icon: UserCheck, href: '/login?role=Surveillant' },
+    { role: 'Professeur', title: 'Portail Enseignant', description: 'Accès à la saisie des notes et au suivi des cours.', icon: ClipboardEdit, href: '/login?role=Professeur' },
+    { role: 'Étudiant', title: 'Portail Étudiant', description: 'Consultez vos notes, résultats et emploi du temps.', icon: User, href: '/login?role=Étudiant' },
 ];
 
 export default function Home() {
@@ -30,7 +32,7 @@ export default function Home() {
           <h1 className="text-4xl font-bold">Bienvenue sur S.G.ENIA 2.0</h1>
           <p className="text-lg text-muted-foreground mt-2">Veuillez sélectionner votre portail de connexion.</p>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
         {roles.map((info) => (
           <Card key={info.role} className="flex flex-col">
             <CardHeader className="flex flex-row items-start gap-4 space-y-0">
