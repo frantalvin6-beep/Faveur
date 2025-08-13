@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import {
   FileText,
   LayoutDashboard,
@@ -138,7 +138,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     const filteredNavItems = navItems.filter(item => hasAccess(item.roles));
 
   return (
-      <>
+      <SidebarProvider>
         <Sidebar collapsible="icon">
           <SidebarHeader>
             <Link href="/dashboard" className="flex items-center gap-2">
@@ -203,7 +203,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
-        <SidebarInset>
+        <SidebarInset className='relative'>
           <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-card px-4 sm:px-6 md:justify-end">
             <SidebarTrigger className="md:hidden"/>
             <div className="flex items-center gap-4">
@@ -215,7 +215,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </SidebarInset>
-      </>
+      </SidebarProvider>
   );
 }
 
@@ -242,6 +242,14 @@ function RoleSelector() {
 }
 
 function UserMenu() {
+    const router = useRouter();
+
+    const handleLogout = () => {
+        // Here you would typically clear the session, tokens, etc.
+        // For this demo, we just redirect to the home page.
+        router.push('/');
+    };
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -260,9 +268,7 @@ function UserMenu() {
           <DropdownMenuItem>Support</DropdownMenuItem>
         </Link>
         <DropdownMenuSeparator />
-        <Link href="/login" passHref>
-          <DropdownMenuItem>Déconnexion</DropdownMenuItem>
-        </Link>
+        <DropdownMenuItem onClick={handleLogout}>Déconnexion</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   );
@@ -271,9 +277,7 @@ function UserMenu() {
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
     <AuthProvider>
-      <SidebarProvider>
         <AppLayoutContent>{children}</AppLayoutContent>
-      </SidebarProvider>
     </AuthProvider>
   );
 }
