@@ -82,7 +82,13 @@ export default function LoginPage() {
             </Button>
           </form>
            <div className="mt-4 text-center text-sm">
-            <Link href="/" className="underline">
+            Nouveau ici ?{' '}
+            <Link href={`/register?role=${role}`} className="underline">
+              Créer un compte
+            </Link>
+          </div>
+           <div className="mt-2 text-center text-sm">
+            <Link href="/" className="underline text-muted-foreground">
               Changer de portail
             </Link>
           </div>
