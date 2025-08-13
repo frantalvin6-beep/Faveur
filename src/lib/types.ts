@@ -147,8 +147,6 @@ export interface TeacherAttendance {
   remarks?: string;
 }
 
-export type UserRole = 'Admin' | 'Enseignant' | 'Étudiant';
-
 export interface Message {
   id: string;
   sender: {
@@ -252,3 +250,5 @@ export interface AcademicEvent {
     event: string;
     type: EventType;
 }
+
+export type UserRole = 'Admin' | 'Enseignant' | 'Étudiant' | 'Promoteur' | 'DAC' | 'DAF' | 'Secrétaire' | 'Surveillant' | 'Professeur';
