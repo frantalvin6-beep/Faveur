@@ -140,6 +140,21 @@ export async function deleteExamGrade(id: string): Promise<void> {
     await deleteDoc(doc(db, 'examGrades', id));
 }
 
+// --- EXAM SCHEDULE SERVICES ---
+export async function getExamSchedules(): Promise<ExamSchedule[]> {
+    const snapshot = await getDocs(collection(db, 'examSchedules'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as ExamSchedule));
+}
+
+export async function addExamSchedule(exam: Omit<ExamSchedule, 'id'>): Promise<ExamSchedule> {
+    const docRef = await addDoc(collection(db, 'examSchedules'), exam);
+    return { ...exam, id: docRef.id };
+}
+
+export async function deleteExamSchedule(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'examSchedules', id));
+}
+
 
 // --- FINANCIAL DATA SERVICES (Student) ---
 export async function getStudentFinances(): Promise<StudentFinance[]> {
@@ -527,7 +542,7 @@ export async function seedDatabase() {
         'students', 'faculty', 'departments', 'courses', 'studentFinances',
         'adminStaff', 'courseAssignments', 'schedule', 'examGrades', 'teacherWorkload',
         'teacherAttendance', 'accountingTransactions', 'facultyFinances', 'adminFinances',
-        'academicEvents'
+        'academicEvents', 'examSchedules'
     ];
 
     console.log("Starting database seed process...");
