@@ -55,7 +55,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { SheetTitle } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { AuthProvider, useAuth, UserRole } from '@/context/auth-context';
+import { useAuth, UserRole } from '@/context/auth-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 
@@ -203,7 +203,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             </SidebarMenu>
           </SidebarContent>
         </Sidebar>
-        <SidebarInset className='relative'>
+        <SidebarInset>
           <header className="sticky top-0 z-10 flex h-16 items-center justify-between gap-4 border-b bg-card px-4 sm:px-6 md:justify-end">
             <SidebarTrigger className="md:hidden"/>
             <div className="flex items-center gap-4">
@@ -276,8 +276,6 @@ function UserMenu() {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AuthProvider>
-        <AppLayoutContent>{children}</AppLayoutContent>
-    </AuthProvider>
+    <AppLayoutContent>{children}</AppLayoutContent>
   );
 }
