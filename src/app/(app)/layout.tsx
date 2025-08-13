@@ -30,6 +30,7 @@ import {
   Trophy,
   UserCog,
   Megaphone,
+  ExternalLink,
 } from 'lucide-react';
 
 import {
@@ -219,6 +220,14 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             <SidebarTrigger className="md:hidden"/>
             <div className="flex items-center gap-4">
               <RoleSelector />
+              {userRole === 'Promoteur' && (
+                  <Link href="/marketing" target="_blank" passHref>
+                      <Button variant="outline">
+                          <ExternalLink className="mr-2 h-4 w-4" />
+                          Voir le site public
+                      </Button>
+                  </Link>
+              )}
               <UserMenu />
             </div>
           </header>
