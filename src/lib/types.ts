@@ -252,3 +252,25 @@ export interface AcademicEvent {
 }
 
 export type UserRole = 'Admin' | 'Enseignant' | 'Étudiant' | 'Promoteur' | 'DAC' | 'DAF' | 'Secrétaire' | 'Surveillant' | 'Professeur';
+
+
+// --- MARKETING & PRE-REGISTRATION ---
+
+export interface MarketingContent {
+  id: string;
+  title: string;
+  description: string;
+  image?: string;
+  imageHint?: string;
+}
+
+export interface PreRegistration {
+  id: string;
+  name: string;
+  email: string;
+  phone: string;
+  level: string;
+  fieldOfInterest: string;
+  status: 'En attente' | 'Validé' | 'Rejeté';
+  date: string;
+}

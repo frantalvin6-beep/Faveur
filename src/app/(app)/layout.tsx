@@ -133,6 +133,7 @@ const navItems = [
     ]
   },
   { href: '/accounting', icon: BookCopy, label: 'Comptabilité', roles: ['Promoteur', 'DAF'] },
+  { href: '/marketing-admin', icon: Megaphone, label: 'Marketing', roles: ['Promoteur'] },
   { href: '/settings', icon: Settings, label: 'Paramètres', roles: ['Promoteur'] },
 ];
 

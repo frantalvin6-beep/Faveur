@@ -1,6 +1,6 @@
 
 
-import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter, AcademicEvent, EventType } from './types';
+import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter, AcademicEvent, EventType, MarketingContent, PreRegistration } from './types';
 import { db } from './firebase';
 import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, addDoc } from 'firebase/firestore';
 
@@ -380,6 +380,62 @@ export async function updateAdminFinance(matricule: string, data: Partial<AdminF
     await updateDoc(doc(db, 'adminFinances', matricule), data);
 }
 
+// --- MARKETING & PRE-REGISTRATION SERVICES ---
+
+export async function getMarketingContent(): Promise<MarketingContent[]> {
+    const snapshot = await getDocs(collection(db, 'marketingContent'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as MarketingContent));
+}
+
+export async function addMarketingContent(content: Omit<MarketingContent, 'id'>): Promise<MarketingContent> {
+    const docRef = await addDoc(collection(db, 'marketingContent'), content);
+    return { ...content, id: docRef.id };
+}
+
+export async function deleteMarketingContent(id: string): Promise<void> {
+    await deleteDoc(doc(db, 'marketingContent', id));
+}
+
+export async function getPreRegistrations(): Promise<PreRegistration[]> {
+    const snapshot = await getDocs(collection(db, 'preRegistrations'));
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as PreRegistration));
+}
+
+export async function addPreRegistration(registration: Omit<PreRegistration, 'id'>): Promise<PreRegistration> {
+    const docRef = await addDoc(collection(db, 'preRegistrations'), registration);
+    return { ...registration, id: docRef.id };
+}
+
+export async function validatePreRegistration(id: string): Promise<void> {
+    const preRegRef = doc(db, 'preRegistrations', id);
+    const preRegSnap = await getDoc(preRegRef);
+
+    if (!preRegSnap.exists()) {
+        throw new Error("Pré-inscription non trouvée.");
+    }
+
+    const preRegData = preRegSnap.data() as PreRegistration;
+    
+    // Extract year number from level string like "Licence 1"
+    const yearMatch = preRegData.level.match(/\d+/);
+    const year = yearMatch ? parseInt(yearMatch[0], 10) : 1;
+
+    // Add to official students list
+    await addStudent({
+        name: preRegData.name,
+        email: preRegData.email,
+        gender: 'Masculin', // Default value, can be improved later
+        department: preRegData.fieldOfInterest,
+        year: year,
+        enrollmentDate: new Date().toISOString().split('T')[0],
+        academicHistory: [],
+        gpa: 0
+    });
+
+    // Update pre-registration status
+    await updateDoc(preRegRef, { status: 'Validé' });
+}
+
 
 // --- MOCK DATA FOR SEEDING ---
 export const students_data: Omit<Student, 'id'>[] = [
@@ -575,7 +631,7 @@ export async function seedDatabase() {
         'students', 'faculty', 'departments', 'courses', 'studentFinances',
         'adminStaff', 'courseAssignments', 'schedule', 'examGrades', 'teacherWorkload',
         'teacherAttendance', 'accountingTransactions', 'facultyFinances', 'adminFinances',
-        'academicEvents', 'examSchedules'
+        'academicEvents', 'examSchedules', 'marketingContent', 'preRegistrations'
     ];
 
     console.log("Starting database seed process...");
