@@ -138,7 +138,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
     const filteredNavItems = navItems.filter(item => hasAccess(item.roles));
 
   return (
-      <SidebarProvider>
+      <>
         <Sidebar collapsible="icon">
           <SidebarHeader>
             <Link href="/dashboard" className="flex items-center gap-2">
@@ -215,7 +215,7 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
             {children}
           </main>
         </SidebarInset>
-      </SidebarProvider>
+      </>
   );
 }
 
@@ -276,6 +276,8 @@ function UserMenu() {
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <AppLayoutContent>{children}</AppLayoutContent>
+    <SidebarProvider>
+        <AppLayoutContent>{children}</AppLayoutContent>
+    </SidebarProvider>
   );
 }
