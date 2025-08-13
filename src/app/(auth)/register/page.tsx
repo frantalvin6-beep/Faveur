@@ -9,13 +9,21 @@ import { Label } from '@/components/ui/label';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth, UserRole } from '@/context/auth-context';
 import { useEffect, useState } from 'react';
+import { getFaculty, getStudents } from '@/lib/data';
+import { useToast } from '@/hooks/use-toast';
 
 export default function RegisterPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [submitted, setSubmitted] = useState(false);
+  const { toast } = useToast();
   
   const role = searchParams.get('role') as UserRole | null;
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
 
   // If no role is provided, redirect to home to select one
   useEffect(() => {
@@ -24,11 +32,47 @@ export default function RegisterPage() {
     }
   }, [role, router]);
 
-  const handleRegister = (e: React.FormEvent) => {
+  const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
+
+    // Check if user exists in the database based on their role
+    if (role === 'Professeur' || role === 'Étudiant') {
+        let userExists = false;
+        try {
+            if (role === 'Professeur') {
+                const faculty = await getFaculty();
+                userExists = faculty.some(f => f.name.toLowerCase() === name.toLowerCase());
+            } else if (role === 'Étudiant') {
+                const students = await getStudents();
+                userExists = students.some(s => s.name.toLowerCase() === name.toLowerCase());
+            }
+        } catch (error) {
+             toast({
+                variant: 'destructive',
+                title: 'Erreur de vérification',
+                description: 'Impossible de vérifier vos informations pour le moment. Veuillez réessayer plus tard.',
+            });
+            setIsLoading(false);
+            return;
+        }
+
+        if (!userExists) {
+            toast({
+                variant: 'destructive',
+                title: 'Utilisateur non trouvé',
+                description: 'Votre nom n\'a pas été trouvé dans nos registres. Veuillez contacter l\'administration.',
+            });
+            setIsLoading(false);
+            return;
+        }
+    }
+
+
     // Here you would typically send the registration data to your backend
     // For this demo, we'll just simulate a successful submission
     setSubmitted(true);
+    setIsLoading(false);
   };
 
   if (!role) {
@@ -65,19 +109,19 @@ export default function RegisterPage() {
         <CardContent>
           <form onSubmit={handleRegister} className="grid gap-4">
             <div className="grid gap-2">
-              <Label htmlFor="name">Nom Complet</Label>
-              <Input id="name" type="text" placeholder="John Doe" required />
+              <Label htmlFor="name">Nom Complet (tel qu'enregistré)</Label>
+              <Input id="name" type="text" placeholder="John Doe" required value={name} onChange={(e) => setName(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" placeholder="john.doe@example.com" required />
+              <Input id="email" type="email" placeholder="john.doe@example.com" required value={email} onChange={(e) => setEmail(e.target.value)} />
             </div>
             <div className="grid gap-2">
               <Label htmlFor="password">Mot de passe</Label>
-              <Input id="password" type="password" required />
+              <Input id="password" type="password" required value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
-            <Button type="submit" className="w-full">
-              Demander la création du compte
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? 'Vérification...' : 'Demander la création du compte'}
             </Button>
           </form>
           <div className="mt-4 text-center text-sm">
