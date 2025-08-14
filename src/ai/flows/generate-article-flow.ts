@@ -34,12 +34,12 @@ const prompt = ai.definePrompt({
   model: googleAI.model('gemini-1.5-flash'),
   input: { schema: ArticleGenerateInputSchema },
   output: { schema: ArticleGenerateOutputSchema },
-  prompt: `You are a marketing expert for a university.
-Your task is to generate a draft for a promotional article based on a given topic.
+  prompt: `Vous êtes un expert en marketing pour une université francophone.
+Votre tâche est de générer un brouillon pour un article promotionnel en FRANÇAIS, basé sur un sujet donné.
 
-The tone should be professional, engaging, and inspiring for prospective students.
+Le ton doit être professionnel, engageant et inspirant pour de futurs étudiants.
 
-Topic: {{{topic}}}
+Sujet: {{{topic}}}
 `,
 });
 

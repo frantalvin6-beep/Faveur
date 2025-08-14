@@ -19,8 +19,8 @@ function HeroSection() {
                 src="https://placehold.co/1920x1080.png" 
                 data-ai-hint="university campus modern" 
                 alt="Campus universitaire moderne" 
-                layout="fill" 
-                objectFit="cover" 
+                fill={true}
+                style={{objectFit: 'cover'}}
                 className="z-0"
                 priority
             />
@@ -43,7 +43,7 @@ function PublicationCard({ title, description, image, imageHint }: MarketingCont
   return (
     <Card className="overflow-hidden flex flex-col group transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl">
       <div className="relative h-56 w-full">
-        <Image src={image || "https://placehold.co/600x400.png"} alt={title} layout="fill" objectFit="cover" data-ai-hint={imageHint} className="transition-transform duration-500 group-hover:scale-110" />
+        <Image src={image || "https://placehold.co/600x400.png"} alt={title} fill={true} style={{objectFit: 'cover'}} data-ai-hint={imageHint} className="transition-transform duration-500 group-hover:scale-110" />
          <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
          <CardTitle className="absolute bottom-4 left-4 text-white text-2xl drop-shadow-md">{title}</CardTitle>
       </div>
@@ -57,7 +57,7 @@ function PublicationCard({ title, description, image, imageHint }: MarketingCont
 function VideoCard({ title, description, videoUrl }: MarketingContent) {
     const embedUrl = videoUrl?.includes('youtube.com') 
         ? `https://www.youtube.com/embed/${new URL(videoUrl).searchParams.get('v')}`
-        : videoUrl; // Add more providers if needed
+        : null;
 
     return (
         <Card className="overflow-hidden flex flex-col group transition-transform duration-300 hover:-translate-y-2 hover:shadow-2xl">
@@ -180,7 +180,7 @@ export default function MarketingPage() {
                 </div>
              </div>
              <div className="relative h-96 w-full rounded-lg overflow-hidden shadow-xl group">
-                 <Image src="https://placehold.co/600x400.png" data-ai-hint="students collaborating learning" alt="Étudiants collaborant" layout="fill" objectFit="cover" className="transition-transform duration-500 group-hover:scale-110"/>
+                 <Image src="https://placehold.co/600x400.png" data-ai-hint="students collaborating learning" alt="Étudiants collaborant" fill={true} style={{objectFit: 'cover'}} className="transition-transform duration-500 group-hover:scale-110"/>
                  <div className="absolute inset-0 bg-black/10"></div>
              </div>
         </div>

@@ -78,14 +78,19 @@ function AddContentForm({ onAdd, type }: { onAdd: (data: Omit<MarketingContent, 
             type,
             ...(isArticle ? { image: url, imageHint } : { videoUrl: url }),
         };
-        await onAdd(contentData);
-        setLoading(false);
-        setIsOpen(false);
-        setTitle('');
-        setDescription('');
-        setUrl('');
-        setImageHint('');
-        setAiTopic('');
+        try {
+            await onAdd(contentData);
+            setLoading(false);
+            setIsOpen(false);
+            setTitle('');
+            setDescription('');
+            setUrl('');
+            setImageHint('');
+            setAiTopic('');
+        } catch (error) {
+            setLoading(false);
+            // Error is handled by parent
+        }
     };
 
     return (
@@ -108,7 +113,7 @@ function AddContentForm({ onAdd, type }: { onAdd: (data: Omit<MarketingContent, 
                             </CardHeader>
                             <CardContent className="flex items-end gap-2">
                                 <div className="flex-grow space-y-1">
-                                    <Label htmlFor="ai-topic">Sujet de l'article</Label>
+                                    <Label htmlFor="ai-topic">Sujet de l'article (en français)</Label>
                                     <Input id="ai-topic" value={aiTopic} onChange={(e) => setAiTopic(e.target.value)} placeholder="Ex: Journée portes ouvertes de l'université" />
                                 </div>
                                 <Button type="button" onClick={handleGenerateArticle} disabled={isGenerating}>
@@ -246,6 +251,7 @@ export default function MarketingAdminPage() {
             fetchData();
         } catch(e) {
             toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'ajouter le contenu."});
+            throw e;
         }
     };
     
@@ -358,5 +364,3 @@ export default function MarketingAdminPage() {
         </div>
     )
 }
-
-    
