@@ -53,8 +53,32 @@ export function processStudentResults(
         gradesByType[g.examType] = g.grade;
       });
 
-      const gradeValues = Object.values(gradesByType).filter(g => g !== undefined) as number[];
-      const average = gradeValues.length > 0 ? gradeValues.reduce((sum, g) => sum + g, 0) / gradeValues.length : 0;
+      const controle = gradesByType['Contrôle'];
+      const partiel = gradesByType['Partiel'];
+      const final = gradesByType['Final'];
+
+      let average = 0;
+      if (final !== undefined) {
+          if (controle !== undefined && partiel !== undefined) {
+              // Standard case: (Contrôle + Partiel)/2 + Final / 2
+              const moyenneContinue = (controle + partiel) / 2;
+              average = (moyenneContinue + final) / 2;
+          } else if (controle !== undefined || partiel !== undefined) {
+              // Case with only one of the continuous grades
+              const existingContinuousGrade = controle !== undefined ? controle : partiel!;
+              average = (existingContinuousGrade + final) / 2;
+          } else {
+              // Case with only the final exam grade
+              average = final;
+          }
+      } else if (controle !== undefined && partiel !== undefined) {
+          // Case with only continuous grades
+          average = (controle + partiel) / 2;
+      } else if (controle !== undefined) {
+          average = controle;
+      } else if (partiel !== undefined) {
+          average = partiel;
+      }
       
       const result: 'Validé' | 'Rattrapage' = average >= 10 ? 'Validé' : 'Rattrapage';
 
