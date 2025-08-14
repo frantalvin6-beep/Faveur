@@ -162,7 +162,7 @@ function PermissionsDialog() {
                     <DialogTitle>Permissions des Rôles</DialogTitle>
                     <DialogDescription>Aperçu des accès pour chaque rôle principal. Les permissions sont définies par le système.</DialogDescription>
                 </DialogHeader>
-                <div className="rounded-md border mt-4">
+                <div className="rounded-md border mt-4 overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
@@ -246,14 +246,8 @@ export default function SettingsPage() {
 
   React.useEffect(() => {
     // Set initial theme based on system preference or saved setting
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    if (prefersDark) {
-        document.documentElement.classList.add('dark');
-        setIsDarkMode(true);
-    } else {
-        document.documentElement.classList.remove('dark');
-        setIsDarkMode(false);
-    }
+    const isDark = document.documentElement.classList.contains('dark');
+    setIsDarkMode(isDark);
   }, []);
 
   return (
@@ -330,7 +324,7 @@ export default function SettingsPage() {
           <CardDescription>Définir les rôles et les autorisations pour le personnel de l'université.</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="rounded-md border">
+          <div className="rounded-md border overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>
