@@ -86,7 +86,7 @@ function VideoCard({ title, description, videoUrl }: MarketingContent) {
     );
 }
 
-
+// Making the component async allows us to fetch data on the server
 export default function MarketingPage() {
     const [content, setContent] = React.useState<MarketingContent[]>([]);
     const [loading, setLoading] = React.useState(true);
@@ -196,3 +196,7 @@ export default function MarketingPage() {
     </div>
   );
 }
+
+// This line instructs Next.js to revalidate the page every hour,
+// ensuring content updates are reflected without needing a full redeployment.
+export const revalidate = 3600; // Revalidate every hour
