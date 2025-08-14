@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
+import * as React from "react";
 
 const roles = [
   { 
@@ -47,6 +48,7 @@ const roles = [
 
 export default function SettingsPage() {
   const { toast } = useToast();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   
   const handleAction = (action: string) => {
     toast({
@@ -55,6 +57,34 @@ export default function SettingsPage() {
     });
   };
 
+  const handleUploadClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      toast({
+        title: "Photo sélectionnée",
+        description: `Le fichier ${file.name} est prêt à être téléchargé.`,
+      });
+      // Here you would typically handle the file upload process
+    }
+  };
+
+  const handleAccountStatusChange = (checked: boolean) => {
+    toast({
+      title: `Compte ${checked ? 'activé' : 'désactivé'}`,
+      description: `L'accès à la plateforme a été mis à jour.`,
+    });
+  };
+
+  const handleThemeChange = (checked: boolean) => {
+    toast({
+      title: `Mode ${checked ? 'sombre' : 'clair'} activé`,
+      description: "L'apparence de l'application sera mise à jour.",
+    });
+  }
 
   return (
     <div className="space-y-6">
@@ -80,7 +110,8 @@ export default function SettingsPage() {
                       <Badge>Promoteur</Badge>
                   </div>
                    <div className="ml-auto flex gap-2">
-                       <Button variant="outline" onClick={() => handleAction("Télécharger une photo")}>Télécharger une photo</Button>
+                       <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
+                       <Button variant="outline" onClick={handleUploadClick}>Télécharger une photo</Button>
                        <Button onClick={() => handleAction("Modifier le profil")}>Modifier le profil</Button>
                    </div>
               </div>
@@ -110,10 +141,10 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4">
                        <div className="flex items-center justify-between">
                             <div className="space-y-1">
-                                <Label htmlFor="account-status">Activer / Désactiver le compte</Label>
+                                <Label htmlFor="account-status" className="cursor-pointer">Activer / Désactiver le compte</Label>
                                 <p className="text-xs text-muted-foreground">Désactiver ce compte empêchera l'accès à la plateforme.</p>
                             </div>
-                            <Switch id="account-status" defaultChecked />
+                            <Switch id="account-status" defaultChecked onCheckedChange={handleAccountStatusChange} />
                         </div>
                     </CardContent>
                  </Card>
@@ -183,8 +214,8 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2">
-            <Switch id="dark-mode" disabled aria-readonly />
-            <Label htmlFor="dark-mode">Mode sombre (bientôt disponible)</Label>
+            <Switch id="dark-mode" onCheckedChange={handleThemeChange} />
+            <Label htmlFor="dark-mode">Mode sombre</Label>
           </div>
         </CardContent>
       </Card>
