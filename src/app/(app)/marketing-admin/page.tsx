@@ -17,13 +17,14 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, CheckCircle, Loader2, Clapperboard, Newspaper } from 'lucide-react';
+import { PlusCircle, Trash2, CheckCircle, Loader2, Clapperboard, Newspaper, Sparkles } from 'lucide-react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { generateArticle } from '@/ai/flows/generate-article-flow';
 
 
 function AddContentForm({ onAdd, type }: { onAdd: (data: Omit<MarketingContent, 'id'>) => Promise<void>, type: 'article' | 'video' }) {
@@ -33,11 +34,39 @@ function AddContentForm({ onAdd, type }: { onAdd: (data: Omit<MarketingContent, 
     const [url, setUrl] = React.useState('');
     const [imageHint, setImageHint] = React.useState('');
     const [loading, setLoading] = React.useState(false);
+    
+    // AI Generation State
+    const [aiTopic, setAiTopic] = React.useState('');
+    const [isGenerating, setIsGenerating] = React.useState(false);
 
     const isArticle = type === 'article';
     const dialogTitle = isArticle ? 'Nouvel Article' : 'Nouvelle Vidéo';
     const urlLabel = isArticle ? "URL de l'image" : "URL de la vidéo (YouTube, etc.)";
     const urlPlaceholder = isArticle ? "https://placehold.co/600x400.png" : "https://www.youtube.com/watch?v=...";
+
+    const { toast } = useToast();
+
+    const handleGenerateArticle = async () => {
+        if (!aiTopic) {
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez entrer un sujet pour la génération IA.' });
+            return;
+        }
+        setIsGenerating(true);
+        try {
+            const result = await generateArticle({ topic: aiTopic });
+            if (result) {
+                setTitle(result.title);
+                setDescription(result.description);
+                setImageHint(result.imageHint);
+                toast({ title: 'Article généré !', description: 'Le titre, la description et l\'indice d\'image ont été remplis.' });
+            }
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Erreur de génération', description: 'Impossible de générer l\'article.' });
+        } finally {
+            setIsGenerating(false);
+        }
+    }
 
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -56,6 +85,7 @@ function AddContentForm({ onAdd, type }: { onAdd: (data: Omit<MarketingContent, 
         setDescription('');
         setUrl('');
         setImageHint('');
+        setAiTopic('');
     };
 
     return (
@@ -65,11 +95,30 @@ function AddContentForm({ onAdd, type }: { onAdd: (data: Omit<MarketingContent, 
                     <PlusCircle className="mr-2 h-4 w-4" /> {isArticle ? 'Ajouter un article' : 'Ajouter une vidéo'}
                 </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="sm:max-w-2xl">
                 <DialogHeader>
                     <DialogTitle>{dialogTitle}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
+                    {isArticle && (
+                        <Card className="bg-muted/50">
+                            <CardHeader className="pb-4">
+                               <CardTitle className="text-lg flex items-center gap-2"><Sparkles className="h-5 w-5 text-primary" /> Générateur d'Article IA</CardTitle>
+                               <CardDescription>Entrez un sujet et laissez l'IA créer un brouillon pour vous.</CardDescription>
+                            </CardHeader>
+                            <CardContent className="flex items-end gap-2">
+                                <div className="flex-grow space-y-1">
+                                    <Label htmlFor="ai-topic">Sujet de l'article</Label>
+                                    <Input id="ai-topic" value={aiTopic} onChange={(e) => setAiTopic(e.target.value)} placeholder="Ex: Journée portes ouvertes de l'université" />
+                                </div>
+                                <Button type="button" onClick={handleGenerateArticle} disabled={isGenerating}>
+                                    {isGenerating ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Sparkles className="mr-2 h-4 w-4" />}
+                                    Générer
+                                </Button>
+                            </CardContent>
+                        </Card>
+                    )}
+
                     <div>
                         <Label htmlFor="title">Titre</Label>
                         <Input id="title" value={title} onChange={(e) => setTitle(e.target.value)} required />
@@ -257,7 +306,7 @@ export default function MarketingAdminPage() {
                                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {articles.map(pub => (
                                         <Card key={pub.id} className="group relative">
-                                            <Image src={pub.image || "https://placehold.co/600x400.png"} alt={pub.title} width={600} height={400} className="rounded-t-lg object-cover h-48 w-full" />
+                                            <Image src={pub.image || "https://placehold.co/600x400.png"} alt={pub.title} width={600} height={400} className="rounded-t-lg object-cover h-48 w-full" data-ai-hint={pub.imageHint} />
                                             <CardHeader>
                                                 <CardTitle>{pub.title}</CardTitle>
                                                 <CardDescription>{pub.description}</CardDescription>
@@ -309,3 +358,5 @@ export default function MarketingAdminPage() {
         </div>
     )
 }
+
+    
