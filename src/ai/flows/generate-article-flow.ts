@@ -10,6 +10,7 @@
  */
 
 import { ai } from '@/ai/genkit';
+import { googleAI } from '@genkit-ai/googleai';
 import { z } from 'zod';
 
 const ArticleGenerateInputSchema = z.object({
@@ -30,6 +31,7 @@ export async function generateArticle(input: ArticleGenerateInput): Promise<Arti
 
 const prompt = ai.definePrompt({
   name: 'generateArticlePrompt',
+  model: googleAI.model('gemini-1.5-flash-preview'),
   input: { schema: ArticleGenerateInputSchema },
   output: { schema: ArticleGenerateOutputSchema },
   prompt: `You are a marketing expert for a university.
@@ -52,5 +54,3 @@ const generateArticleFlow = ai.defineFlow(
     return output!;
   }
 );
-
-    
