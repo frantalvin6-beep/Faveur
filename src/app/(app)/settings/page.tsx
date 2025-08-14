@@ -12,6 +12,8 @@ import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
 import { useToast } from "@/hooks/use-toast";
 import * as React from "react";
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const roles = [
   { 
@@ -46,11 +48,63 @@ const roles = [
   }
 ];
 
+function EditProfileDialog({ user, onUpdate, children }: { user: { name: string, email: string }, onUpdate: (data: { name: string, email: string }) => void, children: React.ReactNode }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [name, setName] = React.useState(user.name);
+    const [email, setEmail] = React.useState(user.email);
+    const { toast } = useToast();
+
+    React.useEffect(() => {
+        if (isOpen) {
+            setName(user.name);
+            setEmail(user.email);
+        }
+    }, [isOpen, user]);
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onUpdate({ name, email });
+        toast({ title: "Profil mis à jour", description: "Vos informations ont été enregistrées." });
+        setIsOpen(false);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Modifier le profil</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="name">Nom complet</Label>
+                            <Input id="name" value={name} onChange={(e) => setName(e.target.value)} />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="email">Adresse e-mail</Label>
+                            <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+                        <Button type="submit">Enregistrer</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
 export default function SettingsPage() {
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = React.useState("https://placehold.co/100x100.png");
   const [isDarkMode, setIsDarkMode] = React.useState(false);
+  const [userProfile, setUserProfile] = React.useState({
+      name: "Admin Principal",
+      email: "admin@campuscentral.com"
+  });
 
   const handleAction = (action: string) => {
     toast({
@@ -88,12 +142,12 @@ export default function SettingsPage() {
   const handleThemeChange = (checked: boolean) => {
     setIsDarkMode(checked);
     if (checked) {
-        document.documentElement.classList.remove('dark'); // In my globals.css, .dark is the light theme
-    } else {
         document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
     }
     toast({
-      title: `Mode ${checked ? 'clair' : 'sombre'} activé`,
+      title: `Mode ${checked ? 'sombre' : 'clair'} activé`,
       description: "L'apparence de l'application a été mise à jour.",
     });
   }
@@ -101,13 +155,12 @@ export default function SettingsPage() {
   React.useEffect(() => {
     // Set initial theme based on system preference or saved setting
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    // My theme is inverted, dark class means light theme
-    if (!prefersDark) {
+    if (prefersDark) {
         document.documentElement.classList.add('dark');
-        setIsDarkMode(false);
+        setIsDarkMode(true);
     } else {
         document.documentElement.classList.remove('dark');
-        setIsDarkMode(true);
+        setIsDarkMode(false);
     }
   }, []);
 
@@ -130,14 +183,16 @@ export default function SettingsPage() {
                       <AvatarFallback>AD</AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
-                      <h2 className="text-xl font-semibold">Admin Principal</h2>
-                      <p className="text-muted-foreground">admin@campuscentral.com</p>
+                      <h2 className="text-xl font-semibold">{userProfile.name}</h2>
+                      <p className="text-muted-foreground">{userProfile.email}</p>
                       <Badge>Promoteur</Badge>
                   </div>
                    <div className="ml-auto flex gap-2">
                        <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
                        <Button variant="outline" onClick={handleUploadClick}>Télécharger une photo</Button>
-                       <Button onClick={() => handleAction("Modifier le profil")}>Modifier le profil</Button>
+                       <EditProfileDialog user={userProfile} onUpdate={setUserProfile}>
+                           <Button>Modifier le profil</Button>
+                       </EditProfileDialog>
                    </div>
               </div>
 
@@ -239,7 +294,7 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2">
-            <Switch id="dark-mode" onCheckedChange={handleThemeChange} checked={!isDarkMode} />
+            <Switch id="dark-mode" onCheckedChange={handleThemeChange} checked={isDarkMode} />
             <Label htmlFor="dark-mode">Mode Sombre</Label>
           </div>
         </CardContent>
