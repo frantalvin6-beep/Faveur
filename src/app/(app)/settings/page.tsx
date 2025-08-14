@@ -49,7 +49,9 @@ const roles = [
 export default function SettingsPage() {
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
-  
+  const [avatarUrl, setAvatarUrl] = React.useState("https://placehold.co/100x100.png");
+  const [isDarkMode, setIsDarkMode] = React.useState(false);
+
   const handleAction = (action: string) => {
     toast({
       title: "Fonctionnalité en cours de développement",
@@ -64,11 +66,15 @@ export default function SettingsPage() {
   const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      toast({
-        title: "Photo sélectionnée",
-        description: `Le fichier ${file.name} est prêt à être téléchargé.`,
-      });
-      // Here you would typically handle the file upload process
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setAvatarUrl(reader.result as string);
+        toast({
+          title: "Photo de profil mise à jour",
+          description: "Votre nouvelle photo de profil est maintenant affichée.",
+        });
+      };
+      reader.readAsDataURL(file);
     }
   };
 
@@ -80,11 +86,30 @@ export default function SettingsPage() {
   };
 
   const handleThemeChange = (checked: boolean) => {
+    setIsDarkMode(checked);
+    if (checked) {
+        document.documentElement.classList.remove('dark'); // In my globals.css, .dark is the light theme
+    } else {
+        document.documentElement.classList.add('dark');
+    }
     toast({
-      title: `Mode ${checked ? 'sombre' : 'clair'} activé`,
-      description: "L'apparence de l'application sera mise à jour.",
+      title: `Mode ${checked ? 'clair' : 'sombre'} activé`,
+      description: "L'apparence de l'application a été mise à jour.",
     });
   }
+
+  React.useEffect(() => {
+    // Set initial theme based on system preference or saved setting
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    // My theme is inverted, dark class means light theme
+    if (!prefersDark) {
+        document.documentElement.classList.add('dark');
+        setIsDarkMode(false);
+    } else {
+        document.documentElement.classList.remove('dark');
+        setIsDarkMode(true);
+    }
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -101,7 +126,7 @@ export default function SettingsPage() {
           <CardContent className="space-y-6">
               <div className="flex items-center space-x-4">
                   <Avatar className="h-20 w-20">
-                      <AvatarImage src="https://placehold.co/100x100.png" alt="User avatar" data-ai-hint="person avatar" />
+                      <AvatarImage src={avatarUrl} alt="User avatar" data-ai-hint="person avatar" />
                       <AvatarFallback>AD</AvatarFallback>
                   </Avatar>
                   <div className="space-y-1">
@@ -214,8 +239,8 @@ export default function SettingsPage() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center space-x-2">
-            <Switch id="dark-mode" onCheckedChange={handleThemeChange} />
-            <Label htmlFor="dark-mode">Mode sombre</Label>
+            <Switch id="dark-mode" onCheckedChange={handleThemeChange} checked={!isDarkMode} />
+            <Label htmlFor="dark-mode">Mode Sombre</Label>
           </div>
         </CardContent>
       </Card>
