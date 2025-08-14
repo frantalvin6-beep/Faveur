@@ -249,35 +249,51 @@ function PermissionsManager() {
     )
 }
 
+function ChangeAvatarDialog({ currentAvatar, onUpdate, children }: { currentAvatar: string, onUpdate: (url: string) => void, children: React.ReactNode }) {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const [url, setUrl] = React.useState(currentAvatar);
+    const { toast } = useToast();
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        onUpdate(url);
+        toast({ title: "Photo de profil mise à jour" });
+        setIsOpen(false);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>{children}</DialogTrigger>
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Modifier la photo de profil</DialogTitle>
+                    <DialogDescription>Collez l'URL d'une image pour mettre à jour votre photo.</DialogDescription>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                    <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="avatar-url">URL de l'image</Label>
+                            <Input id="avatar-url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder="https://..." />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+                        <Button type="submit">Enregistrer</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
 
 export default function SettingsPage() {
   const { toast } = useToast();
-  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const [avatarUrl, setAvatarUrl] = React.useState("https://placehold.co/100x100.png");
   const [isDarkMode, setIsDarkMode] = React.useState(false);
   const [userProfile, setUserProfile] = React.useState({
       name: "Admin Principal",
       email: "admin@campuscentral.com"
   });
-
-  const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setAvatarUrl(reader.result as string);
-        toast({
-          title: "Photo de profil mise à jour",
-          description: "Votre nouvelle photo de profil est maintenant affichée.",
-        });
-      };
-      reader.readAsDataURL(file);
-    }
-  };
 
   const handleAccountStatusChange = (checked: boolean) => {
     toast({
@@ -328,8 +344,9 @@ export default function SettingsPage() {
                       <Badge>Promoteur</Badge>
                   </div>
                    <div className="ml-auto flex gap-2">
-                       <input type="file" ref={fileInputRef} onChange={handleFileChange} className="hidden" accept="image/*" />
-                       <Button variant="outline" onClick={handleUploadClick}>Télécharger une photo</Button>
+                       <ChangeAvatarDialog currentAvatar={avatarUrl} onUpdate={setAvatarUrl}>
+                           <Button variant="outline">Changer la photo</Button>
+                       </ChangeAvatarDialog>
                        <EditProfileDialog user={userProfile} onUpdate={setUserProfile}>
                            <Button>Modifier le profil</Button>
                        </EditProfileDialog>
