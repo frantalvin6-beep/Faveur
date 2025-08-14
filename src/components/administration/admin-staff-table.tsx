@@ -20,7 +20,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { AdminStaff } from '@/lib/types';
+import { AdminStaff, UserRole } from '@/lib/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -37,16 +37,40 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils';
 import { useToast } from '@/hooks/use-toast';
 
-function AddStaffForm({ onAddStaff }: { onAddStaff: (staff: Omit<AdminStaff, 'id'>) => Promise<AdminStaff> }) {
+const ALL_ROLES: UserRole[] = ['Promoteur', 'DAC', 'DAF', 'Secrétaire', 'Surveillant', 'Professeur', 'Étudiant'];
+
+function StaffForm({
+  staff,
+  onSave,
+  children,
+}: {
+  staff?: AdminStaff;
+  onSave: (staff: Omit<AdminStaff, 'id'>) => Promise<AdminStaff | void>;
+  children: React.ReactNode;
+}) {
   const [isOpen, setIsOpen] = React.useState(false);
-  
   const [name, setName] = React.useState('');
-  const [role, setRole] = React.useState('');
+  const [role, setRole] = React.useState<UserRole>('Secrétaire');
   const [email, setEmail] = React.useState('');
   const [phone, setPhone] = React.useState('');
   const [status, setStatus] = React.useState<AdminStaff['status']>('Actif');
-  
   const { toast } = useToast();
+
+  React.useEffect(() => {
+    if (staff) {
+      setName(staff.name);
+      setRole(staff.role);
+      setEmail(staff.email);
+      setPhone(staff.phone);
+      setStatus(staff.status);
+    } else {
+      setName('');
+      setRole('Secrétaire');
+      setEmail('');
+      setPhone('');
+      setStatus('Actif');
+    }
+  }, [staff, isOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -56,38 +80,40 @@ function AddStaffForm({ onAddStaff }: { onAddStaff: (staff: Omit<AdminStaff, 'id
     }
     
     try {
-        await onAddStaff({
-          name, role, email, phone, status,
-          hireDate: new Date().toISOString().split('T')[0]
-        });
-        setIsOpen(false);
-        // Reset form
-        setName('');
-        setRole('');
-        setEmail('');
-        setPhone('');
-        setStatus('Actif');
+      const staffData = {
+        name,
+        role,
+        email,
+        phone,
+        status,
+        hireDate: staff?.hireDate || new Date().toISOString().split('T')[0],
+      };
+      await onSave(staffData);
+      setIsOpen(false);
     } catch(error) {
-        // Error toast is handled in parent component
+      // Error toast is handled in parent component
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogTrigger asChild>
-        <Button>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Ajouter un membre
-        </Button>
-      </DialogTrigger>
+      <DialogTrigger asChild>{children}</DialogTrigger>
       <DialogContent className="sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nouveau membre du personnel administratif</DialogTitle>
+          <DialogTitle>{staff ? 'Modifier le membre' : 'Nouveau membre du personnel'}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
             <div className="space-y-2"><Label>Nom Complet</Label><Input value={name} onChange={e => setName(e.target.value)} required /></div>
-            <div className="space-y-2"><Label>Rôle / Poste</Label><Input value={role} onChange={e => setRole(e.target.value)} placeholder="Ex: Secrétaire Général" required /></div>
+            <div className="space-y-2">
+                <Label>Rôle / Poste</Label>
+                <Select onValueChange={(v: UserRole) => setRole(v)} value={role}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                        {ALL_ROLES.map(r => <SelectItem key={r} value={r}>{r}</SelectItem>)}
+                    </SelectContent>
+                </Select>
+            </div>
             <div className="space-y-2"><Label>Email</Label><Input type="email" value={email} onChange={e => setEmail(e.target.value)} required /></div>
             <div className="space-y-2"><Label>Téléphone</Label><Input value={phone} onChange={e => setPhone(e.target.value)} /></div>
             <div className="space-y-2">
@@ -126,7 +152,13 @@ export function AdminStaffTable({ data, onAddStaff, onUpdateStaff, onDeleteStaff
     onUpdateStaff(id, { status: newStatus });
   }
 
-  const handleEdit = (id: string) => alert(`La fonctionnalité de modification pour ${id} sera bientôt implémentée.`);
+  const handleSave = (staffData: Omit<AdminStaff, 'id'>) => {
+    return onAddStaff(staffData);
+  }
+  
+  const handleUpdate = (id: string) => async (staffData: Omit<AdminStaff, 'id'>) => {
+    return onUpdateStaff(id, staffData);
+  }
   
   return (
     <Card>
@@ -143,7 +175,12 @@ export function AdminStaffTable({ data, onAddStaff, onUpdateStaff, onDeleteStaff
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-xs"
                 />
-                <AddStaffForm onAddStaff={onAddStaff} />
+                <StaffForm onSave={handleSave}>
+                  <Button>
+                    <PlusCircle className="mr-2 h-4 w-4" />
+                    Ajouter un membre
+                  </Button>
+                </StaffForm>
             </div>
         </div>
       </CardHeader>
@@ -164,7 +201,7 @@ export function AdminStaffTable({ data, onAddStaff, onUpdateStaff, onDeleteStaff
                 {filteredStaff.length > 0 ? filteredStaff.map((member) => (
                 <TableRow key={member.id}>
                     <TableCell className="font-medium">{member.name}</TableCell>
-                    <TableCell>{member.role}</TableCell>
+                    <TableCell><Badge variant="secondary">{member.role}</Badge></TableCell>
                     <TableCell>
                         <div className="flex flex-col">
                             <span className="text-sm">{member.email}</span>
@@ -189,21 +226,23 @@ export function AdminStaffTable({ data, onAddStaff, onUpdateStaff, onDeleteStaff
                         </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                        <DropdownMenuItem onClick={() => handleEdit(member.id)}>
-                            <Edit className="mr-2 h-4 w-4" />
-                            Modifier
-                        </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => handleStatusChange(member.id, member.status)}>
-                            {member.status === 'Actif' ? 'Suspendre' : 'Activer'} le compte
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                            onClick={() => onDeleteStaff(member.id)}
-                            className="text-destructive focus:text-destructive"
-                        >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Supprimer
-                        </DropdownMenuItem>
+                          <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                          <StaffForm staff={member} onSave={handleUpdate(member.id)}>
+                            <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                              <Edit className="mr-2 h-4 w-4" />
+                              Modifier
+                            </DropdownMenuItem>
+                          </StaffForm>
+                          <DropdownMenuItem onClick={() => handleStatusChange(member.id, member.status)}>
+                              {member.status === 'Actif' ? 'Suspendre' : 'Activer'} le compte
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                              onClick={() => onDeleteStaff(member.id)}
+                              className="text-destructive focus:text-destructive"
+                          >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Supprimer
+                          </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
                     </TableCell>

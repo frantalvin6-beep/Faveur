@@ -1,5 +1,6 @@
 
 
+
 export interface Student {
   id: string;
   name: string;
@@ -210,7 +211,7 @@ export interface FacultyFinance {
 export interface AdminStaff {
   id: string;
   name: string;
-  role: string;
+  role: UserRole;
   email: string;
   phone: string;
   status: 'Actif' | 'Suspendu';
@@ -251,7 +252,7 @@ export interface AcademicEvent {
     type: EventType;
 }
 
-export type UserRole = 'Admin' | 'Enseignant' | 'Étudiant' | 'Promoteur' | 'DAC' | 'DAF' | 'Secrétaire' | 'Surveillant' | 'Professeur';
+export type UserRole = 'Promoteur' | 'DAC' | 'DAF' | 'Secrétaire' | 'Surveillant' | 'Professeur' | 'Étudiant';
 
 
 // --- MARKETING & PRE-REGISTRATION ---
