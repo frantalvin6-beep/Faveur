@@ -20,7 +20,7 @@ export default function RootLayout({
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link href="https://fonts.googleapis.com/css2?family=Inter&display=swap" rel="stylesheet"></link>
       </head>
-      <body className="font-body antialiased">
+      <body>
         <Providers>
           {children}
           <Toaster />
@@ -29,3 +29,5 @@ export default function RootLayout({
     </html>
   );
 }
+
+    

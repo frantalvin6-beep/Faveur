@@ -306,8 +306,10 @@ export default function SettingsPage() {
     setIsDarkMode(checked);
     if (checked) {
         document.documentElement.classList.add('dark');
+        localStorage.setItem('theme', 'dark');
     } else {
         document.documentElement.classList.remove('dark');
+        localStorage.setItem('theme', 'light');
     }
     toast({
       title: `Mode ${checked ? 'sombre' : 'clair'} activé`,
@@ -316,8 +318,14 @@ export default function SettingsPage() {
   }
 
   React.useEffect(() => {
-    const isDark = document.documentElement.classList.contains('dark');
+    const storedTheme = localStorage.getItem('theme');
+    const isDark = storedTheme === 'dark';
     setIsDarkMode(isDark);
+    if (isDark) {
+        document.documentElement.classList.add('dark');
+    } else {
+        document.documentElement.classList.remove('dark');
+    }
   }, []);
 
   return (
@@ -457,3 +465,5 @@ export default function SettingsPage() {
     </div>
   )
 }
+
+    

@@ -22,8 +22,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         if (storedRole) {
             setUserRole(storedRole);
         }
+        
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
+
     } catch (error) {
-        console.warn("Could not read user role from localStorage", error);
+        console.warn("Could not read from localStorage", error);
     }
     setIsInitialized(true);
   }, []);
@@ -55,3 +63,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+    
