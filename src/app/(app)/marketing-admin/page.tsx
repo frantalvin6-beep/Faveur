@@ -17,30 +17,44 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { PlusCircle, Trash2, CheckCircle, Loader2 } from 'lucide-react';
+import { PlusCircle, Trash2, CheckCircle, Loader2, Clapperboard, Newspaper } from 'lucide-react';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import Image from 'next/image';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-function AddPublicationForm({ onAdd }: { onAdd: (data: Omit<MarketingContent, 'id'>) => Promise<void> }) {
+
+function AddContentForm({ onAdd, type }: { onAdd: (data: Omit<MarketingContent, 'id'>) => Promise<void>, type: 'article' | 'video' }) {
     const [isOpen, setIsOpen] = React.useState(false);
     const [title, setTitle] = React.useState('');
     const [description, setDescription] = React.useState('');
-    const [image, setImage] = React.useState('');
+    const [url, setUrl] = React.useState('');
     const [imageHint, setImageHint] = React.useState('');
     const [loading, setLoading] = React.useState(false);
+
+    const isArticle = type === 'article';
+    const dialogTitle = isArticle ? 'Nouvel Article' : 'Nouvelle Vidéo';
+    const urlLabel = isArticle ? "URL de l'image" : "URL de la vidéo (YouTube, etc.)";
+    const urlPlaceholder = isArticle ? "https://placehold.co/600x400.png" : "https://www.youtube.com/watch?v=...";
+
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setLoading(true);
-        await onAdd({ title, description, image, imageHint });
+        const contentData: Omit<MarketingContent, 'id'> = {
+            title,
+            description,
+            type,
+            ...(isArticle ? { image: url, imageHint } : { videoUrl: url }),
+        };
+        await onAdd(contentData);
         setLoading(false);
         setIsOpen(false);
         setTitle('');
         setDescription('');
-        setImage('');
+        setUrl('');
         setImageHint('');
     };
 
@@ -48,12 +62,12 @@ function AddPublicationForm({ onAdd }: { onAdd: (data: Omit<MarketingContent, 'i
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
                 <Button>
-                    <PlusCircle className="mr-2 h-4 w-4" /> Ajouter une publication
+                    <PlusCircle className="mr-2 h-4 w-4" /> {isArticle ? 'Ajouter un article' : 'Ajouter une vidéo'}
                 </Button>
             </DialogTrigger>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Nouvelle Publication</DialogTitle>
+                    <DialogTitle>{dialogTitle}</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div>
@@ -65,13 +79,15 @@ function AddPublicationForm({ onAdd }: { onAdd: (data: Omit<MarketingContent, 'i
                         <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value)} required />
                     </div>
                     <div>
-                        <Label htmlFor="image">URL de l'image</Label>
-                        <Input id="image" value={image} onChange={(e) => setImage(e.target.value)} placeholder="https://placehold.co/600x400.png" />
+                        <Label htmlFor="url">{urlLabel}</Label>
+                        <Input id="url" value={url} onChange={(e) => setUrl(e.target.value)} placeholder={urlPlaceholder} required />
                     </div>
-                     <div>
-                        <Label htmlFor="imageHint">Indice pour l'image (IA)</Label>
-                        <Input id="imageHint" value={imageHint} onChange={(e) => setImageHint(e.target.value)} placeholder="Ex: university students" />
-                    </div>
+                     {isArticle && (
+                         <div>
+                            <Label htmlFor="imageHint">Indice pour l'image (IA)</Label>
+                            <Input id="imageHint" value={imageHint} onChange={(e) => setImageHint(e.target.value)} placeholder="Ex: university students" />
+                        </div>
+                     )}
                     <DialogFooter>
                         <DialogClose asChild>
                             <Button type="button" variant="secondary" disabled={loading}>Annuler</Button>
@@ -150,15 +166,18 @@ function PreRegistrationTable({ registrations, onValidate, onDelete }: { registr
 }
 
 export default function MarketingAdminPage() {
-    const [publications, setPublications] = React.useState<MarketingContent[]>([]);
+    const [content, setContent] = React.useState<MarketingContent[]>([]);
     const [registrations, setRegistrations] = React.useState<PreRegistration[]>([]);
     const [loading, setLoading] = React.useState(true);
     const { toast } = useToast();
 
+    const articles = content.filter(c => c.type === 'article');
+    const videos = content.filter(c => c.type === 'video');
+
     const fetchData = React.useCallback(async () => {
         try {
-            const [pubData, regData] = await Promise.all([getMarketingContent(), getPreRegistrations()]);
-            setPublications(pubData);
+            const [contentData, regData] = await Promise.all([getMarketingContent(), getPreRegistrations()]);
+            setContent(contentData);
             setRegistrations(regData.filter(r => r.status === 'En attente'));
         } catch (error) {
             toast({ variant: 'destructive', title: "Erreur", description: "Impossible de charger les données marketing."});
@@ -171,24 +190,24 @@ export default function MarketingAdminPage() {
         fetchData();
     }, [fetchData]);
 
-    const handleAddPublication = async (data: Omit<MarketingContent, 'id'>) => {
+    const handleAddContent = async (data: Omit<MarketingContent, 'id'>) => {
         try {
             await addMarketingContent(data);
-            toast({ title: "Publication ajoutée" });
+            toast({ title: "Contenu ajouté avec succès" });
             fetchData();
         } catch(e) {
-            toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'ajouter la publication."});
+            toast({ variant: 'destructive', title: "Erreur", description: "Impossible d'ajouter le contenu."});
         }
     };
     
-    const handleDeletePublication = async (id: string) => {
-       if (confirm("Êtes-vous sûr de vouloir supprimer cette publication ?")) {
+    const handleDeleteContent = async (id: string) => {
+       if (confirm("Êtes-vous sûr de vouloir supprimer cet élément ?")) {
          try {
             await deleteMarketingContent(id);
-            toast({ title: "Publication supprimée" });
+            toast({ title: "Contenu supprimé" });
             fetchData();
         } catch(e) {
-            toast({ variant: 'destructive', title: "Erreur", description: "Impossible de supprimer la publication."});
+            toast({ variant: 'destructive', title: "Erreur", description: "Impossible de supprimer le contenu."});
         }
        }
     };
@@ -220,32 +239,65 @@ export default function MarketingAdminPage() {
     return (
         <div className="space-y-8">
             <Card>
-                <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                        <CardTitle>Gestion des Publications</CardTitle>
-                        <CardDescription>Gérez le contenu affiché sur la page marketing publique.</CardDescription>
-                    </div>
-                    <AddPublicationForm onAdd={handleAddPublication} />
+                <CardHeader>
+                    <CardTitle>Gestion du Contenu Marketing</CardTitle>
+                    <CardDescription>Gérez le contenu affiché sur la page marketing publique.</CardDescription>
                 </CardHeader>
                 <CardContent>
-                    {publications.length > 0 ? (
-                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {publications.map(pub => (
-                                <Card key={pub.id} className="group relative">
-                                    <Image src={pub.image || "https://placehold.co/600x400.png"} alt={pub.title} width={600} height={400} className="rounded-t-lg object-cover h-48 w-full" />
-                                    <CardHeader>
-                                        <CardTitle>{pub.title}</CardTitle>
-                                        <CardDescription>{pub.description}</CardDescription>
-                                    </CardHeader>
-                                    <Button size="icon" variant="destructive" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeletePublication(pub.id)}>
-                                        <Trash2 className="h-4 w-4" />
-                                    </Button>
-                                </Card>
-                            ))}
-                        </div>
-                    ) : (
-                        <p className="text-center text-muted-foreground py-8">Aucune publication. Ajoutez-en une pour commencer.</p>
-                    )}
+                    <Tabs defaultValue="articles">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="articles"><Newspaper className="mr-2 h-4 w-4" />Articles & Publications</TabsTrigger>
+                            <TabsTrigger value="videos"><Clapperboard className="mr-2 h-4 w-4" />Vidéos</TabsTrigger>
+                        </TabsList>
+                        <TabsContent value="articles" className="mt-4">
+                            <div className="text-right mb-4">
+                                <AddContentForm onAdd={handleAddContent} type="article" />
+                            </div>
+                            {articles.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {articles.map(pub => (
+                                        <Card key={pub.id} className="group relative">
+                                            <Image src={pub.image || "https://placehold.co/600x400.png"} alt={pub.title} width={600} height={400} className="rounded-t-lg object-cover h-48 w-full" />
+                                            <CardHeader>
+                                                <CardTitle>{pub.title}</CardTitle>
+                                                <CardDescription>{pub.description}</CardDescription>
+                                            </CardHeader>
+                                            <Button size="icon" variant="destructive" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteContent(pub.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-center text-muted-foreground py-8">Aucun article. Ajoutez-en un pour commencer.</p>
+                            )}
+                        </TabsContent>
+                        <TabsContent value="videos" className="mt-4">
+                             <div className="text-right mb-4">
+                                <AddContentForm onAdd={handleAddContent} type="video" />
+                            </div>
+                             {videos.length > 0 ? (
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {videos.map(pub => (
+                                        <Card key={pub.id} className="group relative">
+                                            <div className="h-48 w-full bg-black rounded-t-lg flex items-center justify-center">
+                                                <Clapperboard className="h-16 w-16 text-white"/>
+                                            </div>
+                                            <CardHeader>
+                                                <CardTitle>{pub.title}</CardTitle>
+                                                <CardDescription>{pub.description}</CardDescription>
+                                            </CardHeader>
+                                            <Button size="icon" variant="destructive" className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => handleDeleteContent(pub.id)}>
+                                                <Trash2 className="h-4 w-4" />
+                                            </Button>
+                                        </Card>
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-center text-muted-foreground py-8">Aucune vidéo. Ajoutez-en une pour commencer.</p>
+                            )}
+                        </TabsContent>
+                    </Tabs>
                 </CardContent>
             </Card>
 

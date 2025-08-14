@@ -259,10 +259,12 @@ export type UserRole = 'Promoteur' | 'DAC' | 'DAF' | 'Secrétaire' | 'Surveillan
 
 export interface MarketingContent {
   id: string;
+  type: 'article' | 'video';
   title: string;
   description: string;
   image?: string;
   imageHint?: string;
+  videoUrl?: string;
 }
 
 export interface PreRegistration {
