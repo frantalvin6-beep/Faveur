@@ -17,6 +17,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 export const dynamic = 'force-dynamic';
 
+function getAcademicYears(students: Student[]): string[] {
+    const years = new Set<number>();
+    students.forEach(s => years.add(new Date(s.enrollmentDate).getFullYear()));
+    
+    if (years.size === 0) {
+        const currentYear = new Date().getFullYear();
+        return [`${currentYear}-${currentYear + 1}`];
+    }
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+    return sortedYears.map(year => `${year}-${year + 1}`);
+}
+
 function AddStudentDialog({ onAddStudent, allDepartments }: { onAddStudent: (student: Omit<Student, 'id' | 'gpa' | 'academicHistory'>) => Promise<void>, allDepartments: Department[] }) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [name, setName] = React.useState('');
@@ -121,6 +134,8 @@ export default function StudentsListPage() {
   const [students, setStudents] = useState<Student[]>([]);
   const [departments, setDepartments] = useState<Department[]>([]);
   const [loading, setLoading] = useState(true);
+  const [academicYears, setAcademicYears] = React.useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = React.useState<string>('');
   const { toast } = useToast();
 
   const fetchData = useCallback(async () => {
@@ -129,6 +144,12 @@ export default function StudentsListPage() {
       const [studentsData, departmentsData] = await Promise.all([getStudents(), getDepartments()]);
       setStudents(studentsData);
       setDepartments(departmentsData);
+      
+      const years = getAcademicYears(studentsData);
+      setAcademicYears(years);
+      if (years.length > 0) {
+          setSelectedYear(years[0]);
+      }
     } catch (error) {
       console.error("Failed to fetch data:", error);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
@@ -141,8 +162,14 @@ export default function StudentsListPage() {
     fetchData();
   }, [fetchData]);
   
+  const filteredStudents = React.useMemo(() => {
+      if (!selectedYear) return students;
+      const [startYear] = selectedYear.split('-').map(Number);
+      return students.filter(s => new Date(s.enrollmentDate).getFullYear() === startYear);
+  }, [selectedYear, students]);
+  
   const getStudentsForDepartment = (departmentName: string): Student[] => {
-    let studentsInDept = students.filter(student => student.department === departmentName);
+    let studentsInDept = filteredStudents.filter(student => student.department === departmentName);
     if (searchTerm) {
         const lowercasedFilter = searchTerm.toLowerCase();
         // If the search term matches the department name, we don't filter the students further
@@ -220,7 +247,20 @@ export default function StudentsListPage() {
             <h1 className="text-3xl font-bold">Liste des Étudiants par Faculté et Option</h1>
             <p className="text-muted-foreground">Consultez et gérez les étudiants regroupés par leur faculté et option.</p>
          </div>
-         <div className="flex items-center gap-2">
+         <div className="flex items-center gap-4">
+             <div className="flex items-center gap-2">
+                <Label htmlFor="academic-year">Année Académique</Label>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                    <SelectTrigger id="academic-year" className="w-[180px]">
+                        <SelectValue placeholder="Sélectionner l'année" />
+                    </SelectTrigger>
+                    <SelectContent>
+                        {academicYears.map(year => (
+                            <SelectItem key={year} value={year}>{year}</SelectItem>
+                        ))}
+                    </SelectContent>
+                </Select>
+            </div>
             <Input
                 placeholder="Rechercher (faculté, option, étudiant...)"
                 value={searchTerm}

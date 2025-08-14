@@ -2,29 +2,56 @@
 'use client';
 
 import * as React from 'react';
-import { getStudentFinances, getDepartments, addStudentFinance, updateStudentFinance, addAccountingTransaction, StudentFinance, Department, AccountingTransaction } from '@/lib/data';
+import { getStudentFinances, getDepartments, addStudentFinance, updateStudentFinance, addAccountingTransaction, StudentFinance, Department, AccountingTransaction, getStudents, Student } from '@/lib/data';
 import { StudentFinancesPageContent } from '@/components/finances/student-finances-page-content';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Label } from '@/components/ui/label';
+
 
 export const dynamic = 'force-dynamic';
 
+function getAcademicYears(students: Student[]): string[] {
+    const years = new Set<number>();
+    students.forEach(s => years.add(new Date(s.enrollmentDate).getFullYear()));
+    
+    if (years.size === 0) {
+        const currentYear = new Date().getFullYear();
+        return [`${currentYear}-${currentYear + 1}`];
+    }
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a);
+    return sortedYears.map(year => `${year}-${year + 1}`);
+}
+
 export default function StudentFinancesPage() {
-  const [studentFinances, setStudentFinances] = React.useState<StudentFinance[]>([]);
+  const [allFinances, setAllFinances] = React.useState<StudentFinance[]>([]);
+  const [allStudents, setAllStudents] = React.useState<Student[]>([]);
   const [departments, setDepartments] = React.useState<Department[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const [academicYears, setAcademicYears] = React.useState<string[]>([]);
+  const [selectedYear, setSelectedYear] = React.useState<string>('');
   const { toast } = useToast();
 
   const fetchData = React.useCallback(async () => {
     try {
       setLoading(true);
-      const [finances, depts] = await Promise.all([
+      const [finances, depts, students] = await Promise.all([
         getStudentFinances(),
-        getDepartments()
+        getDepartments(),
+        getStudents(),
       ]);
-      setStudentFinances(finances);
-      // We only need the options (departments with a parent) for the form
+      
+      setAllFinances(finances);
+      setAllStudents(students);
       setDepartments(depts.filter(d => d.parentId)); 
+      
+      const years = getAcademicYears(students);
+      setAcademicYears(years);
+      if (years.length > 0) {
+          setSelectedYear(years[0]);
+      }
     } catch (error) {
       console.error("Failed to fetch student finances data:", error);
       toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les finances des étudiants.' });
@@ -36,6 +63,17 @@ export default function StudentFinancesPage() {
   React.useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const filteredFinances = React.useMemo(() => {
+    if (!selectedYear) return allFinances;
+    
+    const [startYear] = selectedYear.split('-').map(Number);
+    const studentsForYear = allStudents
+        .filter(s => new Date(s.enrollmentDate).getFullYear() === startYear)
+        .map(s => s.id);
+
+    return allFinances.filter(f => studentsForYear.includes(f.matricule));
+  }, [selectedYear, allFinances, allStudents]);
 
   const handleAddStudent = async (newStudent: StudentFinance) => {
     try {
@@ -67,7 +105,7 @@ export default function StudentFinancesPage() {
   };
   
   const handleUpdateStudent = async (updatedStudentData: StudentFinance, newAdvance: number) => {
-    const originalStudent = studentFinances.find(s => s.matricule === updatedStudentData.matricule);
+    const originalStudent = allFinances.find(s => s.matricule === updatedStudentData.matricule);
     const paymentAmount = newAdvance - (originalStudent?.avance || 0);
 
     try {
@@ -122,10 +160,29 @@ export default function StudentFinancesPage() {
     );
   }
   
-  return <StudentFinancesPageContent 
-    initialFinances={studentFinances} 
-    initialDepartments={departments}
-    onAddStudent={handleAddStudent}
-    onUpdateStudent={handleUpdateStudent}
-   />;
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-end">
+        <div className="flex items-center gap-2">
+            <Label htmlFor="academic-year">Année Académique</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger id="academic-year" className="w-[180px]">
+                    <SelectValue placeholder="Sélectionner l'année" />
+                </SelectTrigger>
+                <SelectContent>
+                    {academicYears.map(year => (
+                        <SelectItem key={year} value={year}>{year}</SelectItem>
+                    ))}
+                </SelectContent>
+            </Select>
+        </div>
+      </div>
+      <StudentFinancesPageContent 
+        initialFinances={filteredFinances} 
+        initialDepartments={departments}
+        onAddStudent={handleAddStudent}
+        onUpdateStudent={handleUpdateStudent}
+      />
+    </div>
+  );
 }
