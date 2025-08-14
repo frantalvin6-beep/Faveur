@@ -3,7 +3,7 @@
 
 import * as React from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter, useSearchParams } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   FileText,
   LayoutDashboard,
@@ -61,94 +61,125 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { useAuth, UserRole } from '@/context/auth-context';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { getPermissions, Permissions, defaultPermissions } from '@/lib/permissions';
+import { Skeleton } from '@/components/ui/skeleton';
 
-const navItems = [
-  { href: '/dashboard', icon: LayoutDashboard, label: 'Tableau de bord', roles: ['Promoteur', 'DAC', 'DAF', 'Secrétaire', 'Surveillant'] },
+const navStructure = [
+  { path: 'dashboard', icon: LayoutDashboard, label: 'Tableau de bord' },
   { 
     id: 'academics',
-    icon: GraduationCap, 
     label: 'Gestion académique',
-    roles: ['Promoteur', 'DAC', 'Secrétaire'],
+    icon: GraduationCap,
     subItems: [
-        { href: '/academics/departments', label: 'Facultés et départements', icon: Building, roles: ['Promoteur', 'DAC'] },
-        { href: '/academics/courses', label: 'Cours et matières', icon: BookOpen, roles: ['Promoteur', 'DAC'] },
-        { href: '/academics/syllabus', label: 'Syllabus des cours', icon: BookCopy, roles: ['Promoteur', 'DAC'] },
-        { href: '/academics/calendar', label: 'Calendrier académique', icon: Calendar, roles: ['Promoteur', 'DAC', 'Secrétaire'] },
+        { path: 'academics/departments', label: 'Facultés et départements', icon: Building },
+        { path: 'academics/courses', label: 'Cours et matières', icon: BookOpen },
+        { path: 'academics/syllabus', label: 'Syllabus des cours', icon: BookCopy },
+        { path: 'academics/calendar', label: 'Calendrier académique', icon: Calendar },
     ]
   },
    { 
     id: 'students',
-    icon: Users, 
     label: 'Étudiants',
-    roles: ['Promoteur', 'DAC', 'Secrétaire', 'Surveillant'],
+    icon: Users,
     subItems: [
-        { href: '/students/list', label: 'Liste des étudiants', icon: Users, roles: ['Promoteur', 'DAC', 'Secrétaire'] },
-        { href: '/students/attendance', label: 'Suivi des étudiants', icon: ClipboardCheck, roles: ['Promoteur', 'DAC', 'Secrétaire', 'Surveillant'] },
-        { href: '/students/repartition', label: 'Répartition', icon: BarChart3, roles: ['Promoteur', 'DAC'] },
+        { path: 'students/list', label: 'Liste des étudiants', icon: Users },
+        { path: 'students/attendance', label: 'Suivi des étudiants', icon: ClipboardCheck },
+        { path: 'students/repartition', label: 'Répartition', icon: BarChart3 },
     ]
    },
   { 
     id: 'faculty',
-    icon: UserSquare, 
     label: 'Personnel enseignant',
-    roles: ['Promoteur', 'DAC', 'Surveillant'],
+    icon: UserSquare,
     subItems: [
-        { href: '/faculty/profiles', label: 'Profils enseignants', icon: Users, roles: ['Promoteur', 'DAC'] },
-        { href: '/faculty/assignments', label: 'Attribution des cours', icon: Briefcase, roles: ['Promoteur', 'DAC'] },
-        { href: '/faculty/schedule', label: 'Emploi du temps', icon: Clock, roles: ['Promoteur', 'DAC'] },
-        { href: '/faculty/workload', label: 'Charge horaire', icon: Hourglass, roles: ['Promoteur', 'DAC'] },
-        { href: '/faculty/attendance', label: 'Feuille de présence', icon: CheckSquare, roles: ['Promoteur', 'DAC', 'Surveillant'] },
+        { path: 'faculty/profiles', label: 'Profils enseignants', icon: Users },
+        { path: 'faculty/assignments', label: 'Attribution des cours', icon: Briefcase },
+        { path: 'faculty/schedule', label: 'Emploi du temps', icon: Clock },
+        { path: 'faculty/workload', label: 'Charge horaire', icon: Hourglass },
+        { path: 'faculty/attendance', label: 'Feuille de présence', icon: CheckSquare },
     ]
   },
   { 
     id: 'exams',
-    icon: PencilRuler, 
     label: 'Examens et notes',
-    roles: ['Promoteur', 'DAC', 'Professeur', 'Étudiant'],
+    icon: PencilRuler,
     subItems: [
-        { href: '/exams/grades', label: 'Saisie des notes', icon: ClipboardCheck, roles: ['Promoteur', 'DAC', 'Professeur'] },
-        { href: '/exams/planning', label: 'Planification', icon: CalendarPlus, roles: ['Promoteur', 'DAC'] },
-        { href: '/exams/results', label: 'Résultats Globaux', icon: Trophy, roles: ['Promoteur', 'DAC', 'Étudiant'] },
+        { path: 'exams/grades', label: 'Saisie des notes', icon: ClipboardCheck },
+        { path: 'exams/planning', label: 'Planification', icon: CalendarPlus },
+        { path: 'exams/results', label: 'Résultats Globaux', icon: Trophy },
     ]
   },
   { 
     id: 'finances',
-    icon: DollarSign, 
     label: 'Finances',
-    roles: ['Promoteur', 'DAF'],
+    icon: DollarSign,
     subItems: [
-        { href: '/finances/students', label: 'Finances Étudiants', icon: Users, roles: ['Promoteur', 'DAF'] },
-        { href: '/finances/faculty', label: 'Finances Enseignants', icon: UserSquare, roles: ['Promoteur', 'DAF'] },
-        { href: '/finances/administration', label: 'Finances Administration', icon: Briefcase, roles: ['Promoteur', 'DAF'] },
-        { href: '/finances/expenses', label: 'Dépenses Administratives', icon: Wallet, roles: ['Promoteur', 'DAF'] },
+        { path: 'finances/students', label: 'Finances Étudiants', icon: Users },
+        { path: 'finances/faculty', label: 'Finances Enseignants', icon: UserSquare },
+        { path: 'finances/administration', label: 'Finances Administration', icon: Briefcase },
+        { path: 'finances/expenses', label: 'Dépenses Administratives', icon: Wallet },
     ]
   },
   { 
     id: 'administration',
-    icon: UserCog, 
     label: 'Administration',
-    roles: ['Promoteur'],
+    icon: UserCog,
     subItems: [
-        { href: '/administration/staff', label: 'Personnel Administratif', icon: UserCog, roles: ['Promoteur'] },
+        { path: 'administration/staff', label: 'Personnel Administratif', icon: UserCog },
     ]
   },
-  { href: '/accounting', icon: BookCopy, label: 'Comptabilité', roles: ['Promoteur', 'DAF'] },
-  { href: '/marketing-admin', icon: Megaphone, label: 'Marketing', roles: ['Promoteur'] },
-  { href: '/settings', icon: Settings, label: 'Paramètres', roles: ['Promoteur'] },
+  { path: 'accounting', icon: BookCopy, label: 'Comptabilité' },
+  { path: 'marketing-admin', icon: Megaphone, label: 'Marketing' },
+  { path: 'settings', icon: Settings, label: 'Paramètres' },
 ];
 
 function AppLayoutContent({ children }: { children: React.ReactNode }) {
     const pathname = usePathname();
     const { isMobile } = useSidebar();
-    const { userRole, setUserRole } = useAuth();
+    const { userRole } = useAuth();
+    const [permissions, setPermissions] = React.useState<Permissions | null>(null);
 
-    const hasAccess = (itemRoles: UserRole[]) => itemRoles.includes(userRole);
+    React.useEffect(() => {
+        async function fetchPermissions() {
+            const perms = await getPermissions();
+            setPermissions(perms);
+        }
+        fetchPermissions();
+    }, []);
 
-    const isSubItemActive = (subItems: any[]) => {
-        return subItems.some(item => pathname.startsWith(item.href) && hasAccess(item.roles));
+    const hasAccess = (path: string) => {
+        if (!permissions || !userRole) return false;
+        return permissions[path]?.includes(userRole);
     }
     
-    const filteredNavItems = navItems.filter(item => hasAccess(item.roles));
+    if (!permissions) {
+        return (
+            <div className="flex h-screen">
+                <div className="w-64 bg-sidebar p-4 space-y-4">
+                    <Skeleton className="h-8 w-3/4" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                    <Skeleton className="h-6 w-full" />
+                </div>
+                <div className="flex-1 p-6">
+                    <Skeleton className="h-12 w-full" />
+                    <Skeleton className="mt-4 h-[calc(100vh-100px)] w-full" />
+                </div>
+            </div>
+        )
+    }
+
+    const filteredNavItems = navStructure.map(item => {
+        if (item.subItems) {
+            const visibleSubItems = item.subItems.filter(sub => hasAccess(sub.path));
+            return visibleSubItems.length > 0 ? { ...item, subItems: visibleSubItems } : null;
+        }
+        return hasAccess(item.path!) ? item : null;
+    }).filter(Boolean);
+
+    const isSubItemActive = (subItems: any[]) => subItems.some(item => pathname.startsWith(`/${item.path}`));
 
   return (
       <>
@@ -163,20 +194,15 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
           <SidebarContent>
             <SidebarMenu>
               {filteredNavItems.map((item) => {
-                 const filteredSubItems = item.subItems?.filter(subItem => hasAccess(subItem.roles));
-                 
-                 if (item.subItems && filteredSubItems && filteredSubItems.length === 0) {
-                     return null;
-                 }
-
+                 if (!item) return null;
                  return item.subItems ? (
-                  <Collapsible key={item.id} className="w-full" defaultOpen={isSubItemActive(filteredSubItems || [])}>
+                  <Collapsible key={item.id} className="w-full" defaultOpen={isSubItemActive(item.subItems)}>
                     <CollapsibleTrigger asChild>
                        <SidebarMenuItem>
                           <SidebarMenuButton
                               className="w-full justify-start"
                               tooltip={item.label}
-                              isActive={isSubItemActive(filteredSubItems || [])}
+                              isActive={isSubItemActive(item.subItems)}
                           >
                               <item.icon className="h-4 w-4" />
                               <span>{item.label}</span>
@@ -185,10 +211,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     </CollapsibleTrigger>
                     <CollapsibleContent>
                       <SidebarMenuSub>
-                          {filteredSubItems && filteredSubItems.map((subItem) => (
-                               <SidebarMenuItem key={subItem.href}>
-                                  <SidebarMenuSubButton asChild isActive={pathname === subItem.href}>
-                                    <Link href={subItem.href}>
+                          {item.subItems.map((subItem) => (
+                               <SidebarMenuItem key={subItem.path}>
+                                  <SidebarMenuSubButton asChild isActive={pathname === `/${subItem.path}`}>
+                                    <Link href={`/${subItem.path}`}>
                                         <subItem.icon className="h-4 w-4" />
                                         <span>{subItem.label}</span>
                                     </Link>
@@ -199,10 +225,10 @@ function AppLayoutContent({ children }: { children: React.ReactNode }) {
                     </CollapsibleContent>
                   </Collapsible>
                 ) : (
-                  <SidebarMenuItem key={item.href}>
-                    <Link href={item.href!} passHref>
+                  <SidebarMenuItem key={item.path}>
+                    <Link href={`/${item.path!}`} passHref>
                       <SidebarMenuButton
-                        isActive={pathname.startsWith(item.href!)}
+                        isActive={pathname.startsWith(`/${item.path!}`)}
                         tooltip={item.label}
                         className="w-full justify-start"
                       >

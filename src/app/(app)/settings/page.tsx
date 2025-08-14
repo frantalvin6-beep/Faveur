@@ -15,6 +15,8 @@ import * as React from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogDescription } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Check, ShieldCheck, X } from "lucide-react";
+import { Permissions, allRoles, getPermissions, updatePermission } from "@/lib/permissions";
+import { UserRole } from "@/lib/types";
 
 const roles = [
   { 
@@ -48,15 +50,6 @@ const roles = [
     access: ['Pointage enseignants', 'Présence étudiants']
   }
 ];
-
-const permissionsData = {
-    'Promoteur': { 'Gestion Utilisateurs': true, 'Finances': true, 'Académique': true, 'Marketing': true, 'Paramètres': true },
-    'DAC': { 'Gestion Utilisateurs': false, 'Finances': false, 'Académique': true, 'Marketing': false, 'Paramètres': false },
-    'DAF': { 'Gestion Utilisateurs': false, 'Finances': true, 'Académique': false, 'Marketing': false, 'Paramètres': false },
-    'Secrétaire': { 'Gestion Utilisateurs': false, 'Finances': false, 'Académique': 'limited', 'Marketing': false, 'Paramètres': false },
-};
-const permissionModules = ['Gestion Utilisateurs', 'Finances', 'Académique', 'Marketing', 'Paramètres'];
-
 
 function EditProfileDialog({ user, onUpdate, children }: { user: { name: string, email: string }, onUpdate: (data: { name: string, email: string }) => void, children: React.ReactNode }) {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -151,34 +144,99 @@ function ChangePasswordDialog() {
     );
 }
 
-function PermissionsDialog() {
+const permissionLabels: { [key: string]: string } = {
+  'dashboard': 'Tableau de bord',
+  'academics/departments': 'Facultés et départements',
+  'academics/courses': 'Cours et matières',
+  'academics/syllabus': 'Syllabus des cours',
+  'academics/calendar': 'Calendrier académique',
+  'students/list': 'Liste des étudiants',
+  'students/attendance': 'Suivi des étudiants',
+  'students/repartition': 'Répartition des étudiants',
+  'faculty/profiles': 'Profils enseignants',
+  'faculty/assignments': 'Attribution des cours',
+  'faculty/schedule': 'Emploi du temps',
+  'faculty/workload': 'Charge horaire',
+  'faculty/attendance': 'Feuille de présence',
+  'exams/grades': 'Saisie des notes',
+  'exams/planning': 'Planification des examens',
+  'exams/results': 'Résultats Globaux',
+  'finances/students': 'Finances Étudiants',
+  'finances/faculty': 'Finances Enseignants',
+  'finances/administration': 'Finances Administration',
+  'finances/expenses': 'Dépenses Administratives',
+  'administration/staff': 'Personnel Administratif',
+  'accounting': 'Comptabilité',
+  'marketing-admin': 'Marketing',
+  'settings': 'Paramètres',
+};
+
+
+function PermissionsManager() {
+    const [permissions, setPermissions] = React.useState<Permissions | null>(null);
+    const { toast } = useToast();
+
+    React.useEffect(() => {
+        async function loadPermissions() {
+            const perms = await getPermissions();
+            setPermissions(perms);
+        }
+        loadPermissions();
+    }, []);
+
+    const handlePermissionChange = async (path: string, role: UserRole, hasAccess: boolean) => {
+        if (!permissions) return;
+        
+        const currentRoles = permissions[path] || [];
+        const newRoles = hasAccess 
+            ? [...currentRoles, role] 
+            : currentRoles.filter(r => r !== role);
+
+        const newPermissions = { ...permissions, [path]: newRoles };
+        setPermissions(newPermissions); // Update UI optimistically
+
+        try {
+            await updatePermission(path, newRoles);
+            toast({ title: 'Permission mise à jour', description: `L'accès pour le rôle ${role} à ${permissionLabels[path] || path} a été modifié.` });
+        } catch (error) {
+            console.error(error);
+            toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de sauvegarder la permission.' });
+            setPermissions(permissions); // Revert on error
+        }
+    };
+
+    if (!permissions) return <p>Chargement des permissions...</p>;
+
+    const availablePaths = Object.keys(permissionLabels);
+
     return (
-        <Dialog>
-            <DialogTrigger asChild>
-                 <Button variant="outline">Gérer</Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-4xl">
-                <DialogHeader>
-                    <DialogTitle>Permissions des Rôles</DialogTitle>
-                    <DialogDescription>Aperçu des accès pour chaque rôle principal. Les permissions sont définies par le système.</DialogDescription>
-                </DialogHeader>
-                <div className="rounded-md border mt-4 overflow-x-auto">
+        <Card>
+            <CardHeader>
+                <CardTitle>Gestion des Permissions</CardTitle>
+                <CardDescription>Activez ou désactivez l'accès à chaque module pour les rôles (hors Promoteur).</CardDescription>
+            </CardHeader>
+            <CardContent>
+                <div className="rounded-md border overflow-x-auto">
                     <Table>
                         <TableHeader>
                             <TableRow>
-                                <TableHead>Rôle</TableHead>
-                                {permissionModules.map(module => <TableHead key={module} className="text-center">{module}</TableHead>)}
+                                <TableHead className="w-[250px]">Module</TableHead>
+                                {allRoles.filter(r => r !== 'Promoteur').map(role => (
+                                    <TableHead key={role} className="text-center">{role}</TableHead>
+                                ))}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {Object.entries(permissionsData).map(([role, perms]) => (
-                                <TableRow key={role}>
-                                    <TableCell className="font-medium">{role}</TableCell>
-                                    {permissionModules.map(module => (
-                                        <TableCell key={module} className="text-center">
-                                            {perms[module as keyof typeof perms] === true ? <Check className="h-5 w-5 text-green-500 mx-auto" /> :
-                                             perms[module as keyof typeof perms] === 'limited' ? <ShieldCheck className="h-5 w-5 text-yellow-500 mx-auto" /> :
-                                             <X className="h-5 w-5 text-red-500 mx-auto" />}
+                            {availablePaths.map(path => (
+                                <TableRow key={path}>
+                                    <TableCell className="font-medium">{permissionLabels[path] || path}</TableCell>
+                                    {allRoles.filter(r => r !== 'Promoteur').map(role => (
+                                        <TableCell key={role} className="text-center">
+                                            <Switch
+                                                checked={permissions[path]?.includes(role)}
+                                                onCheckedChange={(checked) => handlePermissionChange(path, role, checked)}
+                                                aria-label={`Accès pour ${role} à ${path}`}
+                                            />
                                         </TableCell>
                                     ))}
                                 </TableRow>
@@ -186,12 +244,9 @@ function PermissionsDialog() {
                         </TableBody>
                     </Table>
                 </div>
-                 <DialogFooter>
-                    <DialogClose asChild><Button>Fermer</Button></DialogClose>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-    );
+            </CardContent>
+        </Card>
+    )
 }
 
 
@@ -245,7 +300,6 @@ export default function SettingsPage() {
   }
 
   React.useEffect(() => {
-    // Set initial theme based on system preference or saved setting
     const isDark = document.documentElement.classList.contains('dark');
     setIsDarkMode(isDark);
   }, []);
@@ -294,10 +348,6 @@ export default function SettingsPage() {
                             <Label>Changer le mot de passe</Label>
                             <ChangePasswordDialog />
                         </div>
-                        <div className="flex items-center justify-between">
-                            <Label>Gérer les permissions du rôle</Label>
-                             <PermissionsDialog />
-                        </div>
                     </CardContent>
                  </Card>
                  <Card>
@@ -317,11 +367,13 @@ export default function SettingsPage() {
               </div>
           </CardContent>
       </Card>
+
+      <PermissionsManager />
       
       <Card>
         <CardHeader>
-          <CardTitle>Gestion des Rôles & Accès</CardTitle>
-          <CardDescription>Définir les rôles et les autorisations pour le personnel de l'université.</CardDescription>
+          <CardTitle>Gestion des Rôles</CardTitle>
+          <CardDescription>Définitions et responsabilités pour le personnel de l'université.</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="rounded-md border overflow-x-auto">

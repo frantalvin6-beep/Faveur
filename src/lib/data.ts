@@ -3,6 +3,7 @@
 import type { Student, Faculty, Department, Course, AcademicRecord, CourseRecord, CourseAssignment, ScheduleEntry, ExamGrade, ExamSchedule, TeacherWorkload, TeacherAttendance, Message, StudentFinance, FacultyFinance, AdminStaff, AdminFinance, AccountingTransaction, Chapter, AcademicEvent, EventType, MarketingContent, PreRegistration } from './types';
 import { db } from './firebase';
 import { collection, getDocs, writeBatch, doc, getDoc, setDoc, updateDoc, deleteDoc, query, where, addDoc } from 'firebase/firestore';
+import { defaultPermissions, Permissions } from './permissions';
 
 
 // --- STUDENT DATA SERVICES ---
@@ -631,7 +632,7 @@ export async function seedDatabase() {
         'students', 'faculty', 'departments', 'courses', 'studentFinances',
         'adminStaff', 'courseAssignments', 'schedule', 'examGrades', 'teacherWorkload',
         'teacherAttendance', 'accountingTransactions', 'facultyFinances', 'adminFinances',
-        'academicEvents', 'examSchedules', 'marketingContent', 'preRegistrations'
+        'academicEvents', 'examSchedules', 'marketingContent', 'preRegistrations', 'permissions'
     ];
 
     console.log("Starting database seed process...");
@@ -690,6 +691,10 @@ export async function seedDatabase() {
         const docRef = doc(collection(db, "academicEvents"));
         batch.set(docRef, event);
     });
+
+    // Seed initial permissions
+    const permissionsRef = doc(db, 'config', 'permissions');
+    batch.set(permissionsRef, defaultPermissions);
 
 
     await batch.commit();
