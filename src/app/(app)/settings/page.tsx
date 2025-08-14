@@ -14,6 +14,7 @@ import { useToast } from "@/hooks/use-toast";
 import * as React from "react";
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Check, ShieldCheck, X } from "lucide-react";
 
 const roles = [
   { 
@@ -47,6 +48,15 @@ const roles = [
     access: ['Pointage enseignants', 'Présence étudiants']
   }
 ];
+
+const permissionsData = {
+    'Promoteur': { 'Gestion Utilisateurs': true, 'Finances': true, 'Académique': true, 'Marketing': true, 'Paramètres': true },
+    'DAC': { 'Gestion Utilisateurs': false, 'Finances': false, 'Académique': true, 'Marketing': false, 'Paramètres': false },
+    'DAF': { 'Gestion Utilisateurs': false, 'Finances': true, 'Académique': false, 'Marketing': false, 'Paramètres': false },
+    'Secrétaire': { 'Gestion Utilisateurs': false, 'Finances': false, 'Académique': 'limited', 'Marketing': false, 'Paramètres': false },
+};
+const permissionModules = ['Gestion Utilisateurs', 'Finances', 'Académique', 'Marketing', 'Paramètres'];
+
 
 function EditProfileDialog({ user, onUpdate, children }: { user: { name: string, email: string }, onUpdate: (data: { name: string, email: string }) => void, children: React.ReactNode }) {
     const [isOpen, setIsOpen] = React.useState(false);
@@ -96,6 +106,95 @@ function EditProfileDialog({ user, onUpdate, children }: { user: { name: string,
     );
 }
 
+function ChangePasswordDialog() {
+    const [isOpen, setIsOpen] = React.useState(false);
+    const { toast } = useToast();
+
+    const handleSubmit = (e: React.FormEvent) => {
+        e.preventDefault();
+        // Here you would add your password change logic
+        toast({ title: "Mot de passe mis à jour", description: "Votre mot de passe a été changé avec succès." });
+        setIsOpen(false);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={setIsOpen}>
+            <DialogTrigger asChild>
+                 <Button variant="outline">Modifier</Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Changer le mot de passe</DialogTitle>
+                </DialogHeader>
+                <form onSubmit={handleSubmit}>
+                     <div className="space-y-4 py-4">
+                        <div className="space-y-2">
+                            <Label htmlFor="current-password">Ancien mot de passe</Label>
+                            <Input id="current-password" type="password" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="new-password">Nouveau mot de passe</Label>
+                            <Input id="new-password" type="password" required />
+                        </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="confirm-password">Confirmer le nouveau mot de passe</Label>
+                            <Input id="confirm-password" type="password" required />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <DialogClose asChild><Button type="button" variant="secondary">Annuler</Button></DialogClose>
+                        <Button type="submit">Confirmer</Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+function PermissionsDialog() {
+    return (
+        <Dialog>
+            <DialogTrigger asChild>
+                 <Button variant="outline">Gérer</Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-4xl">
+                <DialogHeader>
+                    <DialogTitle>Permissions des Rôles</DialogTitle>
+                    <DialogDescription>Aperçu des accès pour chaque rôle principal. Les permissions sont définies par le système.</DialogDescription>
+                </DialogHeader>
+                <div className="rounded-md border mt-4">
+                    <Table>
+                        <TableHeader>
+                            <TableRow>
+                                <TableHead>Rôle</TableHead>
+                                {permissionModules.map(module => <TableHead key={module} className="text-center">{module}</TableHead>)}
+                            </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                            {Object.entries(permissionsData).map(([role, perms]) => (
+                                <TableRow key={role}>
+                                    <TableCell className="font-medium">{role}</TableCell>
+                                    {permissionModules.map(module => (
+                                        <TableCell key={module} className="text-center">
+                                            {perms[module as keyof typeof perms] === true ? <Check className="h-5 w-5 text-green-500 mx-auto" /> :
+                                             perms[module as keyof typeof perms] === 'limited' ? <ShieldCheck className="h-5 w-5 text-yellow-500 mx-auto" /> :
+                                             <X className="h-5 w-5 text-red-500 mx-auto" />}
+                                        </TableCell>
+                                    ))}
+                                </TableRow>
+                            ))}
+                        </TableBody>
+                    </Table>
+                </div>
+                 <DialogFooter>
+                    <DialogClose asChild><Button>Fermer</Button></DialogClose>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}
+
+
 export default function SettingsPage() {
   const { toast } = useToast();
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -105,13 +204,6 @@ export default function SettingsPage() {
       name: "Admin Principal",
       email: "admin@campuscentral.com"
   });
-
-  const handleAction = (action: string) => {
-    toast({
-      title: "Fonctionnalité en cours de développement",
-      description: `L'action "${action}" sera bientôt disponible.`,
-    });
-  };
 
   const handleUploadClick = () => {
     fileInputRef.current?.click();
@@ -206,11 +298,11 @@ export default function SettingsPage() {
                     <CardContent className="space-y-4">
                         <div className="flex items-center justify-between">
                             <Label>Changer le mot de passe</Label>
-                            <Button variant="outline" onClick={() => handleAction("Changer le mot de passe")}>Modifier</Button>
+                            <ChangePasswordDialog />
                         </div>
                         <div className="flex items-center justify-between">
                             <Label>Gérer les permissions du rôle</Label>
-                            <Button variant="outline" onClick={() => handleAction("Gérer les permissions")}>Gérer</Button>
+                             <PermissionsDialog />
                         </div>
                     </CardContent>
                  </Card>
