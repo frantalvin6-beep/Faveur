@@ -31,7 +31,7 @@ export async function generateArticle(input: ArticleGenerateInput): Promise<Arti
 
 const prompt = ai.definePrompt({
   name: 'generateArticlePrompt',
-  model: googleAI.model('gemini-1.5-flash-preview'),
+  model: googleAI.model('gemini-1.5-flash'),
   input: { schema: ArticleGenerateInputSchema },
   output: { schema: ArticleGenerateOutputSchema },
   prompt: `You are a marketing expert for a university.
