@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,8 +20,8 @@ interface ChapterRowData extends Chapter {
 }
 
 interface GroupedChapters {
-    [department: string]: {
-        [level: string]: ChapterRowData[];
+    [level: string]: {
+        [department: string]: ChapterRowData[];
     };
 }
 
@@ -106,20 +107,20 @@ export default function SyllabusPage() {
             );
         
         return filteredChapters.reduce((acc, chapter) => {
-            const { department, level } = chapter;
-            if (!acc[department]) {
-                acc[department] = {};
+            const { level, department } = chapter;
+            if (!acc[level]) {
+                acc[level] = {};
             }
-            if (!acc[department][level]) {
-                acc[department][level] = [];
+            if (!acc[level][department]) {
+                acc[level][department] = [];
             }
-            acc[department][level].push(chapter);
+            acc[level][department].push(chapter);
             return acc;
         }, {} as GroupedChapters);
 
     }, [courses, searchTerm]);
 
-    const departmentOrder = Object.keys(groupedChapters).sort();
+    const sortedLevelKeys = Object.keys(groupedChapters).sort();
 
   if (loading) {
     return (
@@ -148,7 +149,7 @@ export default function SyllabusPage() {
          </div>
          <div className="flex items-center gap-2">
             <Input
-                placeholder="Rechercher (option, matière, chapitre...)"
+                placeholder="Rechercher (niveau, option, matière...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -156,25 +157,29 @@ export default function SyllabusPage() {
          </div>
        </div>
 
-        {departmentOrder.length > 0 ? (
-            departmentOrder.map(department => (
-                <div key={department} className="space-y-4">
-                    <h2 className="text-2xl font-semibold tracking-tight">{department}</h2>
-                    {Object.keys(groupedChapters[department]).sort().map(level => (
-                         <Card key={`${department}-${level}`}>
-                            <CardHeader>
-                                <CardTitle>{level}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <SyllabusTable 
-                                    data={groupedChapters[department][level]} 
-                                    onChapterUpdate={handleChapterUpdate}
-                                    onChapterDelete={handleChapterDelete}
-                                />
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+        {sortedLevelKeys.length > 0 ? (
+            sortedLevelKeys.map(level => (
+                <Card key={level}>
+                    <CardHeader>
+                        <CardTitle>{level}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                       <Accordion type="single" collapsible className="w-full">
+                           {Object.keys(groupedChapters[level]).sort().map(department => (
+                               <AccordionItem value={department} key={`${level}-${department}`}>
+                                   <AccordionTrigger className="text-xl">{department}</AccordionTrigger>
+                                   <AccordionContent>
+                                       <SyllabusTable 
+                                           data={groupedChapters[level][department]} 
+                                           onChapterUpdate={handleChapterUpdate}
+                                           onChapterDelete={handleChapterDelete}
+                                       />
+                                   </AccordionContent>
+                               </AccordionItem>
+                           ))}
+                       </Accordion>
+                    </CardContent>
+                </Card>
             ))
         ) : (
              <Card>

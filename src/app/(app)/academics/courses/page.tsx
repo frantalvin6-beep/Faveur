@@ -8,12 +8,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 
 export const dynamic = 'force-dynamic';
 
 interface GroupedCourses {
-  [department: string]: {
-    [level: string]: Course[];
+  [level: string]: {
+    [department: string]: Course[];
   };
 }
 
@@ -89,19 +90,19 @@ export default function CoursesPage() {
         );
 
         return filteredCourses.reduce((acc, course) => {
-            const { department, level } = course;
-            if (!acc[department]) {
-                acc[department] = {};
+            const { level, department } = course;
+            if (!acc[level]) {
+                acc[level] = {};
             }
-            if (!acc[department][level]) {
-                acc[department][level] = [];
+            if (!acc[level][department]) {
+                acc[level][department] = [];
             }
-            acc[department][level].push(course);
+            acc[level][department].push(course);
             return acc;
         }, {} as GroupedCourses);
     }, [courses, searchTerm]);
 
-    const departmentOrder = Object.keys(groupedCourses).sort();
+    const sortedLevelKeys = Object.keys(groupedCourses).sort();
 
   if (loading) {
       return (
@@ -125,7 +126,7 @@ export default function CoursesPage() {
          <div>
             <h1 className="text-3xl font-bold">Cours et matières</h1>
             <p className="text-muted-foreground">
-                Gérez les cours et les matières proposés par l'université, groupés par option et niveau.
+                Gérez les cours et les matières proposés par l'université, groupés par niveau et option.
             </p>
          </div>
          <div className="flex items-center gap-2">
@@ -139,25 +140,29 @@ export default function CoursesPage() {
          </div>
        </div>
 
-        {departmentOrder.length > 0 ? (
-            departmentOrder.map(department => (
-                <div key={department} className="space-y-4">
-                    <h2 className="text-2xl font-semibold tracking-tight">{department}</h2>
-                    {Object.keys(groupedCourses[department]).sort().map(level => (
-                        <Card key={`${department}-${level}`}>
-                            <CardHeader>
-                                <CardTitle>{level}</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <CoursesTable 
-                                    data={groupedCourses[department][level]}
-                                    onDeleteCourse={handleDeleteCourse}
-                                    onUpdateCourse={handleUpdateCourse}
-                                />
-                            </CardContent>
-                        </Card>
-                    ))}
-                </div>
+        {sortedLevelKeys.length > 0 ? (
+            sortedLevelKeys.map(level => (
+                <Card key={level}>
+                    <CardHeader>
+                        <CardTitle>{level}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <Accordion type="single" collapsible className="w-full">
+                            {Object.keys(groupedCourses[level]).sort().map(department => (
+                                <AccordionItem value={department} key={`${level}-${department}`}>
+                                    <AccordionTrigger className="text-xl">{department}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <CoursesTable 
+                                            data={groupedCourses[level][department]}
+                                            onDeleteCourse={handleDeleteCourse}
+                                            onUpdateCourse={handleUpdateCourse}
+                                        />
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
+                    </CardContent>
+                </Card>
             ))
         ) : (
              <Card>
