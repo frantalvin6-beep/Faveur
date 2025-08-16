@@ -12,6 +12,11 @@ import { Badge } from '@/components/ui/badge';
 
 export const dynamic = 'force-dynamic';
 
+function getLevelName(year: number) {
+    if (year <= 3) return `Licence ${year}`;
+    return `Master ${year - 3}`;
+}
+
 export default function RepartitionPage() {
   const [departments, setDepartments] = React.useState<Department[]>([]);
   const [students, setStudents] = React.useState<Student[]>([]);
@@ -38,7 +43,7 @@ export default function RepartitionPage() {
   const getStudentsByLevelForDept = (deptName: string) => {
     const studentsInDept = students.filter(s => s.department === deptName);
     const studentsByLevel = studentsInDept.reduce((acc, student) => {
-        const level = `Licence ${student.year}`;
+        const level = getLevelName(student.year);
         acc[level] = (acc[level] || 0) + 1;
         return acc;
     }, {} as Record<string, number>);

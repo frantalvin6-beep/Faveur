@@ -26,6 +26,11 @@ import { Student } from '@/lib/types';
 import { CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
+function getLevelName(year: number) {
+    if (year <= 3) return `Licence ${year}`;
+    return `Master ${year - 3}`;
+}
+
 export function StudentTable({ data, onDeleteStudent, onEditStudent }: { data: Student[], onDeleteStudent: (id: string) => void, onEditStudent: (id: string) => void }) {
 
   return (
@@ -50,7 +55,7 @@ export function StudentTable({ data, onDeleteStudent, onEditStudent }: { data: S
                 <TableCell className="font-medium">{student.name}</TableCell>
                 <TableCell className="hidden md:table-cell">{student.email}</TableCell>
                 <TableCell><Badge variant="outline">{student.department}</Badge></TableCell>
-                <TableCell className="hidden sm:table-cell">{student.year}</TableCell>
+                <TableCell className="hidden sm:table-cell">{getLevelName(student.year)}</TableCell>
                 <TableCell className="hidden sm:table-cell">
                   {typeof student.gpa === 'number' ? student.gpa.toFixed(2) : 'N/A'}
                 </TableCell>

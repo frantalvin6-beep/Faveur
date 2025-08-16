@@ -63,6 +63,8 @@ export function AddStudentFinanceForm({ onAddStudent, departments }: { onAddStud
         setOption('');
     };
 
+    const levelOptions = ['Licence 1', 'Licence 2', 'Licence 3', 'Master 1', 'Master 2'];
+
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
@@ -81,7 +83,15 @@ export function AddStudentFinanceForm({ onAddStudent, departments }: { onAddStud
                             {/* Champs principaux */}
                             <div className="space-y-2"><Label htmlFor="matricule">Matricule</Label><Input id="matricule" value={matricule} onChange={(e) => setMatricule(e.target.value)} required /></div>
                             <div className="space-y-2"><Label htmlFor="fullName">Nom & Prénom</Label><Input id="fullName" value={fullName} onChange={(e) => setFullName(e.target.value)} required /></div>
-                            <div className="space-y-2"><Label htmlFor="level">Niveau d'études</Label><Input id="level" value={level} onChange={(e) => setLevel(e.target.value)} placeholder="Ex: Licence 1" required /></div>
+                            <div className="space-y-2">
+                                <Label htmlFor="level">Niveau d'études</Label>
+                                <Select onValueChange={setLevel} value={level}>
+                                    <SelectTrigger id="level"><SelectValue placeholder="Sélectionner..." /></SelectTrigger>
+                                    <SelectContent>
+                                        {levelOptions.map(l => <SelectItem key={l} value={l}>{l}</SelectItem>)}
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="space-y-2"><Label htmlFor="option">Option</Label><Select onValueChange={setOption} value={option}><SelectTrigger id="option"><SelectValue placeholder="Sélectionner..." /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.id} value={d.name}>{d.name}</SelectItem>)}</SelectContent></Select></div>
                             <div className="space-y-2"><Label htmlFor="semester">Semestre</Label><Select onValueChange={(v: 'Pair' | 'Impair') => setSemester(v)} value={semester}><SelectTrigger id="semester"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="Impair">Impair</SelectItem><SelectItem value="Pair">Pair</SelectItem></SelectContent></Select></div>
                             

@@ -19,6 +19,11 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 export const dynamic = 'force-dynamic';
 
+function getLevelName(year: number) {
+    if (year <= 3) return `Licence ${year}`;
+    return `Master ${year - 3}`;
+}
+
 function getAcademicYears(students: Student[]): string[] {
     const years = new Set<number>();
     students.forEach(s => years.add(new Date(s.enrollmentDate).getFullYear()));
@@ -117,7 +122,16 @@ function AddStudentDialog({ onAddStudent, allDepartments }: { onAddStudent: (stu
             </div>
             <div className="space-y-2">
               <Label htmlFor="year">Année</Label>
-              <Input id="year" type="number" min="1" max="5" value={year} onChange={e => setYear(Number(e.target.value))} required />
+              <Select onValueChange={(v) => setYear(Number(v))} value={String(year)}>
+                  <SelectTrigger id="year"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                      <SelectItem value="1">Licence 1</SelectItem>
+                      <SelectItem value="2">Licence 2</SelectItem>
+                      <SelectItem value="3">Licence 3</SelectItem>
+                      <SelectItem value="4">Master 1</SelectItem>
+                      <SelectItem value="5">Master 2</SelectItem>
+                  </SelectContent>
+              </Select>
             </div>
           </div>
           <DialogFooter>
@@ -217,7 +231,7 @@ export default function StudentsListPage() {
     }
     
     return studentsToGroup.reduce((acc, student) => {
-        const level = `Année ${student.year}`;
+        const level = getLevelName(student.year);
         if (!acc[level]) acc[level] = {};
         if (!acc[level][student.department]) acc[level][student.department] = [];
         acc[level][student.department].push(student);

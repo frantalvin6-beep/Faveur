@@ -11,6 +11,11 @@ import { useToast } from '@/hooks/use-toast';
 
 export const dynamic = 'force-dynamic';
 
+function getLevelName(year: number) {
+    if (year <= 3) return `Licence ${year}`;
+    return `Master ${year - 3}`;
+}
+
 interface GroupedStudents {
   [key: string]: Student[];
 }
@@ -41,7 +46,7 @@ export default function StudentAttendancePage() {
 
   const groupedStudents = React.useMemo(() => {
     return students.reduce((acc, student) => {
-      const key = `${student.department} - ${student.year === 1 ? '1ère année' : student.year + 'ème année'}`;
+      const key = `${student.department} - ${getLevelName(student.year)}`;
       if (!acc[key]) {
         acc[key] = [];
       }
