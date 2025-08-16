@@ -8,6 +8,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -17,13 +19,14 @@ function getLevelName(year: number) {
 }
 
 interface GroupedStudents {
-  [key: string]: Student[];
+  [level: string]: {
+    [option: string]: Student[];
+  }
 }
 
 export default function StudentAttendancePage() {
   const [searchTerm, setSearchTerm] = React.useState('');
   const [students, setStudents] = React.useState<Student[]>([]);
-  const [departments, setDepartments] = React.useState<Department[]>([]);
   const [loading, setLoading] = React.useState(true);
   const { toast } = useToast();
 
@@ -31,9 +34,8 @@ export default function StudentAttendancePage() {
     async function fetchData() {
       try {
         setLoading(true);
-        const [studentsData, departmentsData] = await Promise.all([getStudents(), getDepartments()]);
+        const studentsData = await getStudents();
         setStudents(studentsData);
-        setDepartments(departmentsData.filter(d => d.parentId)); // Only options
       } catch (error) {
         console.error("Failed to fetch data:", error);
         toast({ variant: 'destructive', title: 'Erreur', description: 'Impossible de charger les données.' });
@@ -45,43 +47,27 @@ export default function StudentAttendancePage() {
   }, [toast]);
 
   const groupedStudents = React.useMemo(() => {
-    return students.reduce((acc, student) => {
-      const key = `${student.department} - ${getLevelName(student.year)}`;
-      if (!acc[key]) {
-        acc[key] = [];
-      }
-      acc[key].push(student);
-      return acc;
+    let studentsToGroup = students;
+    if (searchTerm) {
+        const lowercasedFilter = searchTerm.toLowerCase();
+        studentsToGroup = students.filter(student =>
+            student.name.toLowerCase().includes(lowercasedFilter) ||
+            student.id.toLowerCase().includes(lowercasedFilter) ||
+            student.department.toLowerCase().includes(lowercasedFilter) ||
+            getLevelName(student.year).toLowerCase().includes(lowercasedFilter)
+        );
+    }
+    
+    return studentsToGroup.reduce((acc, student) => {
+        const level = getLevelName(student.year);
+        if (!acc[level]) acc[level] = {};
+        if (!acc[level][student.department]) acc[level][student.department] = [];
+        acc[level][student.department].push(student);
+        return acc;
     }, {} as GroupedStudents);
-  }, [students]);
+  }, [students, searchTerm]);
 
-  const filteredGroups = React.useMemo(() => {
-    if (!searchTerm) {
-      return groupedStudents;
-    }
-
-    const lowercasedFilter = searchTerm.toLowerCase();
-    const filtered: GroupedStudents = {};
-
-    for (const groupName in groupedStudents) {
-      if (groupName.toLowerCase().includes(lowercasedFilter)) {
-        filtered[groupName] = groupedStudents[groupName];
-        continue;
-      }
-      
-      const matchingStudents = groupedStudents[groupName].filter(student =>
-        student.name.toLowerCase().includes(lowercasedFilter) ||
-        student.id.toLowerCase().includes(lowercasedFilter)
-      );
-
-      if (matchingStudents.length > 0) {
-        filtered[groupName] = matchingStudents;
-      }
-    }
-    return filtered;
-  }, [searchTerm, groupedStudents]);
-
-  const sortedGroupKeys = Object.keys(filteredGroups).sort();
+  const sortedLevelKeys = Object.keys(groupedStudents).sort();
 
   if (loading) {
     return (
@@ -104,7 +90,7 @@ export default function StudentAttendancePage() {
          </div>
          <div className="flex items-center gap-2">
             <Input
-                placeholder="Rechercher par groupe, nom..."
+                placeholder="Rechercher (niveau, option, nom...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -113,16 +99,31 @@ export default function StudentAttendancePage() {
        </div>
        
        <div className="space-y-8">
-            {sortedGroupKeys.length > 0 ? sortedGroupKeys.map((groupName) => (
-                <Card key={groupName}>
-                    <CardHeader>
-                        <CardTitle>{groupName.replace(' - ', ' | ')}</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <StudentAttendanceTable students={filteredGroups[groupName]} />
-                    </CardContent>
-                </Card>
-            )) : (
+            {sortedLevelKeys.length > 0 ? sortedLevelKeys.map((level) => {
+                const levelOptions = Object.keys(groupedStudents[level]).sort();
+
+                if (levelOptions.length === 0) return null;
+
+                return (
+                    <Card key={level}>
+                        <CardHeader>
+                            <CardTitle className="text-2xl">{level}</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                           <Accordion type="single" collapsible className="w-full">
+                                {levelOptions.map(option => (
+                                    <AccordionItem value={option} key={`${level}-${option}`}>
+                                        <AccordionTrigger className="text-xl">{option}</AccordionTrigger>
+                                        <AccordionContent>
+                                            <StudentAttendanceTable students={groupedStudents[level][option]} />
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                           </Accordion>
+                        </CardContent>
+                    </Card>
+                )
+            }) : (
                  <Card>
                     <CardContent>
                         <p className="text-muted-foreground text-center py-8">
