@@ -11,8 +11,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 
 
 interface GroupedFinances {
-  [level: string]: {
-    [option: string]: StudentFinance[];
+  [option: string]: {
+    [level: string]: StudentFinance[];
   }
 }
 
@@ -29,13 +29,13 @@ export function StudentFinancesPageContent({ initialFinances, initialDepartments
   const groupedFinances = React.useMemo(() => {
     return initialFinances.reduce((acc, student) => {
       const { level, option } = student;
-      if (!acc[level]) {
-        acc[level] = {};
+      if (!acc[option]) {
+        acc[option] = {};
       }
-      if (!acc[level][option]) {
-        acc[level][option] = [];
+      if (!acc[option][level]) {
+        acc[option][level] = [];
       }
-      acc[level][option].push(student);
+      acc[option][level].push(student);
       return acc;
     }, {} as GroupedFinances);
   }, [initialFinances]);
@@ -48,35 +48,35 @@ export function StudentFinancesPageContent({ initialFinances, initialDepartments
     const lowercasedFilter = searchTerm.toLowerCase();
     const filtered: GroupedFinances = {};
 
-    for (const level in groupedFinances) {
-        for (const option in groupedFinances[level]) {
+    for (const option in groupedFinances) {
+        for (const level in groupedFinances[option]) {
             if (level.toLowerCase().includes(lowercasedFilter) || option.toLowerCase().includes(lowercasedFilter)) {
-                if (!filtered[level]) filtered[level] = {};
-                filtered[level][option] = groupedFinances[level][option];
+                if (!filtered[option]) filtered[option] = {};
+                filtered[option][level] = groupedFinances[option][level];
                 continue;
             }
 
-            const matchingStudents = groupedFinances[level][option].filter(student =>
+            const matchingStudents = groupedFinances[option][level].filter(student =>
                 student.fullName.toLowerCase().includes(lowercasedFilter) ||
                 student.matricule.toLowerCase().includes(lowercasedFilter)
             );
 
             if (matchingStudents.length > 0) {
-                if (!filtered[level]) filtered[level] = {};
-                filtered[level][option] = matchingStudents;
+                if (!filtered[option]) filtered[option] = {};
+                filtered[option][level] = matchingStudents;
             }
         }
     }
     return filtered;
   }, [searchTerm, groupedFinances]);
   
-  const sortedLevelKeys = Object.keys(filteredGroups).sort();
+  const sortedDepartmentKeys = Object.keys(filteredGroups).sort();
   
   return (
     <div className="space-y-6">
        <div className="flex items-center justify-end gap-2">
             <Input
-                placeholder="Rechercher par niveau, option, nom..."
+                placeholder="Rechercher par option, niveau, nom..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -84,20 +84,20 @@ export function StudentFinancesPageContent({ initialFinances, initialDepartments
             <AddStudentFinanceForm onAddStudent={onAddStudent} departments={initialDepartments} />
          </div>
 
-      {sortedLevelKeys.length > 0 ? (
-        sortedLevelKeys.map((level) => (
-          <Card key={level}>
+      {sortedDepartmentKeys.length > 0 ? (
+        sortedDepartmentKeys.map((option) => (
+          <Card key={option}>
             <CardHeader>
-              <CardTitle>{level}</CardTitle>
+              <CardTitle>{option}</CardTitle>
             </CardHeader>
             <CardContent>
               <Accordion type="single" collapsible className="w-full">
-                {Object.keys(filteredGroups[level]).sort().map(option => (
-                    <AccordionItem value={option} key={`${level}-${option}`}>
-                       <AccordionTrigger className="text-xl">{option}</AccordionTrigger>
+                {Object.keys(filteredGroups[option]).sort().map(level => (
+                    <AccordionItem value={level} key={`${option}-${level}`}>
+                       <AccordionTrigger className="text-xl">{level}</AccordionTrigger>
                        <AccordionContent>
                            <StudentFinancesTableWrapper 
-                                initialData={filteredGroups[level][option]} 
+                                initialData={filteredGroups[option][level]} 
                                 onUpdateStudent={onUpdateStudent}
                             />
                        </AccordionContent>

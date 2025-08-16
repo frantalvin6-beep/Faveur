@@ -145,8 +145,8 @@ function AddStudentDialog({ onAddStudent, allDepartments }: { onAddStudent: (stu
 }
 
 interface GroupedStudents {
-  [level: string]: {
-    [option: string]: Student[];
+  [option: string]: {
+    [level: string]: Student[];
   }
 }
 
@@ -232,15 +232,15 @@ export default function StudentsListPage() {
     
     return studentsToGroup.reduce((acc, student) => {
         const level = getLevelName(student.year);
-        if (!acc[level]) acc[level] = {};
-        if (!acc[level][student.department]) acc[level][student.department] = [];
-        acc[level][student.department].push(student);
+        if (!acc[student.department]) acc[student.department] = {};
+        if (!acc[student.department][level]) acc[student.department][level] = [];
+        acc[student.department][level].push(student);
         return acc;
     }, {} as GroupedStudents);
 
   }, [filteredStudentsByYear, searchTerm]);
 
-  const sortedLevelKeys = Object.keys(groupedStudents).sort();
+  const sortedDepartmentKeys = Object.keys(groupedStudents).sort();
 
   if (loading) {
       return (
@@ -259,7 +259,7 @@ export default function StudentsListPage() {
        <div className="flex items-center justify-between">
          <div>
             <h1 className="text-3xl font-bold">Liste des Étudiants</h1>
-            <p className="text-muted-foreground">Consultez et gérez les étudiants regroupés par niveau et option.</p>
+            <p className="text-muted-foreground">Consultez et gérez les étudiants regroupés par option et niveau.</p>
          </div>
          <div className="flex items-center gap-4">
              <div className="flex items-center gap-2">
@@ -276,7 +276,7 @@ export default function StudentsListPage() {
                 </Select>
             </div>
             <Input
-                placeholder="Rechercher (niveau, option, étudiant...)"
+                placeholder="Rechercher (option, niveau, étudiant...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -286,24 +286,24 @@ export default function StudentsListPage() {
        </div>
 
        <div className="space-y-8">
-            {sortedLevelKeys.map((level) => {
-                const levelOptions = Object.keys(groupedStudents[level]).sort();
+            {sortedDepartmentKeys.map((department) => {
+                const departmentLevels = Object.keys(groupedStudents[department]).sort();
 
-                if (levelOptions.length === 0) return null;
+                if (departmentLevels.length === 0) return null;
 
                 return (
-                    <Card key={level}>
+                    <Card key={department}>
                         <CardHeader>
-                            <CardTitle className="text-2xl">{level}</CardTitle>
+                            <CardTitle className="text-2xl">{department}</CardTitle>
                         </CardHeader>
                         <CardContent>
                            <Accordion type="single" collapsible className="w-full">
-                                {levelOptions.map(option => (
-                                    <AccordionItem value={option} key={`${level}-${option}`}>
-                                        <AccordionTrigger className="text-xl">{option}</AccordionTrigger>
+                                {departmentLevels.map(level => (
+                                    <AccordionItem value={level} key={`${department}-${level}`}>
+                                        <AccordionTrigger className="text-xl">{level}</AccordionTrigger>
                                         <AccordionContent>
                                              <StudentTable
-                                                data={groupedStudents[level][option]}
+                                                data={groupedStudents[department][level]}
                                                 onDeleteStudent={handleDeleteStudent}
                                                 onEditStudent={handleEdit}
                                             />
@@ -317,7 +317,7 @@ export default function StudentsListPage() {
             })}
         </div>
 
-       {sortedLevelKeys.length === 0 && !loading && (
+       {sortedDepartmentKeys.length === 0 && !loading && (
             <Card>
                 <CardContent>
                     <p className="text-muted-foreground text-center py-8">

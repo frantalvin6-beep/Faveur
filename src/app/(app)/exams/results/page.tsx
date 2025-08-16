@@ -31,8 +31,8 @@ function getAcademicYears(students: Student[]): string[] {
 }
 
 interface NestedGroupedResults {
-  [level: string]: {
-    [option: string]: ProcessedStudent[];
+  [department: string]: {
+    [level: string]: ProcessedStudent[];
   }
 }
 
@@ -105,19 +105,19 @@ export default function ResultsPage() {
     const groups: NestedGroupedResults = {};
     resultsToGroup.forEach(student => {
       const { level, department } = student;
-      if (!groups[level]) {
-        groups[level] = {};
+      if (!groups[department]) {
+        groups[department] = {};
       }
-      if (!groups[level][department]) {
-        groups[level][department] = [];
+      if (!groups[department][level]) {
+        groups[department][level] = [];
       }
-      groups[level][department].push(student);
+      groups[department][level].push(student);
     });
 
     return groups;
   }, [allProcessedResults, searchTerm]);
   
-  const sortedLevelKeys = Object.keys(groupedResults).sort();
+  const sortedDepartmentKeys = Object.keys(groupedResults).sort();
 
   if (loading) {
     return (
@@ -157,7 +157,7 @@ export default function ResultsPage() {
                 </Select>
             </div>
             <Input
-                placeholder="Rechercher (niveau, étudiant...)"
+                placeholder="Rechercher (option, étudiant...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -165,20 +165,20 @@ export default function ResultsPage() {
         </div>
       </div>
 
-      {sortedLevelKeys.length > 0 ? sortedLevelKeys.map(level => (
-        <Card key={level}>
+      {sortedDepartmentKeys.length > 0 ? sortedDepartmentKeys.map(department => (
+        <Card key={department}>
             <CardHeader>
-              <CardTitle>{level}</CardTitle>
-              <CardDescription>Synthèse des résultats pour ce niveau ({selectedYear}).</CardDescription>
+              <CardTitle>{department}</CardTitle>
+              <CardDescription>Synthèse des résultats pour cette option ({selectedYear}).</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
                  <Accordion type="single" collapsible className="w-full" >
-                    {Object.keys(groupedResults[level]).sort().map(option => (
-                         <AccordionItem value={option} key={`${level}-${option}`}>
-                            <AccordionTrigger className="text-xl font-medium">{option}</AccordionTrigger>
+                    {Object.keys(groupedResults[department]).sort().map(level => (
+                         <AccordionItem value={level} key={`${department}-${level}`}>
+                            <AccordionTrigger className="text-xl font-medium">{level}</AccordionTrigger>
                             <AccordionContent className="space-y-8">
-                                <SummaryTable students={groupedResults[level][option]} />
-                                <ResultsTable students={groupedResults[level][option]} />
+                                <SummaryTable students={groupedResults[department][level]} />
+                                <ResultsTable students={groupedResults[department][level]} />
                             </AccordionContent>
                          </AccordionItem>
                     ))}

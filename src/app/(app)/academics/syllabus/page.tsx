@@ -20,8 +20,8 @@ interface ChapterRowData extends Chapter {
 }
 
 interface GroupedChapters {
-    [level: string]: {
-        [department: string]: ChapterRowData[];
+    [department: string]: {
+        [level: string]: ChapterRowData[];
     };
 }
 
@@ -108,19 +108,19 @@ export default function SyllabusPage() {
         
         return filteredChapters.reduce((acc, chapter) => {
             const { level, department } = chapter;
-            if (!acc[level]) {
-                acc[level] = {};
+            if (!acc[department]) {
+                acc[department] = {};
             }
-            if (!acc[level][department]) {
-                acc[level][department] = [];
+            if (!acc[department][level]) {
+                acc[department][level] = [];
             }
-            acc[level][department].push(chapter);
+            acc[department][level].push(chapter);
             return acc;
         }, {} as GroupedChapters);
 
     }, [courses, searchTerm]);
 
-    const sortedLevelKeys = Object.keys(groupedChapters).sort();
+    const sortedDepartmentKeys = Object.keys(groupedChapters).sort();
 
   if (loading) {
     return (
@@ -149,7 +149,7 @@ export default function SyllabusPage() {
          </div>
          <div className="flex items-center gap-2">
             <Input
-                placeholder="Rechercher (niveau, option, matière...)"
+                placeholder="Rechercher (option, niveau, matière...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -157,20 +157,20 @@ export default function SyllabusPage() {
          </div>
        </div>
 
-        {sortedLevelKeys.length > 0 ? (
-            sortedLevelKeys.map(level => (
-                <Card key={level}>
+        {sortedDepartmentKeys.length > 0 ? (
+            sortedDepartmentKeys.map(department => (
+                <Card key={department}>
                     <CardHeader>
-                        <CardTitle>{level}</CardTitle>
+                        <CardTitle>{department}</CardTitle>
                     </CardHeader>
                     <CardContent>
                        <Accordion type="single" collapsible className="w-full">
-                           {Object.keys(groupedChapters[level]).sort().map(department => (
-                               <AccordionItem value={department} key={`${level}-${department}`}>
-                                   <AccordionTrigger className="text-xl">{department}</AccordionTrigger>
+                           {Object.keys(groupedChapters[department]).sort().map(level => (
+                               <AccordionItem value={level} key={`${department}-${level}`}>
+                                   <AccordionTrigger className="text-xl">{level}</AccordionTrigger>
                                    <AccordionContent>
                                        <SyllabusTable 
-                                           data={groupedChapters[level][department]} 
+                                           data={groupedChapters[department][level]} 
                                            onChapterUpdate={handleChapterUpdate}
                                            onChapterDelete={handleChapterDelete}
                                        />

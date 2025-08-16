@@ -19,8 +19,8 @@ function getLevelName(year: number) {
 }
 
 interface GroupedStudents {
-  [level: string]: {
-    [option: string]: Student[];
+  [option: string]: {
+    [level: string]: Student[];
   }
 }
 
@@ -60,14 +60,14 @@ export default function StudentAttendancePage() {
     
     return studentsToGroup.reduce((acc, student) => {
         const level = getLevelName(student.year);
-        if (!acc[level]) acc[level] = {};
-        if (!acc[level][student.department]) acc[level][student.department] = [];
-        acc[level][student.department].push(student);
+        if (!acc[student.department]) acc[student.department] = {};
+        if (!acc[student.department][level]) acc[student.department][level] = [];
+        acc[student.department][level].push(student);
         return acc;
     }, {} as GroupedStudents);
   }, [students, searchTerm]);
 
-  const sortedLevelKeys = Object.keys(groupedStudents).sort();
+  const sortedDepartmentKeys = Object.keys(groupedStudents).sort();
 
   if (loading) {
     return (
@@ -90,7 +90,7 @@ export default function StudentAttendancePage() {
          </div>
          <div className="flex items-center gap-2">
             <Input
-                placeholder="Rechercher (niveau, option, nom...)"
+                placeholder="Rechercher (option, niveau, nom...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -99,23 +99,23 @@ export default function StudentAttendancePage() {
        </div>
        
        <div className="space-y-8">
-            {sortedLevelKeys.length > 0 ? sortedLevelKeys.map((level) => {
-                const levelOptions = Object.keys(groupedStudents[level]).sort();
+            {sortedDepartmentKeys.length > 0 ? sortedDepartmentKeys.map((department) => {
+                const departmentLevels = Object.keys(groupedStudents[department]).sort();
 
-                if (levelOptions.length === 0) return null;
+                if (departmentLevels.length === 0) return null;
 
                 return (
-                    <Card key={level}>
+                    <Card key={department}>
                         <CardHeader>
-                            <CardTitle className="text-2xl">{level}</CardTitle>
+                            <CardTitle className="text-2xl">{department}</CardTitle>
                         </CardHeader>
                         <CardContent>
                            <Accordion type="single" collapsible className="w-full">
-                                {levelOptions.map(option => (
-                                    <AccordionItem value={option} key={`${level}-${option}`}>
-                                        <AccordionTrigger className="text-xl">{option}</AccordionTrigger>
+                                {departmentLevels.map(level => (
+                                    <AccordionItem value={level} key={`${department}-${level}`}>
+                                        <AccordionTrigger className="text-xl">{level}</AccordionTrigger>
                                         <AccordionContent>
-                                            <StudentAttendanceTable students={groupedStudents[level][option]} />
+                                            <StudentAttendanceTable students={groupedStudents[department][level]} />
                                         </AccordionContent>
                                     </AccordionItem>
                                 ))}

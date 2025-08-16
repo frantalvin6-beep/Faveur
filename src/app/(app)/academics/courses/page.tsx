@@ -13,8 +13,8 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 export const dynamic = 'force-dynamic';
 
 interface GroupedCourses {
-  [level: string]: {
-    [department: string]: Course[];
+  [department: string]: {
+    [level: string]: Course[];
   };
 }
 
@@ -91,18 +91,18 @@ export default function CoursesPage() {
 
         return filteredCourses.reduce((acc, course) => {
             const { level, department } = course;
-            if (!acc[level]) {
-                acc[level] = {};
+            if (!acc[department]) {
+                acc[department] = {};
             }
-            if (!acc[level][department]) {
-                acc[level][department] = [];
+            if (!acc[department][level]) {
+                acc[department][level] = [];
             }
-            acc[level][department].push(course);
+            acc[department][level].push(course);
             return acc;
         }, {} as GroupedCourses);
     }, [courses, searchTerm]);
 
-    const sortedLevelKeys = Object.keys(groupedCourses).sort();
+    const sortedDepartmentKeys = Object.keys(groupedCourses).sort();
 
   if (loading) {
       return (
@@ -126,7 +126,7 @@ export default function CoursesPage() {
          <div>
             <h1 className="text-3xl font-bold">Cours et matières</h1>
             <p className="text-muted-foreground">
-                Gérez les cours et les matières proposés par l'université, groupés par niveau et option.
+                Gérez les cours et les matières proposés par l'université, groupés par option et niveau.
             </p>
          </div>
          <div className="flex items-center gap-2">
@@ -140,20 +140,20 @@ export default function CoursesPage() {
          </div>
        </div>
 
-        {sortedLevelKeys.length > 0 ? (
-            sortedLevelKeys.map(level => (
-                <Card key={level}>
+        {sortedDepartmentKeys.length > 0 ? (
+            sortedDepartmentKeys.map(department => (
+                <Card key={department}>
                     <CardHeader>
-                        <CardTitle>{level}</CardTitle>
+                        <CardTitle>{department}</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <Accordion type="single" collapsible className="w-full">
-                            {Object.keys(groupedCourses[level]).sort().map(department => (
-                                <AccordionItem value={department} key={`${level}-${department}`}>
-                                    <AccordionTrigger className="text-xl">{department}</AccordionTrigger>
+                            {Object.keys(groupedCourses[department]).sort().map(level => (
+                                <AccordionItem value={level} key={`${department}-${level}`}>
+                                    <AccordionTrigger className="text-xl">{level}</AccordionTrigger>
                                     <AccordionContent>
                                         <CoursesTable 
-                                            data={groupedCourses[level][department]}
+                                            data={groupedCourses[department][level]}
                                             onDeleteCourse={handleDeleteCourse}
                                             onUpdateCourse={handleUpdateCourse}
                                         />

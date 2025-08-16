@@ -173,8 +173,8 @@ function AddGradeForm({
 }
 
 interface GroupedGrades {
-    [level: string]: {
-        [option: string]: ExamGrade[]
+    [option: string]: {
+        [level: string]: ExamGrade[]
     }
 }
 
@@ -265,26 +265,26 @@ export default function GradesPage() {
 
       const groups = dataToGroup.reduce((acc, grade) => {
           const { level, department } = grade;
-          if (!acc[level]) {
-              acc[level] = {};
+          if (!acc[department]) {
+              acc[department] = {};
           }
-          if (!acc[level][department]) {
-              acc[level][department] = [];
+          if (!acc[department][level]) {
+              acc[department][level] = [];
           }
-          acc[level][department].push(grade);
+          acc[department][level].push(grade);
           return acc;
       }, {} as GroupedGrades);
 
       // Sort grades within each subgroup by date
-      for(const level in groups) {
-          for(const option in groups[level]) {
-            groups[level][option].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      for(const option in groups) {
+          for(const level in groups[option]) {
+            groups[option][level].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
           }
       }
       return groups;
   }, [grades, searchTerm]);
 
-  const sortedLevelKeys = Object.keys(groupedGrades).sort((a, b) => a.localeCompare(b));
+  const sortedDepartmentKeys = Object.keys(groupedGrades).sort((a, b) => a.localeCompare(b));
 
   if (loading) {
     return (
@@ -328,20 +328,20 @@ export default function GradesPage() {
             </div>
         </div>
 
-        {sortedLevelKeys.length > 0 ? (
-            sortedLevelKeys.map(level => (
-                <Card key={level}>
+        {sortedDepartmentKeys.length > 0 ? (
+            sortedDepartmentKeys.map(department => (
+                <Card key={department}>
                     <CardHeader>
-                        <CardTitle>{level}</CardTitle>
+                        <CardTitle>{department}</CardTitle>
                     </CardHeader>
                     <CardContent>
                        <Accordion type="single" collapsible className="w-full">
-                            {Object.keys(groupedGrades[level]).sort().map(option => (
-                                <AccordionItem value={option} key={`${level}-${option}`}>
-                                    <AccordionTrigger className="text-lg font-medium">{option}</AccordionTrigger>
+                            {Object.keys(groupedGrades[department]).sort().map(level => (
+                                <AccordionItem value={level} key={`${department}-${level}`}>
+                                    <AccordionTrigger className="text-lg font-medium">{level}</AccordionTrigger>
                                     <AccordionContent>
                                         <GradesTable
-                                            data={groupedGrades[level][option]}
+                                            data={groupedGrades[department][level]}
                                             onGradeUpdate={handleGradeUpdate}
                                             onGradeDelete={handleGradeDelete}
                                         />

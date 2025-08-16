@@ -166,7 +166,7 @@ export default function StudentFinancesPage() {
         <div>
             <h1 className="text-3xl font-bold">Finances des Étudiants</h1>
             <p className="text-muted-foreground">
-              Suivez les frais de scolarité, groupés par niveau et option.
+              Suivez les frais de scolarité, groupés par option et niveau.
             </p>
         </div>
         <div className="flex items-center gap-2">
