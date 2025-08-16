@@ -14,6 +14,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogClose, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -128,6 +130,11 @@ function AddStudentDialog({ onAddStudent, allDepartments }: { onAddStudent: (stu
   );
 }
 
+interface GroupedStudents {
+  [level: string]: {
+    [option: string]: Student[];
+  }
+}
 
 export default function StudentsListPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -162,29 +169,11 @@ export default function StudentsListPage() {
     fetchData();
   }, [fetchData]);
   
-  const filteredStudents = React.useMemo(() => {
+  const filteredStudentsByYear = React.useMemo(() => {
       if (!selectedYear) return students;
       const [startYear] = selectedYear.split('-').map(Number);
       return students.filter(s => new Date(s.enrollmentDate).getFullYear() === startYear);
   }, [selectedYear, students]);
-  
-  const getStudentsForDepartment = (departmentName: string): Student[] => {
-    let studentsInDept = filteredStudents.filter(student => student.department === departmentName);
-    if (searchTerm) {
-        const lowercasedFilter = searchTerm.toLowerCase();
-        // If the search term matches the department name, we don't filter the students further
-        if (departmentName.toLowerCase().includes(lowercasedFilter)) {
-            return studentsInDept;
-        }
-        // Otherwise, filter students by name, id, or email
-        studentsInDept = studentsInDept.filter((student) =>
-            student.name.toLowerCase().includes(lowercasedFilter) ||
-            student.id.toLowerCase().includes(lowercasedFilter) ||
-            student.email.toLowerCase().includes(lowercasedFilter)
-        );
-    }
-    return studentsInDept;
-  };
   
   const handleAddStudent = async (studentData: Omit<Student, 'id' | 'gpa' | 'academicHistory'>) => {
     try {
@@ -212,21 +201,32 @@ export default function StudentsListPage() {
 
   const handleEdit = (id: string) => alert(`La fonctionnalité de modification de l'étudiant ${id} sera bientôt disponible.`);
 
-  const faculties = departments.filter(d => !d.parentId);
   const options = departments.filter(d => d.parentId);
-  const lowercasedFilter = searchTerm.toLowerCase();
 
-  const displayedFaculties = faculties.filter(faculty => {
-      if (!searchTerm) return true;
-      const facultyNameMatch = faculty.name.toLowerCase().includes(lowercasedFilter);
-      const facultyOptions = options.filter(opt => opt.parentId === faculty.id);
-      const optionMatch = facultyOptions.some(opt => {
-          const optionNameMatch = opt.name.toLowerCase().includes(lowercasedFilter);
-          const studentMatch = getStudentsForDepartment(opt.name).length > 0;
-          return optionNameMatch || studentMatch;
-      });
-      return facultyNameMatch || optionMatch;
-  });
+  const groupedStudents = React.useMemo(() => {
+    let studentsToGroup = filteredStudentsByYear;
+    if (searchTerm) {
+        const lowercasedFilter = searchTerm.toLowerCase();
+        studentsToGroup = studentsToGroup.filter(student =>
+            student.name.toLowerCase().includes(lowercasedFilter) ||
+            student.id.toLowerCase().includes(lowercasedFilter) ||
+            student.department.toLowerCase().includes(lowercasedFilter) ||
+            `Licence ${student.year}`.toLowerCase().includes(lowercasedFilter) ||
+            `Master ${student.year}`.toLowerCase().includes(lowercasedFilter)
+        );
+    }
+    
+    return studentsToGroup.reduce((acc, student) => {
+        const level = `Année ${student.year}`;
+        if (!acc[level]) acc[level] = {};
+        if (!acc[level][student.department]) acc[level][student.department] = [];
+        acc[level][student.department].push(student);
+        return acc;
+    }, {} as GroupedStudents);
+
+  }, [filteredStudentsByYear, searchTerm]);
+
+  const sortedLevelKeys = Object.keys(groupedStudents).sort();
 
   if (loading) {
       return (
@@ -244,8 +244,8 @@ export default function StudentsListPage() {
     <div className="space-y-6">
        <div className="flex items-center justify-between">
          <div>
-            <h1 className="text-3xl font-bold">Liste des Étudiants par Faculté et Option</h1>
-            <p className="text-muted-foreground">Consultez et gérez les étudiants regroupés par leur faculté et option.</p>
+            <h1 className="text-3xl font-bold">Liste des Étudiants</h1>
+            <p className="text-muted-foreground">Consultez et gérez les étudiants regroupés par niveau et option.</p>
          </div>
          <div className="flex items-center gap-4">
              <div className="flex items-center gap-2">
@@ -262,7 +262,7 @@ export default function StudentsListPage() {
                 </Select>
             </div>
             <Input
-                placeholder="Rechercher (faculté, option, étudiant...)"
+                placeholder="Rechercher (niveau, option, étudiant...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -272,54 +272,42 @@ export default function StudentsListPage() {
        </div>
 
        <div className="space-y-8">
-            {displayedFaculties.map((faculty) => {
-                const facultyOptions = options.filter(opt => opt.parentId === faculty.id).filter(opt => {
-                    if (!searchTerm) return true;
-                    const optionNameMatch = opt.name.toLowerCase().includes(lowercasedFilter);
-                    const studentMatch = getStudentsForDepartment(opt.name).length > 0;
-                    return optionNameMatch || studentMatch || faculty.name.toLowerCase().includes(lowercasedFilter);
-                });
+            {sortedLevelKeys.map((level) => {
+                const levelOptions = Object.keys(groupedStudents[level]).sort();
 
-                if (facultyOptions.length === 0) return null;
+                if (levelOptions.length === 0) return null;
 
                 return (
-                    <Card key={faculty.id} className="bg-muted/20">
+                    <Card key={level}>
                         <CardHeader>
-                            <CardTitle className="text-2xl">{faculty.name}</CardTitle>
-                            <CardDescription>Responsable: {faculty.head}</CardDescription>
+                            <CardTitle className="text-2xl">{level}</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
-                            {facultyOptions.map(option => {
-                                const studentsForOption = getStudentsForDepartment(option.name);
-                                if (studentsForOption.length === 0 && searchTerm && !option.name.toLowerCase().includes(lowercasedFilter)) {
-                                    return null;
-                                }
-                                return (
-                                    <Card key={option.id}>
-                                        <CardHeader>
-                                            <CardTitle className="text-xl">{option.name}</CardTitle>
-                                        </CardHeader>
-                                        <CardContent>
-                                            <StudentTable
-                                                data={studentsForOption}
+                        <CardContent>
+                           <Accordion type="single" collapsible className="w-full">
+                                {levelOptions.map(option => (
+                                    <AccordionItem value={option} key={`${level}-${option}`}>
+                                        <AccordionTrigger className="text-xl">{option}</AccordionTrigger>
+                                        <AccordionContent>
+                                             <StudentTable
+                                                data={groupedStudents[level][option]}
                                                 onDeleteStudent={handleDeleteStudent}
                                                 onEditStudent={handleEdit}
                                             />
-                                        </CardContent>
-                                    </Card>
-                                )
-                            })}
+                                        </AccordionContent>
+                                    </AccordionItem>
+                                ))}
+                           </Accordion>
                         </CardContent>
                     </Card>
                 )
             })}
         </div>
 
-       {displayedFaculties.length === 0 && !loading && (
+       {sortedLevelKeys.length === 0 && !loading && (
             <Card>
                 <CardContent>
                     <p className="text-muted-foreground text-center py-8">
-                        {searchTerm ? "Aucune faculté, option ou étudiant ne correspond à votre recherche." : "Aucun étudiant à afficher. Commencez par en ajouter un."}
+                        {searchTerm ? "Aucun étudiant ne correspond à votre recherche." : "Aucun étudiant à afficher. Commencez par en ajouter un."}
                     </p>
                 </CardContent>
             </Card>

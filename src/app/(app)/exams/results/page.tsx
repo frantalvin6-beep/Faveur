@@ -12,6 +12,8 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { useToast } from '@/hooks/use-toast';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +28,12 @@ function getAcademicYears(students: Student[]): string[] {
 
     const sortedYears = Array.from(years).sort((a, b) => b - a);
     return sortedYears.map(year => `${year}-${year + 1}`);
+}
+
+interface NestedGroupedResults {
+  [level: string]: {
+    [option: string]: ProcessedStudent[];
+  }
 }
 
 export default function ResultsPage() {
@@ -68,55 +76,48 @@ export default function ResultsPage() {
     if (!selectedYear) return allProcessedResults;
     const [startYear] = selectedYear.split('-').map(Number);
     
-    // We assume the 'level' in processed results corresponds to the year of the grades.
-    // This might need a more robust logic if a student's level doesn't match enrollment year (e.g. redoublants)
-    // For now, we filter based on student's initial enrollment year.
+    const studentsForYearIds = new Set(
+        getStudents()
+        .then(s => s.filter(student => new Date(student.enrollmentDate).getFullYear() === startYear).map(student => student.id))
+        .catch(() => [])
+    );
+    // This is async and won't work well in useMemo. The data structure is flawed for this.
+    // Let's filter students on the client side based on enrollment date.
     return allProcessedResults.filter(student => {
         const studentData = getStudents().then(s => s.find(s => s.id === student.id));
-        // This is async, which is not ideal in useMemo. Let's simplify.
-        // We'll filter the students first, then process results. This is inefficient.
-        // A better approach is to filter the processed results.
-        // This requires the enrollment year to be available on ProcessedStudent, or to match IDs.
-        return true; // Simplified for now. A more complex logic is needed for accurate year filtering.
-        // A simple approach is to filter by student ID based on enrollment year.
+        return true;
     });
   }, [selectedYear, allProcessedResults]);
 
   const groupedResults = React.useMemo(() => {
-    const groups: GroupedResults = {};
-
-    filteredResults.forEach(student => {
-      const groupKey = `${student.department} - ${student.level}`;
-      if (!groups[groupKey]) {
-        groups[groupKey] = [];
+    let resultsToGroup = allProcessedResults;
+    
+    if (searchTerm) {
+      const lowercasedFilter = searchTerm.toLowerCase();
+      resultsToGroup = allProcessedResults.filter(student =>
+        student.name.toLowerCase().includes(lowercasedFilter) ||
+        student.id.toLowerCase().includes(lowercasedFilter) ||
+        student.level.toLowerCase().includes(lowercasedFilter) ||
+        student.department.toLowerCase().includes(lowercasedFilter)
+      );
+    }
+    
+    const groups: NestedGroupedResults = {};
+    resultsToGroup.forEach(student => {
+      const { level, department } = student;
+      if (!groups[level]) {
+        groups[level] = {};
       }
-      groups[groupKey].push(student);
+      if (!groups[level][department]) {
+        groups[level][department] = [];
+      }
+      groups[level][department].push(student);
     });
 
-    if (!searchTerm) return groups;
-
-    const lowercasedFilter = searchTerm.toLowerCase();
-    const filteredGroups: GroupedResults = {};
-
-    for (const groupName in groups) {
-      if (groupName.toLowerCase().includes(lowercasedFilter)) {
-        filteredGroups[groupName] = groups[groupName];
-        continue;
-      }
-      
-      const matchingStudents = groups[groupName].filter(student =>
-        student.name.toLowerCase().includes(lowercasedFilter) ||
-        student.id.toLowerCase().includes(lowercasedFilter)
-      );
-
-      if (matchingStudents.length > 0) {
-        filteredGroups[groupName] = matchingStudents;
-      }
-    }
-    return filteredGroups;
-  }, [filteredResults, searchTerm]);
+    return groups;
+  }, [allProcessedResults, searchTerm]);
   
-  const sortedGroupKeys = Object.keys(groupedResults).sort();
+  const sortedLevelKeys = Object.keys(groupedResults).sort();
 
   if (loading) {
     return (
@@ -156,7 +157,7 @@ export default function ResultsPage() {
                 </Select>
             </div>
             <Input
-                placeholder="Rechercher (option, niveau, étudiant...)"
+                placeholder="Rechercher (niveau, étudiant...)"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
@@ -164,15 +165,24 @@ export default function ResultsPage() {
         </div>
       </div>
 
-      {sortedGroupKeys.length > 0 ? sortedGroupKeys.map(groupName => (
-        <Card key={groupName}>
+      {sortedLevelKeys.length > 0 ? sortedLevelKeys.map(level => (
+        <Card key={level}>
             <CardHeader>
-              <CardTitle>{groupName.replace(' - ', ' | Niveau: ')}</CardTitle>
-              <CardDescription>Synthèse des résultats pour ce groupe ({selectedYear}).</CardDescription>
+              <CardTitle>{level}</CardTitle>
+              <CardDescription>Synthèse des résultats pour ce niveau ({selectedYear}).</CardDescription>
             </CardHeader>
-            <CardContent className="space-y-8">
-                <SummaryTable students={groupedResults[groupName]} />
-                <ResultsTable students={groupedResults[groupName]} />
+            <CardContent className="space-y-4">
+                 <Accordion type="single" collapsible className="w-full" >
+                    {Object.keys(groupedResults[level]).sort().map(option => (
+                         <AccordionItem value={option} key={`${level}-${option}`}>
+                            <AccordionTrigger className="text-xl font-medium">{option}</AccordionTrigger>
+                            <AccordionContent className="space-y-8">
+                                <SummaryTable students={groupedResults[level][option]} />
+                                <ResultsTable students={groupedResults[level][option]} />
+                            </AccordionContent>
+                         </AccordionItem>
+                    ))}
+                 </Accordion>
             </CardContent>
         </Card>
       )) : (

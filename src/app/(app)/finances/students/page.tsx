@@ -162,7 +162,13 @@ export default function StudentFinancesPage() {
   
   return (
     <div className="space-y-6">
-      <div className="flex justify-end">
+       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div>
+            <h1 className="text-3xl font-bold">Finances des Étudiants</h1>
+            <p className="text-muted-foreground">
+              Suivez les frais de scolarité, groupés par niveau et option.
+            </p>
+        </div>
         <div className="flex items-center gap-2">
             <Label htmlFor="academic-year">Année Académique</Label>
             <Select value={selectedYear} onValueChange={setSelectedYear}>

@@ -7,9 +7,13 @@ import { StudentFinancesTableWrapper } from '@/components/finances/student-finan
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { AddStudentFinanceForm } from './add-student-finance-form';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
 
 interface GroupedFinances {
-  [key: string]: StudentFinance[];
+  [level: string]: {
+    [option: string]: StudentFinance[];
+  }
 }
 
 interface StudentFinancesPageContentProps {
@@ -24,11 +28,14 @@ export function StudentFinancesPageContent({ initialFinances, initialDepartments
 
   const groupedFinances = React.useMemo(() => {
     return initialFinances.reduce((acc, student) => {
-      const key = `${student.option} - ${student.level}`;
-      if (!acc[key]) {
-        acc[key] = [];
+      const { level, option } = student;
+      if (!acc[level]) {
+        acc[level] = {};
       }
-      acc[key].push(student);
+      if (!acc[level][option]) {
+        acc[level][option] = [];
+      }
+      acc[level][option].push(student);
       return acc;
     }, {} as GroupedFinances);
   }, [initialFinances]);
@@ -41,57 +48,62 @@ export function StudentFinancesPageContent({ initialFinances, initialDepartments
     const lowercasedFilter = searchTerm.toLowerCase();
     const filtered: GroupedFinances = {};
 
-    for (const groupName in groupedFinances) {
-      if (groupName.toLowerCase().includes(lowercasedFilter)) {
-        filtered[groupName] = groupedFinances[groupName];
-        continue;
-      }
-      
-      const matchingStudents = groupedFinances[groupName].filter(student =>
-        student.fullName.toLowerCase().includes(lowercasedFilter) ||
-        student.matricule.toLowerCase().includes(lowercasedFilter)
-      );
+    for (const level in groupedFinances) {
+        for (const option in groupedFinances[level]) {
+            if (level.toLowerCase().includes(lowercasedFilter) || option.toLowerCase().includes(lowercasedFilter)) {
+                if (!filtered[level]) filtered[level] = {};
+                filtered[level][option] = groupedFinances[level][option];
+                continue;
+            }
 
-      if (matchingStudents.length > 0) {
-        filtered[groupName] = matchingStudents;
-      }
+            const matchingStudents = groupedFinances[level][option].filter(student =>
+                student.fullName.toLowerCase().includes(lowercasedFilter) ||
+                student.matricule.toLowerCase().includes(lowercasedFilter)
+            );
+
+            if (matchingStudents.length > 0) {
+                if (!filtered[level]) filtered[level] = {};
+                filtered[level][option] = matchingStudents;
+            }
+        }
     }
     return filtered;
   }, [searchTerm, groupedFinances]);
   
-  const sortedGroupKeys = Object.keys(filteredGroups).sort();
+  const sortedLevelKeys = Object.keys(filteredGroups).sort();
   
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-         <div>
-            <h1 className="text-3xl font-bold">Finances des Étudiants</h1>
-            <p className="text-muted-foreground">
-              Suivez les frais de scolarité, groupés par option et niveau.
-            </p>
-         </div>
-         <div className="flex items-center gap-2">
+       <div className="flex items-center justify-end gap-2">
             <Input
-                placeholder="Rechercher par groupe, nom..."
+                placeholder="Rechercher par niveau, option, nom..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
             <AddStudentFinanceForm onAddStudent={onAddStudent} departments={initialDepartments} />
          </div>
-       </div>
 
-      {sortedGroupKeys.length > 0 ? (
-        sortedGroupKeys.map((groupName) => (
-          <Card key={groupName}>
+      {sortedLevelKeys.length > 0 ? (
+        sortedLevelKeys.map((level) => (
+          <Card key={level}>
             <CardHeader>
-              <CardTitle>{groupName.replace(' - ', ' | Niveau: ')}</CardTitle>
+              <CardTitle>{level}</CardTitle>
             </CardHeader>
             <CardContent>
-              <StudentFinancesTableWrapper 
-                initialData={filteredGroups[groupName]} 
-                onUpdateStudent={onUpdateStudent}
-              />
+              <Accordion type="single" collapsible className="w-full">
+                {Object.keys(filteredGroups[level]).sort().map(option => (
+                    <AccordionItem value={option} key={`${level}-${option}`}>
+                       <AccordionTrigger className="text-xl">{option}</AccordionTrigger>
+                       <AccordionContent>
+                           <StudentFinancesTableWrapper 
+                                initialData={filteredGroups[level][option]} 
+                                onUpdateStudent={onUpdateStudent}
+                            />
+                       </AccordionContent>
+                    </AccordionItem>
+                ))}
+              </Accordion>
             </CardContent>
           </Card>
         ))

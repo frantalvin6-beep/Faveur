@@ -22,6 +22,8 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/hooks/use-toast';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+
 
 function AddGradeForm({ 
     onAddGrade, 
@@ -34,7 +36,7 @@ function AddGradeForm({
     allStudents: Student[], 
     allCourses: Course[], 
     allFaculty: Faculty[],
-    allDepartments: Department[]
+    allDepartments: Department[] 
 }) {
     const [isOpen, setIsOpen] = useState(false);
     
@@ -170,6 +172,12 @@ function AddGradeForm({
     )
 }
 
+interface GroupedGrades {
+    [level: string]: {
+        [option: string]: ExamGrade[]
+    }
+}
+
 export default function GradesPage() {
   const [grades, setGrades] = useState<ExamGrade[]>([]);
   const [allStudents, setAllStudents] = useState<Student[]>([]);
@@ -199,7 +207,7 @@ export default function GradesPage() {
       } finally {
           setLoading(false);
       }
-  }, [toast]);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -256,22 +264,27 @@ export default function GradesPage() {
       }
 
       const groups = dataToGroup.reduce((acc, grade) => {
-          const groupKey = `${grade.department} - ${grade.level}`;
-          if (!acc[groupKey]) {
-              acc[groupKey] = [];
+          const { level, department } = grade;
+          if (!acc[level]) {
+              acc[level] = {};
           }
-          acc[groupKey].push(grade);
+          if (!acc[level][department]) {
+              acc[level][department] = [];
+          }
+          acc[level][department].push(grade);
           return acc;
-      }, {} as { [key: string]: ExamGrade[] });
+      }, {} as GroupedGrades);
 
-      // Sort grades within each group by date
-      for(const key in groups) {
-          groups[key].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // Sort grades within each subgroup by date
+      for(const level in groups) {
+          for(const option in groups[level]) {
+            groups[level][option].sort((a,b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+          }
       }
       return groups;
   }, [grades, searchTerm]);
 
-  const sortedGroupKeys = Object.keys(groupedGrades).sort();
+  const sortedLevelKeys = Object.keys(groupedGrades).sort((a, b) => a.localeCompare(b));
 
   if (loading) {
     return (
@@ -315,18 +328,27 @@ export default function GradesPage() {
             </div>
         </div>
 
-        {sortedGroupKeys.length > 0 ? (
-            sortedGroupKeys.map(groupKey => (
-                <Card key={groupKey}>
+        {sortedLevelKeys.length > 0 ? (
+            sortedLevelKeys.map(level => (
+                <Card key={level}>
                     <CardHeader>
-                        <CardTitle>{groupKey.replace(' - ', ' | Niveau: ')}</CardTitle>
+                        <CardTitle>{level}</CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <GradesTable
-                            data={groupedGrades[groupKey]}
-                            onGradeUpdate={handleGradeUpdate}
-                            onGradeDelete={handleGradeDelete}
-                        />
+                       <Accordion type="single" collapsible className="w-full">
+                            {Object.keys(groupedGrades[level]).sort().map(option => (
+                                <AccordionItem value={option} key={`${level}-${option}`}>
+                                    <AccordionTrigger className="text-lg font-medium">{option}</AccordionTrigger>
+                                    <AccordionContent>
+                                        <GradesTable
+                                            data={groupedGrades[level][option]}
+                                            onGradeUpdate={handleGradeUpdate}
+                                            onGradeDelete={handleGradeDelete}
+                                        />
+                                    </AccordionContent>
+                                </AccordionItem>
+                            ))}
+                        </Accordion>
                     </CardContent>
                 </Card>
             ))
