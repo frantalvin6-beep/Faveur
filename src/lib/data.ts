@@ -70,7 +70,11 @@ export async function getDepartments(): Promise<Department[]> {
 }
 
 export async function addDepartment(department: Omit<Department, 'id'>): Promise<Department> {
-    const docRef = await addDoc(collection(db, 'departments'), department);
+    const dataToAdd: Omit<Department, 'id'> = { ...department };
+    if (dataToAdd.parentId === undefined) {
+      delete dataToAdd.parentId;
+    }
+    const docRef = await addDoc(collection(db, 'departments'), dataToAdd);
     const newDepartment = { ...department, id: docRef.id };
     return newDepartment;
 }
